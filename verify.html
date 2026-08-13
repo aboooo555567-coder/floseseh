@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الاستعلام عن الإجازات المرضية - منصة صحة</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background-color: #fff; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* Top Navigation */
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-bottom: 2px solid #f0f0f0; background: white; }
+        .nav-logo img { height: 40px; }
+        .menu-icon { font-size: 24px; color: #1c3563; cursor: pointer; }
+        
+        /* Breadcrumb */
+        .breadcrumb { padding: 15px 25px; font-size: 14px; font-weight: 500; color: #666; background: #fafafa; border-bottom: 1px solid #eee; }
+        .breadcrumb span.active { color: #216ba5; font-weight: 700; }
+        .breadcrumb span.sep { margin: 0 5px; color: #ccc; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px 25px; max-width: 600px; margin: 0 auto; width: 100%; }
+        
+        .page-title { color: #216ba5; font-size: 28px; font-weight: 800; text-align: center; margin-bottom: 15px; }
+        .page-subtitle { text-align: center; color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group input { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; color: #333; text-align: center; background: #fff; }
+        .input-group input:disabled { background: #fdfdfd; color: #111; font-weight: 600; }
+        
+        .result-card { background: #f5f5f5; border-radius: 12px; padding: 25px 20px; margin-top: 25px; text-align: center; }
+        .result-item { margin-bottom: 20px; }
+        .result-item:last-child { margin-bottom: 0; }
+        .item-label { font-size: 16px; font-weight: 800; color: #222; margin-bottom: 5px; }
+        .item-value { font-size: 15px; color: #444; }
+        
+        .btn-new-inquiry { background: #1c3563; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; display: block; margin: 30px auto 0 auto; width: fit-content; transition: background 0.2s; text-decoration: none; }
+        .btn-new-inquiry:hover { background: #15274b; }
+
+        /* Footer */
+        .footer { background: #216ba5; color: white; padding: 30px 20px; text-align: center; margin-top: 40px; }
+        .footer-logos { display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 20px; }
+        .footer-logos img { height: 45px; filter: brightness(0) invert(1); }
+        .footer-links { margin-bottom: 20px; }
+        .footer-links a { display: block; color: white; text-decoration: none; margin-bottom: 10px; font-size: 15px; }
+        .footer-contact { margin-bottom: 20px; font-size: 14px; line-height: 1.8; }
+        .footer-contact strong { display: block; font-size: 16px; margin-bottom: 5px; }
+        .footer-bottom { font-size: 12px; color: rgba(255,255,255,0.7); padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="menu-icon">☰</div>
+        <div class="nav-logo">
+            <img src="https://i.ibb.co/L5k6nN4/moh-logo.png" alt="Seha">
+        </div>
+    </nav>
+    
+    <div class="breadcrumb">
+        الرئيسية <span class="sep">/</span> الاستعلامات <span class="sep">/</span> <span class="active">الإجازات المرضية</span>
+    </div>
+
+    <main class="main-content">
+        <h1 class="page-title">الإجازات المرضية</h1>
+        <p class="page-subtitle">خدمة الاستعلام عن الإجازات المرضية تتيح لك الاستعلام عن حالة طلبك للإجازة ويمكنك طباعتها عن طريق تطبيق صحتي</p>
+
+        <div class="input-group">
+            <input type="text" id="v-id" disabled>
+        </div>
+        <div class="input-group">
+            <input type="text" id="v-nid" disabled>
+        </div>
+
+        <div class="result-card">
+            <div class="result-item">
+                <div class="item-label">الاسم:</div>
+                <div class="item-value" id="v-name">--</div>
+            </div>
+            <div class="result-item">
+                <div class="item-label">تاريخ إصدار تقرير الإجازة:</div>
+                <div class="item-value" id="v-issue">--</div>
+            </div>
+            <div class="result-item">
+                <div class="item-label">تبدأ من:</div>
+                <div class="item-value" id="v-start">--</div>
+            </div>
+            <div class="result-item">
+                <div class="item-label">وحتى:</div>
+                <div class="item-value" id="v-end">--</div>
+            </div>
+            <div class="result-item">
+                <div class="item-label">المدة بالأيام:</div>
+                <div class="item-value" id="v-dur">--</div>
+            </div>
+            <div class="result-item">
+                <div class="item-label">اسم الطبيب:</div>
+                <div class="item-value" id="v-doc">--</div>
+            </div>
+            <div class="result-item">
+                <div class="item-label">المسمى الوظيفي:</div>
+                <div class="item-value" id="v-pos">--</div>
+            </div>
+        </div>
+
+        <button class="btn-new-inquiry" onclick="window.location.reload()">استعلام جديد</button>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="#">الخدمات</a>
+            <a href="#">الاستعلامات</a>
+            <a href="#">الأسئلة الشائعة</a>
+            <a href="#">تواصل معنا</a>
+        </div>
+        <div class="footer-logos">
+            <img src="https://i.ibb.co/3sks6b9/seha-logo-en.png" alt="Seha">
+            <img src="https://i.ibb.co/L5k6nN4/moh-logo.png" alt="MOH">
+        </div>
+        <div class="footer-contact">
+            <strong>تواصل معنا</strong>
+            📞 920002005<br>
+            ✉️ support@seha.sa<br>
+            أوقات العمل: الأحد حتى الخميس 8 ص - 11 م
+        </div>
+        <div class="footer-bottom">
+            جميع الحقوق محفوظة منصة صحة © 2026
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            document.getElementById('v-id').value = params.get('id') || 'GSL...';
+            document.getElementById('v-nid').value = params.get('nid') || '1...';
+            document.getElementById('v-name').innerText = params.get('name') || '--';
+            document.getElementById('v-issue').innerText = params.get('issue') || '--';
+            document.getElementById('v-start').innerText = params.get('start') || '--';
+            document.getElementById('v-end').innerText = params.get('end') || '--';
+            document.getElementById('v-dur').innerText = params.get('dur') || '--';
+            document.getElementById('v-doc').innerText = params.get('doc') || '--';
+            document.getElementById('v-pos').innerText = params.get('pos') || '--';
+        });
+    </script>
+</body>
+</html>

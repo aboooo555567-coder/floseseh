@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SickLeaves - Seha</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- html2pdf Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Dashboard Screen -->
+        <section id="dashboard-screen" class="screen active">
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <div class="balance-card">
+                        <span>رصيدك: <strong id="points-balance-display">0</strong> نقطة</span>
+                        <span class="coin-icon">🪙</span>
+                    </div>
+                </div>
+
+                <div class="header-center">
+                    <h2>سجل التقارير</h2>
+                    <div class="status-badge" id="sub-status-badge">نشط - متبقي 0 يوم</div>
+                    <button class="btn-renew" onclick="app.navigate('packages')">تجديد</button>
+                </div>
+
+                <div class="header-right">
+                    <div class="dashboard-logo-frame">
+                        <img src="https://i.ibb.co/60qYxGQ/image-not-found.png" alt="Logo" id="dashboard-logo">
+                    </div>
+                </div>
+                <span id="points-balance" style="display:none;">0</span>
+            </header>
+            
+            <main class="reports-list" id="reports-list">
+                <!-- Report Cards will be injected here -->
+            </main>
+
+            <!-- Floating Action Button & Menu -->
+            <div class="fab-container" id="fab-menu">
+                <button type="button" class="fab" id="fab-main" onclick="app.toggleFab()">+</button>
+                <div class="fab-menu-items" id="fab-menu-items">
+                    <div class="fab-menu-item" onclick="app.startForm('companion')">
+                        مرافقة مريض 👥
+                    </div>
+                    <div class="fab-menu-item" onclick="app.startForm('sickleave')">
+                        إجازة مرضية 🤒
+                    </div>
+                </div>
+            </div>
+            <div class="overlay" id="fab-overlay" onclick="app.toggleFab()"></div>
+        </section>
+
+        <!-- Packages Screen -->
+        <section id="packages-screen" class="screen">
+            <header class="app-header">
+                <h2>باقات الاشتراك والشحن</h2>
+                <button class="btn-back" onclick="app.navigate('dashboard')">❯</button>
+            </header>
+
+            <main class="packages-container">
+                <div class="package-section">
+                    <h3 class="section-title">📅 الاشتراك الشهري اللامحدود</h3>
+                    <div class="package-card" onclick="app.buyPackage('Month 1')">
+                        <div class="package-details">
+                            <h4>Month 1</h4>
+                            <p>صلاحية 30 يوم (إنشاء تقارير غير محدود)</p>
+                            <div class="referral-bonus-badge">
+                                🎁 + منح 50 نقطة إضافية للشخص الذي أحالك
+                            </div>
+                        </div>
+                        <div class="package-price">100<br>ريال</div>
+                    </div>
+                </div>
+                
+                <div class="package-section" style="margin-top: 25px;">
+                    <h3 class="section-title">🪙 حزم شحن النقاط</h3>
+                    
+                    <div class="package-card" onclick="app.buyPackage('Basic')">
+                        <div class="package-details">
+                            <h4>حزمة النقاط الأساسية (30 نقطة)</h4>
+                            <p>تمنحك 30 نقطة (بدون تاريخ انتهاء)</p>
+                            <div class="referral-bonus-badge">
+                                🎁 + منح 10 نقطة إضافية للشخص الذي أحالك
+                            </div>
+                        </div>
+                        <div class="package-price">20<br>ريال</div>
+                    </div>
+
+                    <div class="package-card recommended" onclick="app.buyPackage('Recommended')">
+                        <div class="package-details">
+                            <h4>حزمة النقاط الموصى بها (100 نقطة)</h4>
+                            <p>تمنحك 100 نقطة (بدون تاريخ انتهاء)</p>
+                            <div class="referral-bonus-badge">
+                                🎁 + منح 25 نقطة إضافية للشخص الذي أحالك
+                            </div>
+                        </div>
+                        <div class="package-price">50<br>ريال</div>
+                    </div>
+
+                    <div class="package-card" onclick="app.buyPackage('Advanced')">
+                        <div class="package-details">
+                            <h4>حزمة النقاط المتقدمة (200 نقطة)</h4>
+                            <p>تمنحك 200 نقطة (بدون تاريخ انتهاء)</p>
+                            <div class="referral-bonus-badge">
+                                🎁 + منح 50 نقطة إضافية للشخص الذي أحالك
+                            </div>
+                        </div>
+                        <div class="package-price">80<br>ريال</div>
+                    </div>
+                </div>
+                
+                <div style="text-align:center; padding:20px 0 30px 0;">
+                    <p style="font-size:0.9rem; margin-bottom:12px;">📞 يتم التفعيل يدوياً بالتحويل البنكي بالتواصل مع المالك:</p>
+                    <a href="https://t.me/zakmmm_1211" target="_blank" class="btn-renew" style="display:inline-block; padding:10px 22px; text-decoration:none; border-radius:20px; margin:0;">تواصل مع المالك للتفعيل 💬</a>
+                </div>
+            </main>
+        </section>
+
+        <!-- Form Wizard Screen -->
+        <section id="form-screen" class="screen">
+            <header class="app-header">
+                <h2 id="form-title">إصدار تقرير جديد</h2>
+                <button class="btn-back" onclick="app.navigate('dashboard')">❯</button>
+            </header>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="form-progress"></div>
+            </div>
+
+            <form id="report-form">
+                <!-- Step 1: Dates -->
+                <div class="form-step active" id="step-1">
+                    <div class="form-group">
+                        <label>نوع التقرير</label>
+                        <select id="leave_type" required>
+                            <option value="GSL">GSL</option>
+                        </select>
+                    </div>
+                    
+                    <div class="dates-row">
+                        <div class="form-group half">
+                            <label>تاريخ الدخول</label>
+                            <input type="date" id="admission_date" required>
+                        </div>
+                        <div class="form-group half">
+                            <label>تاريخ الخروج</label>
+                            <input type="date" id="discharge_date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>مدة الإجازة (بالأيام)</label>
+                        <input type="number" id="duration" value="1" min="1" required>
+                    </div>
+
+                    <div class="dates-row">
+                        <div class="form-group half">
+                            <label>تاريخ إصدار التقرير</label>
+                            <input type="date" id="issue_date" required>
+                        </div>
+                        <div class="form-group half">
+                            <label>وقت الإصدار</label>
+                            <input type="time" id="issue_time" required>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-next" onclick="app.nextStep()">التالي</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Patient Info -->
+                <div class="form-step" id="step-2">
+                    <div class="form-group">
+                        <label>رقم الهوية / الإقامة</label>
+                        <input type="text" id="national_id" placeholder="1xxxxxxxxx" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>اسم المريض (عربي)</label>
+                        <input type="text" id="patient_name_ar" placeholder="الاسم الرباعي" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>اسم المريض (إنجليزي)</label>
+                        <input type="text" id="patient_name_en" placeholder="Full Name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>الجنسية (عربي)</label>
+                        <select id="nationality" required>
+                            <option value="السعودية">السعودية</option>
+                            <option value="مصر">مصر</option>
+                            <option value="سوريا">سوريا</option>
+                            <option value="اليمن">اليمن</option>
+                            <option value="السودان">السودان</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>جهة العمل</label>
+                        <input type="text" id="employer" placeholder="اسم الجهة">
+                    </div>
+
+                    <!-- Escort Fields (Hidden by default) -->
+                    <div id="escort-fields" style="display:none;">
+                        <h3 class="section-subtitle">بيانات المرافق</h3>
+                        <div class="form-group">
+                            <label>اسم المرافق (عربي)</label>
+                            <input type="text" id="escort_name_ar" placeholder="الاسم الرباعي للمرافق">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم المرافق (إنجليزي)</label>
+                            <input type="text" id="escort_name_en" placeholder="Companion Full Name">
+                        </div>
+                        <div class="dates-row">
+                            <div class="form-group half">
+                                <label>صلة القرابة (عربي)</label>
+                                <input type="text" id="relation_ar" placeholder="مثال: ابن، زوجة">
+                            </div>
+                            <div class="form-group half">
+                                <label>صلة القرابة (إنجليزي)</label>
+                                <input type="text" id="relation_en" placeholder="e.g. Son, Wife">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions dual">
+                        <button type="button" class="btn-next" onclick="app.nextStep()">التالي</button>
+                        <button type="button" class="btn-prev" onclick="app.prevStep()">السابق</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Hospital & Doctor -->
+                <div class="form-step" id="step-3">
+                    <div class="form-group">
+                        <label>اسم الممارس/الطبيب (عربي)</label>
+                        <input type="text" id="doctor_name_ar" required>
+                    </div>
+                    <div class="form-group">
+                        <label>اسم الممارس/الطبيب (إنجليزي)</label>
+                        <input type="text" id="doctor_name_en" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>المسمى الوظيفي (عربي)</label>
+                        <input type="text" id="job_title_ar" value="طبيب عام" required>
+                    </div>
+                    <div class="form-group">
+                        <label>المسمى الوظيفي (إنجليزي)</label>
+                        <input type="text" id="job_title_en" value="General" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>المستشفى (عربي)</label>
+                        <input type="text" id="hospital_ar" placeholder="ابحث أو اكتب الاسم..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>المستشفى (إنجليزي)</label>
+                        <input type="text" id="hospital_en" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>نوع المستشفى</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="hospital_type" value="gov" checked onchange="app.toggleLicense()"> حكومي
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="hospital_type" value="private" onchange="app.toggleLicense()"> خاص
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="license-field" style="display:none;">
+                        <label>رقم الترخيص (يظهر تحت اسم المستشفى)</label>
+                        <input type="text" id="license_number" placeholder="رقم ترخيص المستشفى الخاص">
+                    </div>
+
+                    <div class="form-group">
+                        <label>اختر شعار المستشفى (اختياري)</label>
+                        <input type="file" id="hospital_logo" accept="image/png, image/jpeg" class="file-input">
+                        <small style="color:#777; display:block; margin-top:5px; font-size:0.8rem;">يفضل صورة بخلفية شفافة (PNG) بحجم أقل من 2MB</small>
+                    </div>
+
+                    <div class="form-actions dual">
+                        <button type="button" class="btn-next submit-btn" onclick="app.submitForm()">إصدار التقرير</button>
+                        <button type="button" class="btn-prev" onclick="app.prevStep()">السابق</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Loading Screen -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <p id="loading-text">جاري إصدار التقرير...</p>
+        </div>
+    </div>
+    
+    <div id="pdf-container" style="display:none;">
+        <!-- PDF template will be fetched or built dynamically -->
+    </div>
+
+    <!-- Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>

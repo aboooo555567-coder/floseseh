@@ -1,0 +1,16 @@
+{
+  "name": "seha-telegram-bot",
+  "version": "1.0.0",
+  "description": "Seha Sick Leave Generator Telegram Mini App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "auto": "node auto-start.js",
+    "dev": "node auto-start.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "node-telegram-bot-api": "^0.64.0"
+  }
+}
