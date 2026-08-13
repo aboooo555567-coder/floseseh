@@ -90,7 +90,8 @@ const app = {
                         <p>${r.type === 'companion' ? 'مرافقة مريض' : 'إجازة مرضية'} • ${r.issueDate}</p>
                     </div>
                     <div class="report-actions">
-                        <button onclick="app.copyReportId('${r.id}')">📋</button>
+                        <button onclick="app.copyReportId('${r.id}')" title="نسخ رقم التقرير">📋</button>
+                        <button onclick="app.editReport('${r.id}')" title="تعديل التقرير">✏️</button>
                     </div>
                 `;
                 reportsList.appendChild(card);
@@ -139,6 +140,60 @@ const app = {
         
         this.updateWizardUI();
         this.navigate('form');
+        
+        // Auto-fill current date and time
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(now - offset)).toISOString().slice(0, -1);
+        document.getElementById('issue_date').value = localISOTime.split('T')[0];
+        
+        let hours = now.getHours().toString().padStart(2, '0');
+        let minutes = now.getMinutes().toString().padStart(2, '0');
+        document.getElementById('issue_time').value = `${hours}:${minutes}`;
+    },
+
+    syncHospitalEn() {
+        const ar = document.getElementById('hospital_ar').value;
+        const enInput = document.getElementById('hospital_en');
+        const map = {
+            "مستشفى الملك فهد التخصصي": "King Fahad Specialist Hospital",
+            "مستشفى باقدو والدكتور عرفان العام": "Dr. Erfan Bagedo General Hospital",
+            "مدينة الملك فهد الطبية": "King Fahad Medical City",
+            "مستشفى الملك فيصل التخصصي": "King Faisal Specialist Hospital",
+            "مستشفى القوات المسلحة": "Armed Forces Hospital",
+            "مستشفى الدكتور سليمان الحبيب": "Dr. Sulaiman Al Habib Hospital",
+            "المستشفى السعودي الألماني": "Saudi German Hospital"
+        };
+        if (map[ar]) {
+            enInput.value = map[ar];
+        }
+    },
+
+    editReport(id) {
+        const report = this.state.reports.find(r => r.id === id);
+        if(!report || !report.data) {
+            alert('عذراً، بيانات هذا التقرير القديم غير متوفرة للتعديل.');
+            return;
+        }
+        
+        this.startForm(report.type);
+        
+        // Populate fields
+        for (const [key, value] of Object.entries(report.data)) {
+            const el = document.getElementById(key);
+            if(el && key !== 'hospital_type') {
+                el.value = value || '';
+            }
+        }
+        
+        // Radio button
+        if(report.data.hospital_type) {
+            const radio = document.querySelector(`input[name="hospital_type"][value="${report.data.hospital_type}"]`);
+            if(radio) {
+                radio.checked = true;
+                this.toggleLicense();
+            }
+        }
     },
 
     updateWizardUI() {
@@ -237,12 +292,11 @@ const app = {
         return `${ampm} ${hours}:${minutes}`;
     },
 
-    formatDateLabel(dateString) {
-        if(!dateString) return "";
-        const date = new Date(dateString);
+    formatDateLabel(dateStr) {
+        const d = new Date(dateStr);
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        return `${days[date.getDay()]} ,${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+        return ` ${days[d.getDay()]} ,${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
     },
 
     async submitForm() {
@@ -380,7 +434,7 @@ const app = {
             doc: docNameAr,
             pos: jobAr
         });
-        const verifyUrl = `https://seha-sickleave-app.onrender.com/verify.html?${verifyParams.toString()}`;
+        const verifyUrl = `${window.location.origin}/verify.html?${verifyParams.toString()}`;
         new QRCode(document.getElementById('pdf-qrcode'), {
             text: verifyUrl,
             width: 120,
@@ -439,7 +493,31 @@ const app = {
                         id: reportId,
                         patientName: type === 'companion' ? document.getElementById('escort_name_ar').value : pNameAr,
                         type: type,
-                        issueDate: issueDate
+                        issueDate: issueDate,
+                        data: {
+                            admission_date: admission,
+                            discharge_date: discharge,
+                            duration: duration,
+                            issue_date: issueDate,
+                            issue_time: issueTime,
+                            national_id: idNum,
+                            patient_name_ar: pNameAr,
+                            patient_name_en: pNameEn,
+                            nationality: document.getElementById('nationality').value,
+                            employer: employer,
+                            escort_name_ar: document.getElementById('escort_name_ar').value,
+                            escort_name_en: document.getElementById('escort_name_en').value,
+                            relation_ar: document.getElementById('relation_ar').value,
+                            relation_en: document.getElementById('relation_en').value,
+                            doctor_name_ar: docNameAr,
+                            doctor_name_en: docNameEn,
+                            job_title_ar: jobAr,
+                            job_title_en: jobEn,
+                            hospital_ar: hospAr,
+                            hospital_en: hospEn,
+                            hospital_type: document.querySelector('input[name="hospital_type"]:checked').value,
+                            license_number: license
+                        }
                     }
                 })
             });

@@ -194,17 +194,29 @@
                     
                     <div class="form-group">
                         <label>اسم المريض (إنجليزي)</label>
-                        <input type="text" id="patient_name_en" placeholder="Full Name" required>
+                        <input type="text" id="patient_name_en" placeholder="Full Name" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
                         <label>الجنسية (عربي)</label>
                         <select id="nationality" required>
-                            <option value="السعودية">السعودية</option>
+                            <option value="السعودية" selected>السعودية</option>
                             <option value="مصر">مصر</option>
                             <option value="سوريا">سوريا</option>
                             <option value="اليمن">اليمن</option>
                             <option value="السودان">السودان</option>
+                            <option value="الأردن">الأردن</option>
+                            <option value="فلسطين">فلسطين</option>
+                            <option value="المغرب">المغرب</option>
+                            <option value="تونس">تونس</option>
+                            <option value="الجزائر">الجزائر</option>
+                            <option value="لبنان">لبنان</option>
+                            <option value="العراق">العراق</option>
+                            <option value="الهند">الهند</option>
+                            <option value="باكستان">باكستان</option>
+                            <option value="الفلبين">الفلبين</option>
+                            <option value="بنجلاديش">بنجلاديش</option>
+                            <option value="إندونيسيا">إندونيسيا</option>
                             <option value="أخرى">أخرى</option>
                         </select>
                     </div>
@@ -223,7 +235,7 @@
                         </div>
                         <div class="form-group">
                             <label>اسم المرافق (إنجليزي)</label>
-                            <input type="text" id="escort_name_en" placeholder="Companion Full Name">
+                            <input type="text" id="escort_name_en" placeholder="Companion Full Name" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div class="dates-row">
                             <div class="form-group half">
@@ -251,7 +263,7 @@
                     </div>
                     <div class="form-group">
                         <label>اسم الممارس/الطبيب (إنجليزي)</label>
-                        <input type="text" id="doctor_name_en" required>
+                        <input type="text" id="doctor_name_en" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
@@ -265,7 +277,16 @@
 
                     <div class="form-group">
                         <label>المستشفى (عربي)</label>
-                        <input type="text" id="hospital_ar" placeholder="ابحث أو اكتب الاسم..." required>
+                        <input type="text" id="hospital_ar" list="hospitals_ar" placeholder="ابحث أو اكتب الاسم..." required onchange="app.syncHospitalEn()">
+                        <datalist id="hospitals_ar">
+                            <option value="مستشفى الملك فهد التخصصي">
+                            <option value="مستشفى باقدو والدكتور عرفان العام">
+                            <option value="مدينة الملك فهد الطبية">
+                            <option value="مستشفى الملك فيصل التخصصي">
+                            <option value="مستشفى القوات المسلحة">
+                            <option value="مستشفى الدكتور سليمان الحبيب">
+                            <option value="المستشفى السعودي الألماني">
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label>المستشفى (إنجليزي)</label>
