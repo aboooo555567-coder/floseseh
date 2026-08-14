@@ -483,19 +483,13 @@ const app = {
         const originalDir = document.documentElement.dir;
         document.documentElement.dir = 'ltr'; 
 
-        // Make sure images are loaded
-        const imgs = element.querySelectorAll('img');
-        const imgPromises = Array.from(imgs).map(img => {
-            if (img.complete) return Promise.resolve();
-            return new Promise(resolve => {
-                img.onload = resolve;
-                img.onerror = resolve;
-            });
-        });
-        await Promise.all(imgPromises);
+        // Let html2canvas handle images automatically
 
         try {
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false });
+            const canvasPromise = html2canvas(element, { scale: 2, useCORS: true, logging: false });
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Canvas timeout')), 15000));
+            const canvas = await Promise.race([canvasPromise, timeoutPromise]);
+            
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
             
             const { jsPDF } = window.jspdf;
