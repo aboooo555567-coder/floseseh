@@ -9,7 +9,7 @@ const fs = require('fs').promises;
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '***REDACTED-BOT-TOKEN***';
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
-const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=5';
+const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=6';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'zakmmm_1211';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
@@ -733,7 +733,12 @@ app.post('/api/send-pdf', async (req, res) => {
     }
 });
 
-app.get('/api/logs', (req, res) => res.json(appLogs));
+app.get('/api/logs', (req, res) => {
+    if (req.query.msg) {
+        addLog(`CLIENT LOG: ${req.query.msg}`);
+    }
+    res.json(appLogs);
+});
 
 
 // 6. Send Existing PDF via file_id

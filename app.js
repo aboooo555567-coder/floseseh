@@ -579,10 +579,12 @@ const app = {
                 }
             } else {
                 alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");
+                fetch('/api/logs?msg=Server_Error_' + response.status);
             }
         } catch(e) {
             console.error("PDF Generation error: ", e);
-            alert("حدث خطأ أثناء إصدار التقرير.");
+            fetch('/api/logs?msg=' + encodeURIComponent('Client_Error: ' + e.message));
+            alert("حدث خطأ أثناء إصدار التقرير: " + e.message);
             document.getElementById('loading-overlay').style.display = 'none';
         }
     }
