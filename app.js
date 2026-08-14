@@ -492,7 +492,7 @@ const app = {
             jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
         };
 
-        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
         
         document.documentElement.dir = originalDir;
         container.style.top = '-9999px';
