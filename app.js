@@ -564,12 +564,13 @@ const app = {
             if(response.ok) {
                 if(this.tg) {
                     this.tg.showAlert("✅ تم إصدار التقرير وإرساله بنجاح في المحادثة!", () => {
-                        window.location.reload();
+                        this.navigate('dashboard');
+                        document.getElementById('report-form').reset();
                     });
                 } else {
                     alert("✅ تم إرسال التقرير بنجاح!");
                     this.navigate('dashboard');
-                    location.reload();
+                    document.getElementById('report-form').reset();
                 }
             } else {
                 alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");

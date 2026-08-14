@@ -674,16 +674,26 @@ app.delete('/api/report/:chatId/:id', async (req, res) => {
     }
 });
 
+const appLogs = [];
+function addLog(msg) {
+    appLogs.push(`[${new Date().toISOString()}] ${msg}`);
+    if (appLogs.length > 50) appLogs.shift();
+    console.log(msg);
+}
+
 // 5. Send PDF via Telegram
 app.post('/api/send-pdf', async (req, res) => {
     try {
         const { chatId, pdfBase64, filename, reportId } = req.body;
+        addLog(`send-pdf called for chatId: ${chatId}, pdf length: ${pdfBase64 ? pdfBase64.length : 0}`);
         
         if (!chatId || !pdfBase64) {
+            addLog('Missing chatId or pdfBase64');
             return res.status(400).json({ success: false, error: 'Missing chatId or pdf content' });
         }
 
         const pdfBuffer = Buffer.from(pdfBase64.split('base64,')[1], 'base64');
+        addLog(`Buffer created, size: ${pdfBuffer.length} bytes`);
         
         // Send document via Telegram Bot
         const message = await bot.sendDocument(chatId, pdfBuffer, {
@@ -692,6 +702,8 @@ app.post('/api/send-pdf', async (req, res) => {
             filename: filename || 'sickLeaves.pdf',
             contentType: 'application/pdf'
         });
+        
+        addLog(`Telegram sent doc successfully. fileId: ${message.document?.file_id}`);
 
         const fileId = message.document?.file_id;
         
@@ -712,17 +724,20 @@ app.post('/api/send-pdf', async (req, res) => {
                 try {
                     await bot.sendDocument(CHANNEL_ID, fileId);
                 } catch (err) {
-                    console.warn('Could not forward to Telegram Channel:', err.message);
+                    addLog('Could not forward to Telegram Channel: ' + err.message);
                 }
             }
         }
 
         res.json({ success: true, fileId });
     } catch (err) {
-        console.error('Error sending PDF:', err);
+        addLog(`Error sending PDF: ${err.message}`);
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+app.get('/api/logs', (req, res) => res.json(appLogs));
+
 
 // 6. Send Existing PDF via file_id
 app.post('/api/send-existing-pdf', async (req, res) => {
