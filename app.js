@@ -510,11 +510,11 @@ const app = {
                 jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
             };
 
-            const pdfBase64Uri = await new Promise((resolve, reject) => {
+            const pdfBlob = await new Promise((resolve, reject) => {
                 const t = setTimeout(() => reject(new Error('Canvas timeout')), 15000);
-                html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => {
+                html2pdf().set(opt).from(element).outputPdf('blob').then(blob => {
                     clearTimeout(t);
-                    resolve(pdf.output('datauristring'));
+                    resolve(blob);
                 }).catch(err => {
                     clearTimeout(t);
                     reject(err);
@@ -527,18 +527,23 @@ const app = {
             container.style.zIndex = 'auto';
 
             // 4. Send to Backend
-            // Deduct points
-            app.state.points -= 5;
+            const reader = new FileReader();
+            reader.readAsDataURL(pdfBlob);
+            reader.onloadend = async () => {
+                const base64data = reader.result;
+                
+                // Deduct points
+                app.state.points -= 5;
 
-            const response = await fetch('/api/send-pdf', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    chatId: app.state.chatId,
-                    pdfBase64: pdfBase64Uri,
-                    filename: 'sickLeaves.pdf',
+                const response = await fetch('/api/send-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        chatId: app.state.chatId,
+                        pdfBase64: base64data,
+                        filename: 'sickLeaves.pdf',
                     reportId: reportId
                 })
             });
@@ -598,6 +603,7 @@ const app = {
                 alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");
                 fetch('/api/logs?msg=Server_Error_' + response.status);
             }
+        }; // End of reader.onloadend
         } catch(e) {
             document.documentElement.dir = originalDir;
             container.style.top = '-9999px';
