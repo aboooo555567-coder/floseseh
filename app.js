@@ -475,18 +475,11 @@ const app = {
         const element = document.getElementById('pdf-content');
         const container = document.getElementById('pdf-container');
         
-        // Move to body to avoid viewport clipping on mobile
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'absolute';
-        wrapper.style.top = '0';
-        wrapper.style.left = '0';
-        wrapper.style.width = '794px';
-        wrapper.style.zIndex = '-9999';
-        wrapper.style.background = 'white';
-        wrapper.dir = 'ltr';
-        
-        wrapper.appendChild(element);
-        document.body.appendChild(wrapper);
+        // Temporarily bring the container on-screen behind the loading overlay (z-index: 10000)
+        // This ensures html2canvas renders it perfectly without blank screen issues.
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.zIndex = '9999';
 
         const originalDir = document.body.dir;
         document.body.dir = 'ltr'; // Fix html2canvas RTL offset bug
@@ -499,13 +492,12 @@ const app = {
             jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
         };
 
-        const pdfBlob = await html2pdf().set(opt).from(wrapper).outputPdf('blob');
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
         
         document.body.dir = originalDir;
-        
-        // Cleanup
-        container.appendChild(element);
-        document.body.removeChild(wrapper);
+        container.style.top = '-9999px';
+        container.style.left = '-9999px';
+        container.style.zIndex = 'auto';
 
         // 4. Send to Backend
         const reader = new FileReader();
