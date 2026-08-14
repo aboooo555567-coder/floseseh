@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="style.css">
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="app.js?v=8"></script>
     <style>
         /* Logo Auto-Adjust */
         #pdf-hospital-logo {
@@ -403,6 +404,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <!-- Application Logic -->
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=8"></script>
+    <!-- Version Label for debugging -->
+    <script>
+        const vLabel = document.createElement('div');
+        vLabel.style.position = 'fixed';
+        vLabel.style.bottom = '5px';
+        vLabel.style.right = '5px';
+        vLabel.style.color = '#ccc';
+        vLabel.style.fontSize = '10px';
+        vLabel.style.pointerEvents = 'none';
+        vLabel.innerText = 'v8';
+        document.body.appendChild(vLabel);
+    </script>
 </body>
 </html>

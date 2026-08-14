@@ -576,6 +576,10 @@ const app = {
                 fetch('/api/logs?msg=Server_Error_' + response.status);
             }
         } catch(e) {
+            document.documentElement.dir = originalDir;
+            container.style.top = '-9999px';
+            container.style.left = '-9999px';
+            container.style.zIndex = 'auto';
             console.error("PDF Generation error: ", e);
             fetch('/api/logs?msg=' + encodeURIComponent('Client_Error: ' + e.message));
             alert("حدث خطأ أثناء إصدار التقرير: " + e.message);

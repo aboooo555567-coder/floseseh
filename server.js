@@ -221,8 +221,20 @@ const addSubscriptionByUsername = async (username, days) => {
 
 // Initialize Telegram Bot
 // Consider the app to be in production when a proper WEB_APP_URL is provided
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+});
+
 const isProduction = Boolean(WEB_APP_URL) && WEB_APP_URL.startsWith('https://') && !WEB_APP_URL.includes('localhost');
-const bot = new TelegramBot(TOKEN, { polling: !isProduction });
+const bot = new TelegramBot(TOKEN, { 
+    polling: !isProduction,
+    request: {
+        timeout: 30000 // 30 seconds to prevent ConnectTimeoutError crashes
+    }
+});
 
 bot.on('polling_error', (error) => {
     console.error('Telegram polling error:', error.message);
