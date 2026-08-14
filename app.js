@@ -449,18 +449,33 @@ const app = {
 
         // 3. Generate PDF
         const element = document.getElementById('pdf-content');
-        element.style.display = 'block'; // Make it visible for html2pdf
+        const container = document.getElementById('pdf-container');
+        
+        // Move to body to avoid viewport clipping on mobile
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'absolute';
+        wrapper.style.top = '0';
+        wrapper.style.left = '0';
+        wrapper.style.width = '800px';
+        wrapper.style.zIndex = '-9999';
+        wrapper.style.background = 'white';
+        
+        wrapper.appendChild(element);
+        document.body.appendChild(wrapper);
 
         const opt = {
             margin:       0,
             filename:     'sickLeaves.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, windowWidth: 850, width: 800 },
+            html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
 
         const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
-        element.style.display = 'none'; // Hide again
+        
+        // Cleanup
+        container.appendChild(element);
+        document.body.removeChild(wrapper);
 
         // 4. Send to Backend
         const reader = new FileReader();
