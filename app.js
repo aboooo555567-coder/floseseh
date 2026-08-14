@@ -308,7 +308,7 @@ const app = {
         let ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
         hours = hours ? hours : 12; 
-        return `${ampm} ${hours}:${minutes}`;
+        return `${hours}:${minutes} ${ampm}`;
     },
 
     formatDateLabel(dateStr) {

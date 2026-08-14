@@ -216,7 +216,7 @@
 
                     <div class="form-group">
                         <label>الجنسية</label>
-                        <input list="nationalities" id="nationality" placeholder="اختر الجنسية" value="السعودية">
+                        <input type="text" list="nationalities" id="nationality" placeholder="اختر الجنسية" value="السعودية">
                         <datalist id="nationalities">
                             <option value="السعودية"></option>
                             <option value="الإمارات"></option>
@@ -396,6 +396,10 @@
     <div id="pdf-container" style="position: absolute; top: -9999px; left: -9999px; width: 800px;">
         <!-- PDF template will be fetched or built dynamically -->
     </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <!-- Application Logic -->
     <script src="app.js"></script>
