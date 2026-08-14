@@ -8,7 +8,8 @@ const fs = require('fs').promises;
 // Configuration
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '***REDACTED-BOT-TOKEN***';
 const PORT = process.env.PORT || 3000;
-const WEB_APP_URL = (process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com') + '?v=3';
+const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
+const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=4';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'zakmmm_1211';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
@@ -251,7 +252,7 @@ ${subStatusIcon} حالة الاشتراك: ${statusText}
     await bot.sendMessage(chatId, statusMsg, {
         reply_markup: {
             inline_keyboard: [
-                [{ text: '🏥 فتح التطبيق (إنشاء تقرير)', web_app: { url: WEB_APP_URL } }],
+                [{ text: '🏥 فتح التطبيق (إنشاء تقرير)', web_app: { url: WEB_APP_URL_CACHED } }],
                 [{ text: '🛒 متجر الباقات', callback_data: 'packages' }, { text: '🔗 برنامج الإحالات', callback_data: 'referrals' }]
             ]
         }
@@ -280,7 +281,7 @@ const handleStartCommand = async (msg) => {
     await bot.sendMessage(chatId, `⚡ تم تفعيل قائمة الوصول السريع! يمكنك فتح التطبيق فوراً بالضغط على الزر الأزرق أدناه 👇`, {
         reply_markup: {
             keyboard: [
-                [{ text: '📱 فتح واجهات الإدخال (التطبيق) 🚀', web_app: { url: WEB_APP_URL } }],
+                [{ text: '📱 فتح واجهات الإدخال (التطبيق) 🚀', web_app: { url: WEB_APP_URL_CACHED } }],
                 [{ text: '🔗 كسب نقاط (الإحالات)' }, { text: '🛒 متجر الباقات' }],
                 [{ text: '📊 حالة حسابي' }]
             ],
@@ -305,15 +306,11 @@ ${statusIcon} اشتراكك ${statusText}
     await bot.sendMessage(chatId, welcomeText, {
         reply_markup: {
             inline_keyboard: [
-                [{ text: '🏥 فتح التطبيق مباشرة (إنشاء تقرير)', web_app: { url: WEB_APP_URL } }],
-                [{ text: '🌐 فتح في المتصفح الخارجي ↗️', url: WEB_APP_URL }],
-                [
-                    { text: '🔗 كسب نقاط (الإحالات)', callback_data: 'referrals' },
-                    { text: '🛒 متجر الباقات', callback_data: 'packages' }
-                ],
-                [
-                    { text: '📊 حالة حسابي', callback_data: 'mystatus' }
-                ]
+                [{ text: '🏥 فتح التطبيق مباشرة (إنشاء تقرير)', web_app: { url: WEB_APP_URL_CACHED } }],
+                [{ text: 'إصدار تقرير 📄', web_app: { url: WEB_APP_URL_CACHED } }],
+                [{ text: 'دعوة صديق 🎁', callback_data: 'referrals' }],
+                [{ text: 'باقات الاشتراك 💎', callback_data: 'packages' }],
+                [{ text: 'حالة حسابي 📊', callback_data: 'mystatus' }]
             ]
         }
     });
@@ -810,7 +807,7 @@ const configureChatMenuButton = async (targetChatId = null) => {
                 menu_button: {
                     type: 'web_app',
                     text: 'Open',
-                    web_app: { url: WEB_APP_URL }
+                    web_app: { url: WEB_APP_URL_CACHED }
                 }
             };
             if (chatIdVal) {
@@ -905,13 +902,13 @@ app.get('/setup', async (req, res) => {
                 success: true,
                 message: `Webhook and Menu Button configured successfully`,
                 webhookUrl,
-                webAppUrl: WEB_APP_URL
+                webAppUrl: WEB_APP_URL_CACHED
             });
         } else {
             res.json({
                 success: true,
                 message: 'Menu Button configured (local polling mode)',
-                webAppUrl: WEB_APP_URL
+                webAppUrl: WEB_APP_URL_CACHED
             });
         }
     } catch (err) {
