@@ -12,36 +12,53 @@
     <link rel="stylesheet" href="style.css">
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- html2pdf Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* Logo Auto-Adjust */
+        #pdf-hospital-logo {
+            max-height: 80px;
+            max-width: 220px;
+            object-fit: contain;
+        }
+        /* Dashboard layout fix */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
     <div id="app">
         <!-- Dashboard Screen -->
         <section id="dashboard-screen" class="screen active">
             <header class="dashboard-header">
+                <div class="header-right">
+                    <div class="dashboard-logo-frame">
+                        <img src="https://i.ibb.co/60qYxGQ/image-not-found.png" alt="Logo" id="dashboard-logo">
+                    </div>
+                </div>
+
+                <div class="header-center">
+                    <div class="status-badge" id="sub-status-badge">نشط - متبقي 0 يوم</div>
+                    <button class="btn-renew" onclick="app.navigate('packages')">تجديد</button>
+                </div>
+
                 <div class="header-left">
                     <div class="balance-card">
                         <span>رصيدك: <strong id="points-balance-display">0</strong> نقطة</span>
                         <span class="coin-icon">🪙</span>
                     </div>
                 </div>
-
-                <div class="header-center">
-                    <h2>سجل التقارير</h2>
-                    <div class="status-badge" id="sub-status-badge">نشط - متبقي 0 يوم</div>
-                    <button class="btn-renew" onclick="app.navigate('packages')">تجديد</button>
-                </div>
-
-                <div class="header-right">
-                    <div class="dashboard-logo-frame">
-                        <img src="https://i.ibb.co/60qYxGQ/image-not-found.png" alt="Logo" id="dashboard-logo">
-                    </div>
-                </div>
                 <span id="points-balance" style="display:none;">0</span>
             </header>
             
+            <div class="reports-header" style="text-align: center; margin-bottom: 15px; padding: 0 10px;">
+                <h2 style="color: var(--primary-dark); margin-bottom: 10px;">سجل التقارير</h2>
+                <input type="text" id="report-search" placeholder="🔍 بحث باسم المريض أو الهوية..." 
+                    onkeyup="app.searchReports()" 
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: 'Tajawal', sans-serif;">
+            </div>
+
             <main class="reports-list" id="reports-list">
                 <!-- Report Cards will be injected here -->
             </main>
@@ -194,31 +211,36 @@
                     
                     <div class="form-group">
                         <label>اسم المريض (إنجليزي)</label>
-                        <input type="text" id="patient_name_en" placeholder="Full Name" oninput="this.value = this.value.toUpperCase()" required>
+                        <input type="text" id="patient_name_en" placeholder="مثال: AHMED MOHAMMED" dir="ltr" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
-                        <label>الجنسية (عربي)</label>
-                        <select id="nationality" required>
-                            <option value="السعودية" selected>السعودية</option>
-                            <option value="مصر">مصر</option>
-                            <option value="سوريا">سوريا</option>
-                            <option value="اليمن">اليمن</option>
-                            <option value="السودان">السودان</option>
-                            <option value="الأردن">الأردن</option>
-                            <option value="فلسطين">فلسطين</option>
-                            <option value="المغرب">المغرب</option>
-                            <option value="تونس">تونس</option>
-                            <option value="الجزائر">الجزائر</option>
-                            <option value="لبنان">لبنان</option>
-                            <option value="العراق">العراق</option>
-                            <option value="الهند">الهند</option>
-                            <option value="باكستان">باكستان</option>
-                            <option value="الفلبين">الفلبين</option>
-                            <option value="بنجلاديش">بنجلاديش</option>
-                            <option value="إندونيسيا">إندونيسيا</option>
-                            <option value="أخرى">أخرى</option>
-                        </select>
+                        <label>الجنسية</label>
+                        <input list="nationalities" id="nationality" placeholder="اختر الجنسية" value="السعودية">
+                        <datalist id="nationalities">
+                            <option value="السعودية"></option>
+                            <option value="مصر"></option>
+                            <option value="اليمن"></option>
+                            <option value="سوريا"></option>
+                            <option value="الأردن"></option>
+                            <option value="السودان"></option>
+                            <option value="الهند"></option>
+                            <option value="باكستان"></option>
+                            <option value="الفلبين"></option>
+                            <option value="بنجلاديش"></option>
+                            <option value="إندونيسيا"></option>
+                            <option value="المغرب"></option>
+                            <option value="الجزائر"></option>
+                            <option value="تونس"></option>
+                            <option value="لبنان"></option>
+                            <option value="العراق"></option>
+                            <option value="فلسطين"></option>
+                            <option value="الكويت"></option>
+                            <option value="الإمارات"></option>
+                            <option value="عمان"></option>
+                            <option value="البحرين"></option>
+                            <option value="قطر"></option>
+                        </datalist>
                     </div>
                     
                     <div class="form-group">
@@ -235,12 +257,12 @@
                         </div>
                         <div class="form-group">
                             <label>اسم المرافق (إنجليزي)</label>
-                            <input type="text" id="escort_name_en" placeholder="Companion Full Name" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="escort_name_en" placeholder="مثال: MOHAMMED AYED" dir="ltr" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div class="dates-row">
                             <div class="form-group half">
                                 <label>صلة القرابة (عربي)</label>
-                                <input type="text" id="relation_ar" placeholder="مثال: ابن، زوجة">
+                                <input type="text" id="national_id" placeholder="مثال: 1048082943" dir="ltr">
                             </div>
                             <div class="form-group half">
                                 <label>صلة القرابة (إنجليزي)</label>
@@ -263,7 +285,7 @@
                     </div>
                     <div class="form-group">
                         <label>اسم الممارس/الطبيب (إنجليزي)</label>
-                        <input type="text" id="doctor_name_en" oninput="this.value = this.value.toUpperCase()" required>
+                        <input type="text" id="doctor_name_en" dir="ltr" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
@@ -314,6 +336,11 @@
                         <label>اختر شعار المستشفى (اختياري)</label>
                         <input type="file" id="hospital_logo" accept="image/png, image/jpeg" class="file-input">
                         <small style="color:#777; display:block; margin-top:5px; font-size:0.8rem;">يفضل صورة بخلفية شفافة (PNG) بحجم أقل من 2MB</small>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="include_qr" checked style="width: auto;">
+                        <label for="include_qr" style="margin: 0;">تضمين الباركود (QR Code) في التقرير</label>
                     </div>
 
                     <div class="form-actions dual">

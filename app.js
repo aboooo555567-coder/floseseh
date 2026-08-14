@@ -75,13 +75,28 @@ const app = {
             subBadge.innerText = 'غير نشط - متبقي 0 يوم';
             subBadge.style.color = '#e74c3c';
         }
+        
+        this.renderReports(this.state.reports);
+    },
 
+    searchReports() {
+        const term = document.getElementById('report-search').value.toLowerCase();
+        const filtered = this.state.reports.filter(r => {
+            const data = r.data || {};
+            const name = (r.patientName || "").toLowerCase();
+            const nid = (data.national_id || "").toLowerCase();
+            return name.includes(term) || nid.includes(term);
+        });
+        this.renderReports(filtered);
+    },
+
+    renderReports(reportsToRender) {
         const reportsList = document.getElementById('reports-list');
         reportsList.innerHTML = '';
-        if (this.state.reports.length === 0) {
-            reportsList.innerHTML = '<p style="text-align:center; color:#777; margin-top:30px;">لا توجد تقارير سابقة</p>';
+        if (reportsToRender.length === 0) {
+            reportsList.innerHTML = '<p style="text-align:center; color:#777; margin-top:30px;">لا توجد تقارير مطابقة</p>';
         } else {
-            this.state.reports.forEach(r => {
+            reportsToRender.forEach(r => {
                 const card = document.createElement('div');
                 card.className = 'report-card';
                 card.innerHTML = `
@@ -145,7 +160,11 @@ const app = {
         const now = new Date();
         const offset = now.getTimezoneOffset() * 60000;
         const localISOTime = (new Date(now - offset)).toISOString().slice(0, -1);
-        document.getElementById('issue_date').value = localISOTime.split('T')[0];
+        const todayStr = localISOTime.split('T')[0];
+        
+        document.getElementById('issue_date').value = todayStr;
+        document.getElementById('admission_date').value = todayStr;
+        document.getElementById('discharge_date').value = todayStr;
         
         let hours = now.getHours().toString().padStart(2, '0');
         let minutes = now.getMinutes().toString().padStart(2, '0');
@@ -421,8 +440,10 @@ const app = {
             document.getElementById('pdf-doc-label-ar').innerText = "اسم الممارس";
         }
 
-        // Generate QR Code
+        // Generate QR Code Optional
         document.getElementById('pdf-qrcode').innerHTML = "";
+        const includeQR = document.getElementById('include_qr') ? document.getElementById('include_qr').checked : true;
+        
         const verifyParams = new URLSearchParams({
             id: reportId,
             nid: idNum,
@@ -435,14 +456,17 @@ const app = {
             pos: jobAr
         });
         const verifyUrl = `${window.location.origin}/verify.html?${verifyParams.toString()}`;
-        new QRCode(document.getElementById('pdf-qrcode'), {
-            text: verifyUrl,
-            width: 120,
-            height: 120,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.L
-        });
+        
+        if (includeQR) {
+            new QRCode(document.getElementById('pdf-qrcode'), {
+                text: verifyUrl,
+                width: 100,
+                height: 100,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.L
+            });
+        }
 
         document.getElementById('pdf-time').innerText = this.formatAMPM(issueTime);
         document.getElementById('pdf-day-date').innerText = this.formatDateLabel(issueDate);
@@ -456,7 +480,7 @@ const app = {
         wrapper.style.position = 'absolute';
         wrapper.style.top = '0';
         wrapper.style.left = '0';
-        wrapper.style.width = '800px';
+        wrapper.style.width = '794px';
         wrapper.style.zIndex = '-9999';
         wrapper.style.background = 'white';
         
@@ -467,8 +491,8 @@ const app = {
             margin:       0,
             filename:     'sickLeaves.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, width: 794 },
+            jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
         };
 
         const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
