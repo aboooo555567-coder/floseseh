@@ -481,8 +481,8 @@ const app = {
         container.style.left = '0';
         container.style.zIndex = '9999';
 
-        const originalDir = document.body.dir;
-        document.body.dir = 'ltr'; // Fix html2canvas RTL offset bug
+        const originalDir = document.documentElement.dir;
+        document.documentElement.dir = 'ltr'; // Fix html2canvas RTL offset bug at root level
 
         const opt = {
             margin:       0,
@@ -494,7 +494,7 @@ const app = {
 
         const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
         
-        document.body.dir = originalDir;
+        document.documentElement.dir = originalDir;
         container.style.top = '-9999px';
         container.style.left = '-9999px';
         container.style.zIndex = 'auto';
