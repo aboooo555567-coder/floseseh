@@ -475,24 +475,33 @@ const app = {
         const element = document.getElementById('pdf-content');
         const container = document.getElementById('pdf-container');
         
-        // Temporarily bring the container on-screen behind the loading overlay (z-index: 10000)
-        // This ensures html2canvas renders it perfectly without blank screen issues.
+        // Temporarily bring the container on-screen behind the loading overlay
         container.style.top = '0';
         container.style.left = '0';
         container.style.zIndex = '9999';
 
         const originalDir = document.documentElement.dir;
-        document.documentElement.dir = 'ltr'; // Fix html2canvas RTL offset bug at root level
+        document.documentElement.dir = 'ltr'; 
 
-        const opt = {
-            margin:       0,
-            filename:     'sickLeaves.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, width: 794, x: 0, y: 0, scrollX: 0, scrollY: 0 },
-            jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
-        };
+        // Make sure images are loaded
+        const imgs = element.querySelectorAll('img');
+        const imgPromises = Array.from(imgs).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve;
+            });
+        });
+        await Promise.all(imgPromises);
 
-        html2pdf().set(opt).from(element).toPdf().get('pdf').then(async function (pdf) {
+        try {
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false });
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'px', [794, 1123]);
+            
+            pdf.addImage(imgData, 'JPEG', 0, 0, 794, 1123);
             const pdfBase64Uri = pdf.output('datauristring');
             
             document.documentElement.dir = originalDir;
@@ -571,11 +580,11 @@ const app = {
             } else {
                 alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");
             }
-        }).catch(e => {
+        } catch(e) {
             console.error("PDF Generation error: ", e);
             alert("حدث خطأ أثناء إصدار التقرير.");
             document.getElementById('loading-overlay').style.display = 'none';
-        });
+        }
     }
 };
 
