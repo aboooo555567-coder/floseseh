@@ -502,17 +502,24 @@ const app = {
         // Let html2canvas handle images automatically
 
         try {
-            const canvasPromise = html2canvas(element, { scale: 2, useCORS: true, logging: false });
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Canvas timeout')), 15000));
-            const canvas = await Promise.race([canvasPromise, timeoutPromise]);
-            
-            const imgData = canvas.toDataURL('image/jpeg', 1.0);
-            
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'px', [794, 1123]);
-            
-            pdf.addImage(imgData, 'JPEG', 0, 0, 794, 1123);
-            const pdfBase64Uri = pdf.output('datauristring');
+            const opt = {
+                margin:       0,
+                filename:     'sickLeaves.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, width: 794, x: 0, y: 0, scrollX: 0, scrollY: 0 },
+                jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
+            };
+
+            const pdfBase64Uri = await new Promise((resolve, reject) => {
+                const t = setTimeout(() => reject(new Error('Canvas timeout')), 15000);
+                html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => {
+                    clearTimeout(t);
+                    resolve(pdf.output('datauristring'));
+                }).catch(err => {
+                    clearTimeout(t);
+                    reject(err);
+                });
+            });
             
             document.documentElement.dir = originalDir;
             container.style.top = '-9999px';
