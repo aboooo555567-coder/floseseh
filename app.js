@@ -492,7 +492,7 @@ const app = {
             jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
         };
 
-        const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+        const pdfBase64Uri = await html2pdf().set(opt).from(element).output('datauristring');
         
         document.documentElement.dir = originalDir;
         container.style.top = '-9999px';
@@ -500,26 +500,21 @@ const app = {
         container.style.zIndex = 'auto';
 
         // 4. Send to Backend
-        const reader = new FileReader();
-        reader.readAsDataURL(pdfBlob);
-        reader.onloadend = async () => {
-            const base64data = reader.result;
-            
-            // Deduct points
-            this.state.points -= 5;
+        // Deduct points
+        this.state.points -= 5;
 
-            const response = await fetch('/api/send-pdf', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    chatId: this.state.chatId,
-                    pdfBase64: base64data,
-                    filename: 'sickLeaves.pdf',
-                    reportId: reportId
-                })
-            });
+        const response = await fetch('/api/send-pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chatId: this.state.chatId,
+                pdfBase64: pdfBase64Uri,
+                filename: 'sickLeaves.pdf',
+                reportId: reportId
+            })
+        });
 
             // Also save report data
             await fetch(`/api/report/${this.state.chatId}`, {
@@ -575,7 +570,6 @@ const app = {
             } else {
                 alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");
             }
-        };
     }
 };
 
