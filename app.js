@@ -483,19 +483,25 @@ const app = {
         wrapper.style.width = '794px';
         wrapper.style.zIndex = '-9999';
         wrapper.style.background = 'white';
+        wrapper.dir = 'ltr';
         
         wrapper.appendChild(element);
         document.body.appendChild(wrapper);
+
+        const originalDir = document.body.dir;
+        document.body.dir = 'ltr'; // Fix html2canvas RTL offset bug
 
         const opt = {
             margin:       0,
             filename:     'sickLeaves.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, width: 794 },
+            html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, width: 794, x: 0, y: 0, scrollX: 0, scrollY: 0 },
             jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
         };
 
-        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const pdfBlob = await html2pdf().set(opt).from(wrapper).outputPdf('blob');
+        
+        document.body.dir = originalDir;
         
         // Cleanup
         container.appendChild(element);
