@@ -8,7 +8,7 @@ const app = {
         reports: [],
         currentStep: 1,
         leaveType: 'sickleave', // 'sickleave' or 'companion'
-        hospitalLogoUrl: 'https://i.ibb.co/L5k6nN4/moh-logo.png' // Default MOH logo
+        hospitalLogoUrl: './الشعارات/Saudi_Ministry_of_Health.JPG' // Default MOH logo
     },
 
     async init() {
