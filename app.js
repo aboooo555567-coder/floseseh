@@ -510,16 +510,11 @@ const app = {
                 jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
             };
 
-            const pdfBlob = await new Promise((resolve, reject) => {
-                const t = setTimeout(() => reject(new Error('Canvas timeout')), 15000);
-                html2pdf().set(opt).from(element).outputPdf('blob').then(blob => {
-                    clearTimeout(t);
-                    resolve(blob);
-                }).catch(err => {
-                    clearTimeout(t);
-                    reject(err);
-                });
-            });
+            const pdfPromise = (async () => {
+                return await html2pdf().set(opt).from(element).outputPdf('blob');
+            })();
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Canvas timeout')), 15000));
+            const pdfBlob = await Promise.race([pdfPromise, timeoutPromise]);
             
             document.documentElement.dir = originalDir;
             container.style.top = '-9999px';
