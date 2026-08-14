@@ -432,6 +432,62 @@ ${subStatusIcon} الاشتراك الشهري: ${statusText}
     console.log(`Telegram bot message received: "${msg.text}" from ${msg.from?.username || msg.from?.first_name}`);
 });
 
+bot.on('photo', async (msg) => {
+    const chatId = msg.chat.id.toString();
+    const photo = msg.photo[msg.photo.length - 1]; // get highest resolution
+    const fileId = photo.file_id;
+    
+    const inlineKeyboard = {
+        inline_keyboard: [
+            [{ text: "تعيين كشعار وزارة الصحة (MoH)", callback_data: `setlogo_moh_${fileId}` }],
+            [{ text: "تعيين كشعار المستشفى", callback_data: `setlogo_hosp_${fileId}` }],
+            [{ text: "إلغاء", callback_data: "cancel_logo" }]
+        ]
+    };
+    
+    await bot.sendMessage(chatId, "ماذا تريد أن تفعل بهذه الصورة؟", { reply_markup: inlineKeyboard });
+});
+
+bot.on('callback_query', async (query) => {
+    const chatId = query.message.chat.id.toString();
+    const data = query.data;
+    
+    if (data === "cancel_logo") {
+        await bot.deleteMessage(chatId, query.message.message_id);
+        return;
+    }
+    
+    if (data.startsWith('setlogo_')) {
+        const parts = data.split('_');
+        const type = parts[1]; // moh or hosp
+        const fileId = parts.slice(2).join('_');
+        
+        try {
+            const fileLink = await bot.getFileLink(fileId);
+            
+            const subs = await loadLocalSubscriptions();
+            if (!subs.subscriptions[chatId]) {
+                subs.subscriptions[chatId] = { points: 0, subscriptionDays: 0, reports: [] };
+            }
+            
+            if (type === 'moh') {
+                subs.subscriptions[chatId].mohLogo = fileLink;
+                await bot.answerCallbackQuery(query.id, { text: "تم تعيين شعار وزارة الصحة بنجاح ✅" });
+            } else if (type === 'hosp') {
+                subs.subscriptions[chatId].hospitalLogo = fileLink;
+                await bot.answerCallbackQuery(query.id, { text: "تم تعيين شعار المستشفى بنجاح ✅" });
+            }
+            
+            await saveLocalSubscriptions(subs);
+            await bot.deleteMessage(chatId, query.message.message_id);
+            await bot.sendMessage(chatId, "تم حفظ الشعار في حسابك بنجاح! سيتم استخدامه في التقارير القادمة. ✅\nيرجى إعادة فتح التطبيق لتحديث الشعارات.");
+        } catch (e) {
+            console.error(e);
+            await bot.answerCallbackQuery(query.id, { text: "حدث خطأ أثناء حفظ الشعار ❌" });
+        }
+    }
+});
+
 // Helper: Send Referral Statistics & Link
 const sendReferralMessage = async (chatId, username) => {
     const user = await findSubscription(chatId, username);

@@ -58,9 +58,11 @@ const app = {
         const res = await fetch(`/api/user/${this.state.chatId}`);
         if (res.ok) {
             const data = await res.json();
-            this.state.points = data.points;
-            this.state.subscriptionDays = data.subscriptionDays;
-            this.state.reports = data.reports || [];
+            this.state.points = data.user?.points || data.points || 0;
+            this.state.subscriptionDays = data.user?.subscriptionDays || data.subscriptionDays || 0;
+            this.state.reports = data.reports || data.user?.reports || [];
+            if (data.user?.mohLogo) this.state.mohLogoUrl = data.user.mohLogo;
+            if (data.user?.hospitalLogo) this.state.hospitalLogoUrl = data.user.hospitalLogo;
             this.updateDashboardUI();
         }
     },
@@ -407,6 +409,20 @@ const app = {
         }
         
         document.getElementById('pdf-hospital-logo').src = this.state.hospitalLogoUrl;
+        
+        if (this.state.mohLogoUrl) {
+            const mohContainer = document.getElementById('pdf-moh-logo-container');
+            const mohImg = document.getElementById('pdf-moh-logo');
+            if (mohContainer && mohImg) {
+                mohContainer.style.display = 'block';
+                mohImg.src = this.state.mohLogoUrl;
+            }
+        } else {
+            const mohContainer = document.getElementById('pdf-moh-logo-container');
+            if (mohContainer) {
+                mohContainer.style.display = 'none';
+            }
+        }
 
         // Type specific adjustments
         if (type === 'companion') {
