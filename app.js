@@ -492,32 +492,33 @@ const app = {
             jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
         };
 
-        const pdfBase64Uri = await html2pdf().set(opt).from(element).output('datauristring');
-        
-        document.documentElement.dir = originalDir;
-        container.style.top = '-9999px';
-        container.style.left = '-9999px';
-        container.style.zIndex = 'auto';
+        html2pdf().set(opt).from(element).toPdf().get('pdf').then(async function (pdf) {
+            const pdfBase64Uri = pdf.output('datauristring');
+            
+            document.documentElement.dir = originalDir;
+            container.style.top = '-9999px';
+            container.style.left = '-9999px';
+            container.style.zIndex = 'auto';
 
-        // 4. Send to Backend
-        // Deduct points
-        this.state.points -= 5;
+            // 4. Send to Backend
+            // Deduct points
+            app.state.points -= 5;
 
-        const response = await fetch('/api/send-pdf', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                chatId: this.state.chatId,
-                pdfBase64: pdfBase64Uri,
-                filename: 'sickLeaves.pdf',
-                reportId: reportId
-            })
-        });
+            const response = await fetch('/api/send-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chatId: app.state.chatId,
+                    pdfBase64: pdfBase64Uri,
+                    filename: 'sickLeaves.pdf',
+                    reportId: reportId
+                })
+            });
 
             // Also save report data
-            await fetch(`/api/report/${this.state.chatId}`, {
+            await fetch(`/api/report/${app.state.chatId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -557,19 +558,24 @@ const app = {
             document.getElementById('loading-overlay').style.display = 'none';
 
             if(response.ok) {
-                if(this.tg) {
-                    this.tg.showAlert("✅ تم إصدار التقرير وإرساله بنجاح في المحادثة!", () => {
-                        this.navigate('dashboard');
+                if(app.tg) {
+                    app.tg.showAlert("✅ تم إصدار التقرير وإرساله بنجاح في المحادثة!", () => {
+                        app.navigate('dashboard');
                         document.getElementById('report-form').reset();
                     });
                 } else {
                     alert("✅ تم إرسال التقرير بنجاح!");
-                    this.navigate('dashboard');
+                    app.navigate('dashboard');
                     document.getElementById('report-form').reset();
                 }
             } else {
                 alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");
             }
+        }).catch(e => {
+            console.error("PDF Generation error: ", e);
+            alert("حدث خطأ أثناء إصدار التقرير.");
+            document.getElementById('loading-overlay').style.display = 'none';
+        });
     }
 };
 
