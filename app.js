@@ -563,8 +563,9 @@ const app = {
 
             if(response.ok) {
                 if(this.tg) {
-                    this.tg.showAlert("✅ تم إصدار التقرير وإرساله بنجاح في المحادثة!");
-                    this.tg.close();
+                    this.tg.showAlert("✅ تم إصدار التقرير وإرساله بنجاح في المحادثة!", () => {
+                        window.location.reload();
+                    });
                 } else {
                     alert("✅ تم إرسال التقرير بنجاح!");
                     this.navigate('dashboard');
