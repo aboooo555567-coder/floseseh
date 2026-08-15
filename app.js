@@ -475,8 +475,8 @@ const app = {
 
         // Type specific adjustments
         if (type === 'companion') {
-            document.getElementById('pdf-title-ar').innerText = "تقرير مرافقة مريض";
-            document.getElementById('pdf-title-en').innerText = "Patient Companion Report";
+            if(document.getElementById('pdf-title-ar')) document.getElementById('pdf-title-ar').innerText = "تقرير مرافق مريض";
+            if(document.getElementById('pdf-title-en')) document.getElementById('pdf-title-en').innerText = "Patient Companion Report";
             
             document.getElementById('pdf-name-label-en').innerText = "Companion Name";
             document.getElementById('pdf-name-label-ar').innerText = "اسم المرافق";
@@ -492,8 +492,8 @@ const app = {
             document.getElementById('pdf-doc-label-en').innerText = "Physician Name";
             document.getElementById('pdf-doc-label-ar').innerText = "اسم الطبيب المعالج";
         } else {
-            document.getElementById('pdf-title-ar').innerText = "تقرير إجازة مرضية";
-            document.getElementById('pdf-title-en').innerText = "Sick Leave Report";
+            if(document.getElementById('pdf-title-ar')) document.getElementById('pdf-title-ar').innerText = "تقرير إجازة مرضية";
+            if(document.getElementById('pdf-title-en')) document.getElementById('pdf-title-en').innerText = "Sick Leave Report";
             
             document.getElementById('pdf-name-label-en').innerText = "Name";
             document.getElementById('pdf-name-label-ar').innerText = "الاسم";
