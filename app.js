@@ -11,6 +11,55 @@ const app = {
         hospitalLogoUrl: './الشعارات/Saudi_Ministry_of_Health.JPG' // Default MOH logo
     },
 
+    currentDropdown: null,
+    dropdownData: {
+        nationality: [
+            "السعودية", "الإمارات", "البحرين", "الكويت", "عمان", "قطر", "اليمن", "الأردن", "سوريا", "لبنان", "فلسطين", "العراق", "مصر", "السودان", "ليبيا", "تونس", "الجزائر", "المغرب", "موريتانيا", "الصومال", "جيبوتي", "جزر القمر", "الهند", "باكستان", "بنجلاديش", "أفغانستان", "إندونيسيا", "ماليزيا", "الفلبين", "سريلانكا", "نيبال", "تركيا", "إيران", "الصين", "اليابان", "كوريا الجنوبية", "روسيا", "الولايات المتحدة", "بريطانيا", "فرنسا", "ألمانيا", "إيطاليا", "إسبانيا", "كندا", "أستراليا", "البرازيل", "الأرجنتين", "المكسيك", "جنوب أفريقيا", "نيجيريا", "إثيوبيا", "كينيا", "أوغندا", "تشاد", "النيجر", "مالي", "السنغال"
+        ],
+        hospital: [
+            "مستشفى الملك فهد التخصصي", "مستشفى باقدو والدكتور عرفان العام", "مدينة الملك فهد الطبية", "مستشفى الملك فيصل التخصصي", "مستشفى القوات المسلحة", "مستشفى الدكتور سليمان الحبيب", "المستشفى السعودي الألماني"
+        ]
+    },
+
+    openDropdown(type) {
+        this.currentDropdown = type;
+        const overlay = document.getElementById('custom-select-overlay');
+        const input = document.getElementById('custom-select-input');
+        input.value = '';
+        overlay.classList.add('active');
+        this.renderDropdownList(this.dropdownData[type]);
+        input.focus();
+    },
+
+    closeDropdown() {
+        document.getElementById('custom-select-overlay').classList.remove('active');
+        this.currentDropdown = null;
+    },
+
+    renderDropdownList(items) {
+        const list = document.getElementById('custom-select-list');
+        list.innerHTML = '';
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'custom-select-item';
+            div.innerText = item;
+            div.onclick = () => {
+                const targetInput = document.getElementById(this.currentDropdown === 'hospital' ? 'hospital_ar' : 'nationality');
+                targetInput.value = item;
+                if(this.currentDropdown === 'hospital') this.syncHospitalEn();
+                this.closeDropdown();
+            };
+            list.appendChild(div);
+        });
+    },
+
+    filterCustomSelect() {
+        if(!this.currentDropdown) return;
+        const query = document.getElementById('custom-select-input').value.toLowerCase();
+        const filtered = this.dropdownData[this.currentDropdown].filter(item => item.toLowerCase().includes(query));
+        this.renderDropdownList(filtered);
+    },
+
     async init() {
         if (this.tg) {
             this.tg.expand();
@@ -584,16 +633,8 @@ const app = {
             document.getElementById('loading-overlay').style.display = 'none';
 
             if(response.ok) {
-                if(app.tg) {
-                    app.tg.showAlert("✅ تم إصدار التقرير وإرساله بنجاح في المحادثة!", () => {
-                        app.navigate('dashboard');
-                        document.getElementById('report-form').reset();
-                    });
-                } else {
-                    alert("✅ تم إرسال التقرير بنجاح!");
-                    app.navigate('dashboard');
-                    document.getElementById('report-form').reset();
-                }
+                document.getElementById('report-form').reset();
+                app.navigate('success');
             } else {
                 alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");
                 fetch('/api/logs?msg=Server_Error_' + response.status);
@@ -608,6 +649,14 @@ const app = {
             fetch('/api/logs?msg=' + encodeURIComponent('Client_Error: ' + e.message));
             alert("حدث خطأ أثناء إصدار التقرير: " + e.message);
             document.getElementById('loading-overlay').style.display = 'none';
+        }
+    },
+
+    closeApp() {
+        if(this.tg) {
+            this.tg.close();
+        } else {
+            window.close();
         }
     }
 };

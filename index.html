@@ -217,66 +217,11 @@
 
                     <div class="form-group">
                         <label>الجنسية</label>
-                        <input type="text" list="nationalities" id="nationality" placeholder="اختر الجنسية" value="السعودية">
-                        <datalist id="nationalities">
-                            <option value="السعودية"></option>
-                            <option value="الإمارات"></option>
-                            <option value="البحرين"></option>
-                            <option value="الكويت"></option>
-                            <option value="عمان"></option>
-                            <option value="قطر"></option>
-                            <option value="اليمن"></option>
-                            <option value="الأردن"></option>
-                            <option value="سوريا"></option>
-                            <option value="لبنان"></option>
-                            <option value="فلسطين"></option>
-                            <option value="العراق"></option>
-                            <option value="مصر"></option>
-                            <option value="السودان"></option>
-                            <option value="ليبيا"></option>
-                            <option value="تونس"></option>
-                            <option value="الجزائر"></option>
-                            <option value="المغرب"></option>
-                            <option value="موريتانيا"></option>
-                            <option value="الصومال"></option>
-                            <option value="جيبوتي"></option>
-                            <option value="جزر القمر"></option>
-                            <option value="الهند"></option>
-                            <option value="باكستان"></option>
-                            <option value="بنجلاديش"></option>
-                            <option value="أفغانستان"></option>
-                            <option value="إندونيسيا"></option>
-                            <option value="ماليزيا"></option>
-                            <option value="الفلبين"></option>
-                            <option value="سريلانكا"></option>
-                            <option value="نيبال"></option>
-                            <option value="تركيا"></option>
-                            <option value="إيران"></option>
-                            <option value="الصين"></option>
-                            <option value="اليابان"></option>
-                            <option value="كوريا الجنوبية"></option>
-                            <option value="روسيا"></option>
-                            <option value="الولايات المتحدة"></option>
-                            <option value="بريطانيا"></option>
-                            <option value="فرنسا"></option>
-                            <option value="ألمانيا"></option>
-                            <option value="إيطاليا"></option>
-                            <option value="إسبانيا"></option>
-                            <option value="كندا"></option>
-                            <option value="أستراليا"></option>
-                            <option value="البرازيل"></option>
-                            <option value="الأرجنتين"></option>
-                            <option value="المكسيك"></option>
-                            <option value="جنوب أفريقيا"></option>
-                            <option value="نيجيريا"></option>
-                            <option value="إثيوبيا"></option>
-                            <option value="كينيا"></option>
-                            <option value="أوغندا"></option>
-                            <option value="تشاد"></option>
-                            <option value="النيجر"></option>
-                            <option value="مالي"></option>
-                            <option value="السنغال"></option>
-                        </datalist>
+                        <div class="dropdown-wrapper">
+                            <input type="text" id="nationality" placeholder="اختر الجنسية" value="السعودية" readonly onclick="app.openDropdown('nationality')">
+                            <span class="dropdown-icon" onclick="app.openDropdown('nationality')">▼</span>
+                        </div>
+
                     </div>
                     
                     <div class="form-group">
@@ -335,16 +280,10 @@
 
                     <div class="form-group">
                         <label>المستشفى (عربي)</label>
-                        <input type="text" id="hospital_ar" list="hospitals_ar" placeholder="ابحث أو اكتب الاسم..." required onchange="app.syncHospitalEn()">
-                        <datalist id="hospitals_ar">
-                            <option value="مستشفى الملك فهد التخصصي">
-                            <option value="مستشفى باقدو والدكتور عرفان العام">
-                            <option value="مدينة الملك فهد الطبية">
-                            <option value="مستشفى الملك فيصل التخصصي">
-                            <option value="مستشفى القوات المسلحة">
-                            <option value="مستشفى الدكتور سليمان الحبيب">
-                            <option value="المستشفى السعودي الألماني">
-                        </datalist>
+                        <div class="dropdown-wrapper">
+                            <input type="text" id="hospital_ar" placeholder="ابحث أو اكتب الاسم..." required readonly onclick="app.openDropdown('hospital')">
+                            <span class="dropdown-icon" onclick="app.openDropdown('hospital')">▼</span>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>المستشفى (إنجليزي)</label>
@@ -387,6 +326,38 @@
             </form>
         </section>
 
+        <!-- Success Screen -->
+        <section id="success-screen" class="screen">
+            <header class="app-header" style="justify-content: flex-end; padding-left: 20px;">
+                <button class="btn-back" style="font-size: 20px; font-weight: bold; background: none; border: none; color: #333;" onclick="app.closeApp()">⌄</button>
+            </header>
+            <main style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; text-align: center; padding: 20px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #10b981; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h1 style="color: #111; font-size: 28px; font-weight: bold; margin-bottom: 10px;">تم بنجاح!</h1>
+                <p style="color: #666; font-size: 16px; margin-bottom: 30px;">تم إصدار التقرير وإرساله إليك في المحادثة</p>
+                
+                <button class="submit-btn" style="width: 100%; border-radius: 8px; margin-bottom: 10px;" onclick="app.closeApp()">إغلاق التطبيق</button>
+                <button style="width: 100%; padding: 14px; border-radius: 8px; background: white; border: 1px solid #149a8d; color: #149a8d; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 16px;" onclick="app.navigate('dashboard')">العودة للرئيسية</button>
+            </main>
+        </section>
+
+        <!-- Custom Select Overlay -->
+        <div id="custom-select-overlay" class="custom-select-overlay">
+            <div class="custom-select-content">
+                <div class="custom-select-search-bar">
+                    <input type="text" id="custom-select-input" placeholder="ابحث عن..." oninput="app.filterCustomSelect()">
+                    <button class="custom-select-close" onclick="app.closeDropdown()">×</button>
+                </div>
+                <div class="custom-select-list" id="custom-select-list">
+                    <!-- options injected here -->
+                </div>
+            </div>
+        </div>
+
         <!-- Loading Screen -->
         <div id="loading-overlay" class="loading-overlay">
             <div class="spinner"></div>
@@ -403,7 +374,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <!-- Application Logic -->
-    <script src="app.js?v=12"></script>
+    <script src="app.js?v=13"></script>
     <!-- Version Label for debugging -->
     <script>
         const vLabel = document.createElement('div');
@@ -413,7 +384,7 @@
         vLabel.style.color = '#ccc';
         vLabel.style.fontSize = '10px';
         vLabel.style.pointerEvents = 'none';
-        vLabel.innerText = 'v9';
+        vLabel.innerText = 'v13';
         document.body.appendChild(vLabel);
     </script>
 </body>
