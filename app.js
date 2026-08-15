@@ -340,8 +340,10 @@ const app = {
     getHijriDate(dateString) {
         if(!dateString) return "";
         const date = new Date(dateString);
-        return new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
-            day: '2-digit', month: '2-digit', year: 'numeric'
+        return new Intl.DateTimeFormat('en-GB-u-ca-islamic', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
         }).format(date).replace(/AH/g, '').trim().replace(/\//g, '-');
     },
 
