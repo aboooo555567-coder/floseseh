@@ -550,49 +550,43 @@ const app = {
         const originalDir = document.documentElement.dir;
         document.documentElement.dir = 'ltr'; 
 
-        // Let html2canvas handle images automatically
-
         try {
-            const opt = {
-                margin:       0,
-                filename:     'sickLeaves.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, width: 794, x: 0, y: 0, scrollX: 0, scrollY: 0 },
-                jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
-            };
+            // Build the full HTML string for the backend Puppeteer engine
+            const htmlContent = `
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="${window.location.origin}/style.css">
+    <base href="${window.location.origin}/">
+</head>
+<body style="margin: 0; padding: 0; background: white;">
+    ${element.outerHTML}
+</body>
+</html>
+`;
 
-            const pdfPromise = (async () => {
-                return await html2pdf().set(opt).from(element).outputPdf('blob');
-            })();
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Canvas timeout')), 15000));
-            const pdfBlob = await Promise.race([pdfPromise, timeoutPromise]);
-            
+            // Deduct points
+            app.state.points -= 5;
+
+            // 4. Send to Backend to generate Native PDF
+            const response = await fetch('/api/generate-and-send-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chatId: app.state.chatId,
+                    html: htmlContent,
+                    filename: 'sickLeaves.pdf',
+                    reportId: reportId
+                })
+            });
+
             document.documentElement.dir = originalDir;
             container.style.top = '-9999px';
             container.style.left = '-9999px';
             container.style.zIndex = 'auto';
-
-            // 4. Send to Backend
-            const reader = new FileReader();
-            reader.readAsDataURL(pdfBlob);
-            reader.onloadend = async () => {
-                const base64data = reader.result;
-                
-                // Deduct points
-                app.state.points -= 5;
-
-                const response = await fetch('/api/send-pdf', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        chatId: app.state.chatId,
-                        pdfBase64: base64data,
-                        filename: 'sickLeaves.pdf',
-                    reportId: reportId
-                })
-            });
 
             // Also save report data
             await fetch(`/api/report/${app.state.chatId}`, {
@@ -638,10 +632,9 @@ const app = {
                 document.getElementById('report-form').reset();
                 app.navigate('success');
             } else {
-                alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");
+                alert("حدث خطأ أثناء إصدار التقرير.");
                 fetch('/api/logs?msg=Server_Error_' + response.status);
             }
-        }; // End of reader.onloadend
         } catch(e) {
             document.documentElement.dir = originalDir;
             container.style.top = '-9999px';

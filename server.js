@@ -4,6 +4,7 @@ process.env.NTBA_FIX_319 = 1;
 const TelegramBot = require('node-telegram-bot-api');
 const path = require('path');
 const fs = require('fs').promises;
+const puppeteer = require('puppeteer');
 
 // Configuration
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '***REDACTED-BOT-TOKEN***';
@@ -806,6 +807,60 @@ app.get('/api/logs', (req, res) => {
         addLog(`CLIENT LOG: ${req.query.msg}`);
     }
     res.json(appLogs);
+});
+
+
+// 5.5 Generate and Send Native PDF (Puppeteer)
+app.post('/api/generate-and-send-pdf', async (req, res) => {
+    try {
+        const { chatId, html, filename, reportId } = req.body;
+        addLog(`generate-and-send-pdf called for chatId: ${chatId}`);
+        
+        if (!chatId || !html) {
+            addLog('Missing chatId or html');
+            return res.status(400).json({ success: false, error: 'Missing chatId or html content' });
+        }
+
+        // We use puppeteer to render the HTML
+        const browser = await puppeteer.launch({
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            headless: 'new'
+        });
+        
+        const page = await browser.newPage();
+        
+        // Wait until there are no more than 0 network connections for at least 500 ms
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '0', right: '0', bottom: '0', left: '0' }
+        });
+        
+        await browser.close();
+        
+        addLog(`Native PDF generated, size: ${pdfBuffer.length} bytes`);
+        
+        // Send document via Telegram Bot
+        const message = await bot.sendDocument(chatId, pdfBuffer, {
+            caption: 'تم إصدار التقرير بنجاح ✅'
+        }, {
+            filename: filename || 'sickLeaves.pdf',
+            contentType: 'application/pdf'
+        });
+        
+        // Save to DB
+        const fileId = message.document.file_id;
+        db.run('UPDATE reports SET fileId = ?, isDraft = 0 WHERE id = ?', [fileId, reportId], (err) => {
+            if (err) addLog(`DB Error updating fileId: ${err.message}`);
+        });
+
+        res.json({ success: true, fileId });
+    } catch (err) {
+        addLog(`Error generating/sending native PDF: ${err.message}`);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 
