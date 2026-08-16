@@ -462,15 +462,16 @@ const app = {
         document.getElementById('pdf-hospital-logo').src = this.state.hospitalLogoUrl;
         
         if (this.state.mohLogoUrl) {
+            const mohContainer = document.getElementById('pdf-moh-logo-container');
             const mohImg = document.getElementById('pdf-moh-logo');
-            if (mohImg) {
-                mohImg.style.display = 'block';
+            if (mohContainer && mohImg) {
+                mohContainer.style.display = 'block';
                 mohImg.src = this.state.mohLogoUrl;
             }
         } else {
-            const mohImg = document.getElementById('pdf-moh-logo');
-            if (mohImg) {
-                mohImg.style.display = 'none';
+            const mohContainer = document.getElementById('pdf-moh-logo-container');
+            if (mohContainer) {
+                mohContainer.style.display = 'none';
             }
         }
 
@@ -555,9 +556,9 @@ const app = {
             const opt = {
                 margin:       0,
                 filename:     'sickLeaves.pdf',
-                image:        { type: 'jpeg', quality: 1.0 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, windowWidth: 794, width: 794, x: 0, y: 0, scrollX: 0, scrollY: 0 },
+                jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
             };
 
             const pdfPromise = (async () => {
