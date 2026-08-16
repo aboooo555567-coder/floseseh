@@ -371,10 +371,15 @@
 
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+    <!-- Layout Engine Config -->
+    <script src="layout_config.js?v=24"></script>
+    <script src="layout_engine.js?v=24"></script>
+
     <!-- Application Logic -->
-    <script src="app.js?v=22"></script>
+    <script src="app.js?v=24"></script>
     <!-- Version Label for debugging -->
     <script>
         const vLabel = document.createElement('div');
@@ -384,7 +389,7 @@
         vLabel.style.color = '#ccc';
         vLabel.style.fontSize = '10px';
         vLabel.style.pointerEvents = 'none';
-        vLabel.innerText = 'v22';
+        vLabel.innerText = 'v24';
         document.body.appendChild(vLabel);
     </script>
 </body>
