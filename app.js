@@ -17,7 +17,13 @@ const app = {
             "السعودية", "الإمارات", "البحرين", "الكويت", "عمان", "قطر", "اليمن", "الأردن", "سوريا", "لبنان", "فلسطين", "العراق", "مصر", "السودان", "ليبيا", "تونس", "الجزائر", "المغرب", "موريتانيا", "الصومال", "جيبوتي", "جزر القمر", "الهند", "باكستان", "بنجلاديش", "أفغانستان", "إندونيسيا", "ماليزيا", "الفلبين", "سريلانكا", "نيبال", "تركيا", "إيران", "الصين", "اليابان", "كوريا الجنوبية", "روسيا", "الولايات المتحدة", "بريطانيا", "فرنسا", "ألمانيا", "إيطاليا", "إسبانيا", "كندا", "أستراليا", "البرازيل", "الأرجنتين", "المكسيك", "جنوب أفريقيا", "نيجيريا", "إثيوبيا", "كينيا", "أوغندا", "تشاد", "النيجر", "مالي", "السنغال"
         ],
         hospital: [
-            "مستشفى الملك فهد التخصصي", "مستشفى باقدو والدكتور عرفان العام", "مدينة الملك فهد الطبية", "مستشفى الملك فيصل التخصصي", "مستشفى القوات المسلحة", "مستشفى الدكتور سليمان الحبيب", "المستشفى السعودي الألماني"
+            "مستشفى نجران العام",
+            "مستشفى الملك عبدالعزيز التخصصي",
+            "مستشفى الملك فيصل",
+            "مستشفى القوات المسلحة بالهدا",
+            "مستشفى الملك خالد ومركز الأمير سلطان للخدمات الصحية",
+            "مستشفى الملك خالد",
+            "مستشفى حفر الباطن المركزي"
         ]
     },
 
@@ -226,13 +232,13 @@ const app = {
         const ar = document.getElementById('hospital_ar').value;
         const enInput = document.getElementById('hospital_en');
         const map = {
-            "مستشفى الملك فهد التخصصي": "King Fahad Specialist Hospital",
-            "مستشفى باقدو والدكتور عرفان العام": "Dr. Erfan Bagedo General Hospital",
-            "مدينة الملك فهد الطبية": "King Fahad Medical City",
-            "مستشفى الملك فيصل التخصصي": "King Faisal Specialist Hospital",
-            "مستشفى القوات المسلحة": "Armed Forces Hospital",
-            "مستشفى الدكتور سليمان الحبيب": "Dr. Sulaiman Al Habib Hospital",
-            "المستشفى السعودي الألماني": "Saudi German Hospital"
+            "مستشفى نجران العام": "Najran General Hospital",
+            "مستشفى الملك عبدالعزيز التخصصي": "King Abdulaziz Specialist Hospital",
+            "مستشفى الملك فيصل": "King Faisal Hospital",
+            "مستشفى القوات المسلحة بالهدا": "Al-Hada Armed Forces Hospital",
+            "مستشفى الملك خالد ومركز الأمير سلطان للخدمات الصحية": "King Khalid Hospital and Prince Sultan Health Services Center",
+            "مستشفى الملك خالد": "King Khalid Hospital",
+            "مستشفى حفر الباطن المركزي": "Hafar Al-Batin Central Hospital"
         };
         if (map[ar]) {
             enInput.value = map[ar];
@@ -309,7 +315,19 @@ const app = {
 
     toggleLicense() {
         const isPrivate = document.querySelector('input[name="hospital_type"]:checked').value === 'private';
-        document.getElementById('license-field').style.display = isPrivate ? 'block' : 'none';
+        const licenseField = document.getElementById('license-field');
+        const licenseInput = document.getElementById('license_number');
+        
+        if (isPrivate) {
+            licenseField.style.display = 'block';
+            if (!licenseInput.value) {
+                // Generate a random plausible license number if empty
+                const randomPart = Math.floor(1000 + Math.random() * 9000);
+                licenseInput.value = `040101${randomPart}`;
+            }
+        } else {
+            licenseField.style.display = 'none';
+        }
     },
 
     handleLogoUpload(e) {
