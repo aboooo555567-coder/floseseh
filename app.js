@@ -82,10 +82,11 @@ const app = {
 
         await this.loadLocalData();
         this.updateDashboardUI();
-        this.loadPdfTemplate();
-        
         // Listeners for file upload
-        document.getElementById('hospital_logo').addEventListener('change', (e) => this.handleLogoUpload(e));
+        const logoInput = document.getElementById('hospital_logo');
+        if(logoInput) {
+            logoInput.addEventListener('change', (e) => this.handleLogoUpload(e));
+        }
         
         // Sync with server asynchronously
         this.syncDataWithServer().catch(err => console.warn('Offline mode active', err));
