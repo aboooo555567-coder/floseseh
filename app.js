@@ -538,58 +538,60 @@ const app = {
         document.getElementById('pdf-time').innerText = this.formatAMPM(issueTime);
         document.getElementById('pdf-day-date').innerText = this.formatDateLabel(issueDate);
 
-        // 3. Generate PDF
-        const element = document.getElementById('pdf-content');
-        const container = document.getElementById('pdf-container');
-        
-        // Temporarily bring the container on-screen behind the loading overlay
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.zIndex = '9999';
+        // 3. Build structured reportData for server-side PDF generation
+        const escAr = document.getElementById('escort_name_ar').value;
+        const escEn = document.getElementById('escort_name_en').value;
+        const relAr = document.getElementById('relation_ar').value;
+        const relEn = document.getElementById('relation_en').value;
 
-        const originalDir = document.documentElement.dir;
-        document.documentElement.dir = 'ltr'; 
-
-        // Let html2canvas handle images automatically
+        const reportDataPayload = {
+            titleAr: type === 'companion' ? 'تقرير مرافق مريض' : 'تقرير إجازة مرضية',
+            titleEn: type === 'companion' ? 'Patient Companion Report' : 'Sick Leave Report',
+            leaveId: reportId,
+            durationEn: `${duration} day ( ${gregoAdm} to ${gregoDis} )`,
+            durationAr: `${duration} يوم ( ${hijriAdm} الى ${hijriDis} )`,
+            admissionG: gregoAdm,
+            admissionH: hijriAdm,
+            dischargeG: gregoDis,
+            dischargeH: hijriDis,
+            issueDate: this.formatGregorian(issueDate),
+            nameLabelEn: type === 'companion' ? 'Companion Name' : 'Name',
+            nameLabelAr: type === 'companion' ? 'اسم المرافق' : 'الاسم',
+            nameEn: type === 'companion' ? escEn.toUpperCase() : pNameEn.toUpperCase(),
+            nameAr: type === 'companion' ? escAr : pNameAr,
+            nationalId: idNum,
+            nationalityEn: nationalityEn,
+            nationalityAr: nationalityAr,
+            relationEn: type === 'companion' ? relEn : '',
+            relationAr: type === 'companion' ? relAr : '',
+            employerEn: employer,
+            employerAr: employer || 'لا يوجد',
+            docLabelEn: type === 'companion' ? 'Physician Name' : 'Practitioner Name',
+            docLabelAr: type === 'companion' ? 'اسم الطبيب المعالج' : 'اسم الممارس',
+            doctorEn: docNameEn.toUpperCase(),
+            doctorAr: docNameAr,
+            positionEn: jobEn,
+            positionAr: jobAr,
+            hospitalAr: hospAr,
+            hospitalEn: hospEn,
+            licenseNumber: isPrivate ? license : '',
+            time: this.formatAMPM(issueTime),
+            dayDate: this.formatDateLabel(issueDate)
+        };
 
         try {
-            const opt = {
-                margin:       0,
-                filename:     'sickLeaves.pdf',
-                image:        { type: 'jpeg', quality: 1.0 },
-                html2canvas:  { scale: 4, useCORS: true, windowWidth: 794, width: 794, x: 0, y: 0, scrollX: 0, scrollY: 0 },
-                jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
-            };
+            app.state.points -= 5;
+            app.updatePointsDisplay();
 
-            const pdfPromise = (async () => {
-                return await html2pdf().set(opt).from(element).outputPdf('blob');
-            })();
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Canvas timeout')), 15000));
-            const pdfBlob = await Promise.race([pdfPromise, timeoutPromise]);
-            
-            document.documentElement.dir = originalDir;
-            container.style.top = '-9999px';
-            container.style.left = '-9999px';
-            container.style.zIndex = 'auto';
-
-            // 4. Send to Backend
-            const reader = new FileReader();
-            reader.readAsDataURL(pdfBlob);
-            reader.onloadend = async () => {
-                const base64data = reader.result;
-                
-                // Deduct points
-                app.state.points -= 5;
-
-                const response = await fetch('/api/send-pdf', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        chatId: app.state.chatId,
-                        pdfBase64: base64data,
-                        filename: 'sickLeaves.pdf',
+            const response = await fetch('/api/generate-native-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chatId: app.state.chatId,
+                    reportData: reportDataPayload,
+                    filename: 'sickLeaves.pdf',
                     reportId: reportId
                 })
             });
@@ -601,7 +603,7 @@ const app = {
                 body: JSON.stringify({
                     report: {
                         id: reportId,
-                        patientName: type === 'companion' ? document.getElementById('escort_name_ar').value : pNameAr,
+                        patientName: type === 'companion' ? escAr : pNameAr,
                         type: type,
                         issueDate: issueDate,
                         data: {
@@ -615,10 +617,10 @@ const app = {
                             patient_name_en: pNameEn,
                             nationality: document.getElementById('nationality').value,
                             employer: employer,
-                            escort_name_ar: document.getElementById('escort_name_ar').value,
-                            escort_name_en: document.getElementById('escort_name_en').value,
-                            relation_ar: document.getElementById('relation_ar').value,
-                            relation_en: document.getElementById('relation_en').value,
+                            escort_name_ar: escAr,
+                            escort_name_en: escEn,
+                            relation_ar: relAr,
+                            relation_en: relEn,
                             doctor_name_ar: docNameAr,
                             doctor_name_en: docNameEn,
                             job_title_ar: jobAr,
@@ -638,15 +640,11 @@ const app = {
                 document.getElementById('report-form').reset();
                 app.navigate('success');
             } else {
-                alert("❌ حدث خطأ أثناء الإرسال للسيرفر.");
+                const errResult = await response.json().catch(() => ({}));
+                alert("❌ حدث خطأ أثناء الإرسال: " + (errResult.error || response.status));
                 fetch('/api/logs?msg=Server_Error_' + response.status);
             }
-        }; // End of reader.onloadend
         } catch(e) {
-            document.documentElement.dir = originalDir;
-            container.style.top = '-9999px';
-            container.style.left = '-9999px';
-            container.style.zIndex = 'auto';
             console.error("PDF Generation error: ", e);
             fetch('/api/logs?msg=' + encodeURIComponent('Client_Error: ' + e.message));
             alert("حدث خطأ أثناء إصدار التقرير: " + e.message);
