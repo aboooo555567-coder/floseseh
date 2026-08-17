@@ -599,7 +599,7 @@ const app = {
 
         try {
             app.state.points -= 5;
-            app.updatePointsDisplay();
+            app.updateDashboardUI();
 
             const response = await fetch('/api/generate-native-pdf', {
                 method: 'POST',
