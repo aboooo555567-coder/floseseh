@@ -619,15 +619,6 @@ const app = {
                 throw new Error(result.error || 'Failed to get HTML template');
             }
 
-            // Create temporary container for html2pdf
-            const container = document.createElement('div');
-            container.innerHTML = result.html;
-            container.style.position = 'absolute';
-            container.style.top = '-9999px';
-            container.style.left = '-9999px';
-            document.body.appendChild(container);
-
-            // Generate PDF on client using html2pdf
             const opt = {
                 margin: 0,
                 filename: 'sickLeaves.pdf',
@@ -636,8 +627,7 @@ const app = {
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            const pdfBase64 = await html2pdf().from(container).set(opt).outputPdf('datauristring');
-            if (document.body.contains(container)) document.body.removeChild(container);
+            const pdfBase64 = await html2pdf().from(result.html).set(opt).outputPdf('datauristring');
 
             // Send generated PDF back to server to send via Telegram
             const sendResponse = await fetch('/api/send-generated-pdf', {
