@@ -4,6 +4,7 @@
   "description": "Seha Sick Leave Generator Telegram Mini App",
   "main": "server.js",
   "scripts": {
+    "postinstall": "npx puppeteer browsers install chrome",
     "start": "node server.js",
     "auto": "node auto-start.js",
     "dev": "node auto-start.js"
