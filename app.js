@@ -404,7 +404,7 @@ const app = {
             await this.populatePdfAndGenerate();
         } catch(e) {
             console.error(e);
-            alert("حدث خطأ أثناء إصدار التقرير.");
+            alert("حدث خطأ أثناء إعداد التقرير: " + (e.message || e));
             document.getElementById('loading-overlay').style.display = 'none';
         }
     },
