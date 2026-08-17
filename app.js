@@ -636,8 +636,8 @@ const app = {
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            const pdfBase64 = await html2pdf().from(container.firstElementChild).set(opt).outputPdf('datauristring');
-            document.body.removeChild(container);
+            const pdfBase64 = await html2pdf().from(container).set(opt).outputPdf('datauristring');
+            if (document.body.contains(container)) document.body.removeChild(container);
 
             // Send generated PDF back to server to send via Telegram
             const sendResponse = await fetch('/api/send-generated-pdf', {
