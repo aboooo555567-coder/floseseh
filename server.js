@@ -848,23 +848,23 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 <html lang="ar" dir="ltr">
 <head>
 <meta charset="UTF-8">
+</head>
+<body>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: #fff !important; }
-  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; }
+  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
-  table { border-spacing: 0; }
+  table { border-spacing: 0; direction: ltr; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 12px; width: 155px; text-decoration: underline; font-style: italic; }
-  .label-ar { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 13px; width: 155px; }
+  .label-en { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 12px; width: 155px; text-decoration: underline; font-style: italic; text-align: left; }
+  .label-ar { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 13px; width: 155px; text-align: right; }
   .val { border: 1px solid #dee2e6; padding: 10px 8px; color: #333; font-size: 12px; }
   .dur-row td { background-color: #2b4b7c; color: white; border: 1px solid #4a6a9a; padding: 10px 8px; font-size: 12px; }
   .dur-label { font-weight: bold; }
 </style>
-</head>
-<body>
-<div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;">
+<div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
   <!-- Header: Seha Logo (left) -->
   <img src="${sehaLogo}" style="position:absolute;top:30px;left:40px;width:120px;">
