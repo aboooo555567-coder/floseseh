@@ -12,7 +12,8 @@
     <link rel="stylesheet" href="style.css">
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="app.js?v=12"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="app.js?v=13"></script>
     <style>
         /* Logo Auto-Adjust */
         #pdf-hospital-logo {
@@ -281,9 +282,9 @@
 
                     <div class="form-group">
                         <label>المستشفى (عربي)</label>
-                        <div class="dropdown-wrapper">
-                            <input type="text" id="hospital_ar" placeholder="اكتب الاسم يدوياً أو اختر من القائمة 👈" required>
-                            <span class="dropdown-icon" onclick="app.openDropdown('hospital')">▼</span>
+                        <div class="dropdown-wrapper" style="display: flex; gap: 5px;">
+                            <input type="text" id="hospital_ar" placeholder="اكتب الاسم يدوياً أو اختر..." required style="flex: 1; margin-bottom: 0;">
+                            <button type="button" onclick="app.openDropdown('hospital')" style="background: var(--primary-light); color: var(--primary-dark); border: none; padding: 0 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">▼ القائمة</button>
                         </div>
                     </div>
                     <div class="form-group">

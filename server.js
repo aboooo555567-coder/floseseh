@@ -1007,42 +1007,32 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 </body>
 </html>`;
 
-        // Launch puppeteer
-        browser = await puppeteer.launch({
-            headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
-        });
-        const page = await browser.newPage();
-        
-        // Set viewport to match PDF dimensions
-        await page.setViewport({ width: 794, height: 1123 });
-        
-        // Load HTML and wait for fonts/images
-        await page.setContent(html, { waitUntil: 'networkidle0', timeout: 15000 });
-        
-        // Generate compact PDF
-        const pdfBuffer = await page.pdf({
-            printBackground: true,
-            width: '794px',
-            height: '1123px',
-            margin: { top: 0, right: 0, bottom: 0, left: 0 },
-            preferCSSPageSize: true
-        });
-        
-        await browser.close();
-        browser = null;
-        addLog(`Puppeteer generated PDF, size: ${pdfBuffer.length} bytes (${(pdfBuffer.length/1024).toFixed(1)} KB)`);
+        // We no longer generate PDF on the server due to Render environment limitations.
+        // Instead, we return the HTML and the client uses html2pdf.js to generate the PDF natively.
+        res.json({ success: true, html: html, reportId: reportId });
+    } catch (err) {
+        addLog(`Error generating HTML for PDF: ${err.message}`);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
-        // Send document via Telegram Bot
+// 6.5 Send Client-Generated PDF
+app.post('/api/send-generated-pdf', async (req, res) => {
+    try {
+        const { chatId, pdfBase64, filename, reportId } = req.body;
+        if (!chatId || !pdfBase64) return res.status(400).json({ error: 'Missing data' });
+        
+        const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+        const pdfBuffer = Buffer.from(base64Data, 'base64');
+        
         const message = await bot.sendDocument(chatId, pdfBuffer, {
-            caption: 'تقرير الإجازة المرضية الخاص بك 📄'
+            caption: 'تم إصدار التقرير بنجاح ✅'
         }, {
             filename: filename || 'sickLeaves.pdf',
             contentType: 'application/pdf'
         });
         
-        addLog(`Telegram sent native doc successfully. fileId: ${message.document?.file_id}`);
-
+        addLog(`Telegram sent generated doc successfully. fileId: ${message.document?.file_id}`);
         const fileId = message.document?.file_id;
         
         if (fileId && reportId) {
@@ -1056,12 +1046,19 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                     await saveLocalSubscriptions(data);
                 }
             }
+            
+            if (typeof CHANNEL_ID !== 'undefined' && CHANNEL_ID) {
+                try {
+                    await bot.sendDocument(CHANNEL_ID, fileId);
+                } catch (err) {
+                    addLog('Could not forward to Telegram Channel: ' + err.message);
+                }
+            }
         }
-
+        
         res.json({ success: true, fileId });
     } catch (err) {
-        if (browser) { try { await browser.close(); } catch(_){} }
-        addLog(`Error generating/sending native PDF: ${err.message}`);
+        console.error('Error sending generated PDF:', err);
         res.status(500).json({ success: false, error: err.message });
     }
 });

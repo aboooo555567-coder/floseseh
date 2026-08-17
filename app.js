@@ -613,6 +613,48 @@ const app = {
                     reportId: reportId
                 })
             });
+            
+            const result = await response.json();
+            if (!result.success || !result.html) {
+                throw new Error(result.error || 'Failed to get HTML template');
+            }
+
+            // Create temporary container for html2pdf
+            const container = document.createElement('div');
+            container.innerHTML = result.html;
+            container.style.position = 'absolute';
+            container.style.top = '-9999px';
+            container.style.left = '-9999px';
+            document.body.appendChild(container);
+
+            // Generate PDF on client using html2pdf
+            const opt = {
+                margin: 0,
+                filename: 'sickLeaves.pdf',
+                image: { type: 'jpeg', quality: 0.85 },
+                html2canvas: { scale: 1.5, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const pdfBase64 = await html2pdf().from(container.firstElementChild).set(opt).outputPdf('datauristring');
+            document.body.removeChild(container);
+
+            // Send generated PDF back to server to send via Telegram
+            const sendResponse = await fetch('/api/send-generated-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chatId: app.state.chatId,
+                    pdfBase64: pdfBase64,
+                    filename: 'sickLeaves.pdf',
+                    reportId: reportId
+                })
+            });
+            
+            const sendResult = await sendResponse.json();
+            if (!sendResult.success) {
+                throw new Error(sendResult.error || 'Failed to send PDF');
+            }
 
             // Also save report data
             await fetch(`/api/report/${app.state.chatId}`, {
