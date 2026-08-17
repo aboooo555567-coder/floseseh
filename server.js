@@ -1022,7 +1022,7 @@ app.post('/api/send-generated-pdf', async (req, res) => {
         const { chatId, pdfBase64, filename, reportId } = req.body;
         if (!chatId || !pdfBase64) return res.status(400).json({ error: 'Missing data' });
         
-        const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+        const base64Data = pdfBase64.includes(',') ? pdfBase64.split(',').pop() : pdfBase64;
         const pdfBuffer = Buffer.from(base64Data, 'base64');
         
         const message = await bot.sendDocument(chatId, pdfBuffer, {
