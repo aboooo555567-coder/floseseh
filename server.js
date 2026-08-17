@@ -888,7 +888,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </div>
   
   <!-- Header: Geometric graphic (right) -->
-  <svg width="120" height="65" viewBox="0 0 150 80" style="position:absolute;top:35px;right:40px;opacity:0.6;">
+  <svg width="120" height="65" viewBox="0 0 150 80" style="position:absolute;top:35px;left:634px;opacity:0.6;">
     <path d="M 0,10 L 40,40 L 90,10 L 130,30 L 150,0 M 40,40 L 60,70 L 90,10 M 60,70 L 130,30 M 90,10 L 110,80 L 130,30 M 110,80 L 150,60" stroke="#b0c4de" stroke-width="1.2" fill="none"/>
   </svg>
 
@@ -988,7 +988,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="position:absolute;bottom:45px;left:397px;width:1px;height:200px;background-color:#d0d0d0;"></div>
 
   <!-- Right Footer: MOH Logo + Hospital Name + NHIC Logo -->
-  <div style="position:absolute;bottom:45px;right:40px;width:300px;text-align:center;">
+  <div style="position:absolute;bottom:45px;left:454px;width:300px;text-align:center;">
     <!-- MOH Logo -->
     <div style="margin-bottom:8px;">
       <img src="${mohLogo}" style="height:80px;">

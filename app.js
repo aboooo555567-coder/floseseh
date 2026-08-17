@@ -643,7 +643,7 @@ const app = {
                 margin: 0,
                 filename: 'sickLeaves.pdf',
                 image: { type: 'jpeg', quality: 0.85 },
-                html2canvas: { scale: 1.5, useCORS: true, logging: false },
+                html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794, height: 1123, windowWidth: 794, windowHeight: 1123 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
