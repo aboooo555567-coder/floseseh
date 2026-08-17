@@ -601,54 +601,64 @@ const app = {
             app.state.points -= 5;
             app.updateDashboardUI();
 
-            const response = await fetch('/api/generate-native-pdf', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    chatId: app.state.chatId,
-                    reportData: reportDataPayload,
-                    filename: 'sickLeaves.pdf',
-                    reportId: reportId
-                })
-            });
+            // Populate the hidden PDF template in index.html
+            document.getElementById('pdf-leave-id').innerText = reportDataPayload.leaveId;
+            document.getElementById('pdf-duration-en').innerText = reportDataPayload.durationEn;
+            document.getElementById('pdf-duration-ar').innerText = reportDataPayload.durationAr;
+            document.getElementById('pdf-admission-g').innerText = reportDataPayload.admissionG;
+            document.getElementById('pdf-admission-h').innerText = reportDataPayload.admissionH;
+            document.getElementById('pdf-discharge-g').innerText = reportDataPayload.dischargeG;
+            document.getElementById('pdf-discharge-h').innerText = reportDataPayload.dischargeH;
+            document.getElementById('pdf-issue-date').innerText = reportDataPayload.issueDate;
             
-            const result = await response.json();
-            if (!result.success || !result.html) {
-                throw new Error(result.error || 'Failed to get HTML template');
+            document.getElementById('pdf-name-en').innerText = reportDataPayload.nameEn;
+            document.getElementById('pdf-name-ar').innerText = reportDataPayload.nameAr;
+            document.getElementById('pdf-national-id').innerText = reportDataPayload.nationalId;
+            document.getElementById('pdf-employer-en').innerText = reportDataPayload.employerEn;
+            document.getElementById('pdf-employer-ar').innerText = reportDataPayload.employerAr;
+            
+            document.getElementById('pdf-doctor-en').innerText = reportDataPayload.doctorEn;
+            document.getElementById('pdf-doctor-ar').innerText = reportDataPayload.doctorAr;
+            document.getElementById('pdf-position-en').innerText = reportDataPayload.positionEn;
+            document.getElementById('pdf-position-ar').innerText = reportDataPayload.positionAr;
+
+            if (reportDataPayload.relationEn) {
+                document.getElementById('pdf-relation-row').style.display = '';
+                document.getElementById('pdf-relation-en').innerText = reportDataPayload.relationEn;
+                document.getElementById('pdf-relation-ar').innerText = reportDataPayload.relationAr;
+            } else {
+                document.getElementById('pdf-relation-row').style.display = 'none';
             }
 
-            // Create hidden iframe to ensure perfect rendering of styles and fonts
-            const iframe = document.createElement('iframe');
-            iframe.style.position = 'absolute';
-            iframe.style.top = '-9999px';
-            iframe.style.width = '794px';
-            iframe.style.height = '1123px';
-            iframe.style.border = 'none';
-            document.body.appendChild(iframe);
+            document.getElementById('pdf-time').innerText = reportDataPayload.time;
+            document.getElementById('pdf-day-date').innerText = reportDataPayload.dayDate;
+            document.getElementById('pdf-hospital-ar').innerText = reportDataPayload.hospitalAr;
+            document.getElementById('pdf-hospital-en').innerText = reportDataPayload.hospitalEn;
 
-            const doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write(result.html);
-            doc.close();
+            if (reportDataPayload.licenseNumber) {
+                document.getElementById('pdf-license').style.display = '';
+                document.getElementById('pdf-license-val').innerText = reportDataPayload.licenseNumber;
+            } else {
+                document.getElementById('pdf-license').style.display = 'none';
+            }
 
-            // Wait for fonts and images to load in the iframe
-            await new Promise(resolve => {
-                iframe.onload = resolve;
-                setTimeout(resolve, 1000); // fallback timeout
-            });
+            // QR Code
+            document.getElementById('pdf-qrcode').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(reportDataPayload.leaveId)}" style="width:110px;height:110px;">`;
+
+            // Wait a moment for the QR code image to load
+            await new Promise(r => setTimeout(r, 800));
+
+            const pdfElement = document.getElementById('pdf-content');
 
             const opt = {
                 margin: 0,
                 filename: 'sickLeaves.pdf',
-                image: { type: 'jpeg', quality: 0.85 },
+                image: { type: 'jpeg', quality: 0.95 },
                 html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794, height: 1123, windowWidth: 794, windowHeight: 1123 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            const pdfBase64 = await html2pdf().from(doc.body).set(opt).outputPdf('datauristring');
-            document.body.removeChild(iframe);
+            const pdfBase64 = await html2pdf().from(pdfElement).set(opt).outputPdf('datauristring');
 
             // Send generated PDF back to server to send via Telegram
             const sendResponse = await fetch('/api/send-generated-pdf', {
