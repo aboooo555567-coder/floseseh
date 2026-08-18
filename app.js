@@ -651,6 +651,37 @@ const app = {
 
             const pdfElement = document.getElementById('pdf-content');
 
+            // Create hidden iframe to ensure perfect rendering of styles and fonts regardless of mobile viewport
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute';
+            iframe.style.top = '-9999px';
+            iframe.style.width = '794px';
+            iframe.style.height = '1123px';
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <!DOCTYPE html>
+                <html dir="ltr">
+                <head>
+                    <meta charset="UTF-8">
+                    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+                </head>
+                <body style="margin:0; padding:0; background: white; width: 794px; height: 1123px;">
+                    ${pdfElement.outerHTML}
+                </body>
+                </html>
+            `);
+            doc.close();
+
+            // Wait for fonts to load in the iframe
+            await new Promise(resolve => {
+                iframe.onload = resolve;
+                setTimeout(resolve, 1000); // fallback timeout
+            });
+
             const opt = {
                 margin: 0,
                 filename: 'sickLeaves.pdf',
@@ -659,7 +690,8 @@ const app = {
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            const pdfBase64 = await html2pdf().from(pdfElement).set(opt).outputPdf('datauristring');
+            const pdfBase64 = await html2pdf().from(doc.body).set(opt).outputPdf('datauristring');
+            document.body.removeChild(iframe);
 
 
             // Send generated PDF back to server to send via Telegram
