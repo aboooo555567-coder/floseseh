@@ -708,7 +708,7 @@ const app = {
 
             doc.write(`
                 <!DOCTYPE html>
-                <html dir="ltr">
+                <html dir="rtl">
                 <head>
                     <meta charset="UTF-8">
                     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -731,8 +731,8 @@ const app = {
                 margin: 0,
                 filename: 'sickLeaves.pdf',
                 image: { type: 'jpeg', quality: 0.95 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['avoid-all'] }
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 794, width: 794, windowHeight: 1123, height: 1123, scrollY: 0, scrollX: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             const targetElement = doc.getElementById('pdf-content') || doc.body;
