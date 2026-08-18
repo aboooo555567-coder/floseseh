@@ -662,12 +662,16 @@ const app = {
 
             const doc = iframe.contentWindow.document;
             doc.open();
+                        const styleRes = await fetch('style.css');
+            const styleText = await styleRes.text();
+
             doc.write(`
                 <!DOCTYPE html>
                 <html dir="ltr">
                 <head>
                     <meta charset="UTF-8">
                     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+                    <style>${styleText}</style>
                 </head>
                 <body style="margin:0; padding:0; background: white; width: 794px; height: 1123px;">
                     ${pdfElement.outerHTML}
