@@ -82,11 +82,10 @@ const app = {
 
         await this.loadLocalData();
         this.updateDashboardUI();
+        
         // Listeners for file upload
         const logoInput = document.getElementById('hospital_logo');
-        if(logoInput) {
-            logoInput.addEventListener('change', (e) => this.handleLogoUpload(e));
-        }
+        if(logoInput) logoInput.addEventListener('change', (e) => this.handleLogoUpload(e));
         
         // Sync with server asynchronously
         this.syncDataWithServer().catch(err => console.warn('Offline mode active', err));
@@ -602,6 +601,7 @@ const app = {
             app.state.points -= 5;
             app.updateDashboardUI();
 
+
             // Populate the hidden PDF template in index.html
             document.getElementById('pdf-leave-id').innerText = reportDataPayload.leaveId;
             document.getElementById('pdf-duration-en').innerText = reportDataPayload.durationEn;
@@ -660,6 +660,7 @@ const app = {
             };
 
             const pdfBase64 = await html2pdf().from(pdfElement).set(opt).outputPdf('datauristring');
+
 
             // Send generated PDF back to server to send via Telegram
             const sendResponse = await fetch('/api/send-generated-pdf', {
