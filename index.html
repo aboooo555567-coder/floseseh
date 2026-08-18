@@ -13,7 +13,7 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=26"></script>
+    <script src="app.js?v=27"></script>
     <style>
         /* Logo Auto-Adjust */
         #pdf-hospital-logo {
@@ -164,7 +164,8 @@
                     <div class="form-group">
                         <label>نوع التقرير</label>
                         <select id="leave_type" required>
-                            <option value="GSL">GSL</option>
+                            <option value="GSL">GSL (حكومي)</option>
+<option value="PSL">PSL (خاص)</option>
                         </select>
                     </div>
                     
@@ -204,7 +205,7 @@
                 <div class="form-step" id="step-2">
                     <div class="form-group">
                         <label>رقم الهوية / الإقامة</label>
-                        <input type="text" id="national_id" placeholder="1xxxxxxxxx" required>
+                        <input type="text" id="national_id" placeholder="1xxxxxxxxx أو 2xxxxxxxxx" required>
                     </div>
                     
                     <div class="form-group">
@@ -214,15 +215,13 @@
                     
                     <div class="form-group">
                         <label>اسم المريض (إنجليزي)</label>
-                        <input type="text" id="patient_name_en" placeholder="مثال: AHMED MOHAMMED" dir="ltr" oninput="this.value = this.value.toUpperCase()" required>
+                        <input type="text" id="patient_name_en" placeholder="Full Name" dir="ltr" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
                         <label>الجنسية</label>
-                        <div class="dropdown-wrapper">
-                            <input type="text" id="nationality" placeholder="اختر الجنسية" value="السعودية" readonly onclick="app.openDropdown('nationality')">
-                            <span class="dropdown-icon" onclick="app.openDropdown('nationality')">▼</span>
-                        </div>
+                        <input type="text" id="nationality" list="nationality_list" placeholder="السعودية" value="السعودية" required>
+<datalist id="nationality_list"></datalist>
 
                     </div>
                     
@@ -236,11 +235,11 @@
                         <h3 class="section-subtitle">بيانات المرافق</h3>
                         <div class="form-group">
                             <label>اسم المرافق (عربي)</label>
-                            <input type="text" id="escort_name_ar" placeholder="الاسم الرباعي للمرافق">
+                            <input type="text" id="escort_name_ar" placeholder="الاسم الرباعي">
                         </div>
                         <div class="form-group">
                             <label>اسم المرافق (إنجليزي)</label>
-                            <input type="text" id="escort_name_en" placeholder="مثال: MOHAMMED AYED" dir="ltr" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="escort_name_en" placeholder="Full Name" dir="ltr" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div class="dates-row">
                             <div class="form-group half">
@@ -282,10 +281,8 @@
 
                     <div class="form-group">
                         <label>المستشفى (عربي)</label>
-                        <div class="dropdown-wrapper" style="display: flex; gap: 5px;">
-                            <input type="text" id="hospital_ar" placeholder="اكتب الاسم يدوياً أو اختر..." required style="flex: 1; margin-bottom: 0;">
-                            <button type="button" onclick="app.openDropdown('hospital')" style="background: var(--primary-light); color: var(--primary-dark); border: none; padding: 0 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">▼ القائمة</button>
-                        </div>
+                        <input type="text" id="hospital_ar" list="hospital_list" placeholder="ابحث أو اكتب الاسم..." required>
+<datalist id="hospital_list"></datalist>
                     </div>
                     <div class="form-group">
                         <label>المستشفى (إنجليزي)</label>
@@ -321,7 +318,7 @@
                     </div>
 
                     <div class="form-actions dual">
-                        <button type="button" class="btn-submit" onclick="app.submitForm()">إصدار التقرير (v14)</button>
+                        <button type="button" class="btn-submit" onclick="app.submitForm()">إصدار التقرير (v15)</button>
                         <button type="button" class="btn-prev" onclick="app.prevStep()">السابق</button>
                     </div>
                 </div>
