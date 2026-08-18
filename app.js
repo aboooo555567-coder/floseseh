@@ -690,54 +690,45 @@ const app = {
             // Wait a moment for the QR code image to load
             await new Promise(r => setTimeout(r, 800));
 
-            const pdfElement = document.getElementById('pdf-content');
+            // Ensure fonts are loaded before generating
+await document.fonts.ready;
+await new Promise(r => setTimeout(r, 800)); // allow QR and images to settle
 
-            // Create hidden iframe to ensure perfect rendering of styles and fonts regardless of mobile viewport
-            const iframe = document.createElement('iframe');
-            iframe.style.position = 'absolute';
-            iframe.style.top = '-9999px';
-            iframe.style.width = '794px';
-            iframe.style.height = '1123px';
-            iframe.style.border = 'none';
-            document.body.appendChild(iframe);
+const pdfElement = document.getElementById('pdf-content');
+// Ensure the element is completely visible before rendering
+pdfElement.parentElement.style.opacity = '1';
+pdfElement.parentElement.style.zIndex = '9999';
+pdfElement.parentElement.style.top = '0';
+pdfElement.parentElement.style.left = '0';
 
-            const doc = iframe.contentWindow.document;
-            doc.open();
-                        const styleRes = await fetch('style.css');
-            const styleText = await styleRes.text();
-
-            doc.write(`
-                <!DOCTYPE html>
-                <html dir="rtl">
-                <head>
-                    <meta charset="UTF-8"><meta name="viewport" content="width=794, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-                    <style>${styleText}</style>
-                </head>
-                <body style="margin:0; padding:0; background: white; width: 794px; height: 1123px;">
-                    ${pdfElement.outerHTML}
-                </body>
-                </html>
-            `);
-            doc.close();
-
-            // Wait for fonts to load in the iframe
-            await new Promise(resolve => {
-                iframe.onload = resolve;
-                setTimeout(resolve, 1000); // fallback timeout
-            });
-
+            
+            // html2canvas gets confused if the element is inside a wrapper that has scaling or weird RTL offsets
+            // So we explicitly force the dimensions and bypass viewport limits
             const opt = {
                 margin: 0,
                 filename: 'sickLeaves.pdf',
-                image: { type: 'jpeg', quality: 0.95 },
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 794, width: 794, windowHeight: 1123, height: 1123, scrollY: 0, scrollX: 0 },
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    windowWidth: 794, 
+                    width: 794, 
+                    windowHeight: 1123, 
+                    height: 1123, 
+                    scrollY: 0, 
+                    scrollX: 0 
+                },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            const targetElement = doc.getElementById('pdf-content') || doc.body;
-            const pdfBase64 = await html2pdf().from(targetElement).set(opt).outputPdf('datauristring');
-            document.body.removeChild(iframe);
+            const pdfBase64 = await html2pdf().from(pdfElement).set(opt).outputPdf('datauristring');
+// Hide it again
+pdfElement.parentElement.style.opacity = '0.01';
+pdfElement.parentElement.style.zIndex = '-9999';
+pdfElement.parentElement.style.top = '-10000px';
+pdfElement.parentElement.style.left = '-10000px';
+
+    
 
 
             // Send generated PDF back to server to send via Telegram
