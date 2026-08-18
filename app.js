@@ -731,11 +731,12 @@ const app = {
                 margin: 0,
                 filename: 'sickLeaves.pdf',
                 image: { type: 'jpeg', quality: 0.95 },
-                html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794, height: 1123, windowWidth: 794, windowHeight: 1123 },
+                html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794, height: 1123, windowWidth: 794, windowHeight: 1123, x: 0, y: 0, scrollX: 0, scrollY: 0 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            const pdfBase64 = await html2pdf().from(doc.body).set(opt).outputPdf('datauristring');
+            const targetElement = doc.getElementById('pdf-content') || doc.body;
+            const pdfBase64 = await html2pdf().from(targetElement).set(opt).outputPdf('datauristring');
             document.body.removeChild(iframe);
 
 

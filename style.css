@@ -561,3 +561,6 @@ input:focus, select:focus {
 .custom-select-item:active {
     background: #f0f0f0;
 }
+
+/* Table text wrapping fix */
+#pdf-wrapper td { word-wrap: break-word; word-break: break-word; overflow-wrap: break-word; white-space: normal !important; }
