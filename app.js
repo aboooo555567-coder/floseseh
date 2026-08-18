@@ -710,7 +710,7 @@ const app = {
                 <!DOCTYPE html>
                 <html dir="rtl">
                 <head>
-                    <meta charset="UTF-8">
+                    <meta charset="UTF-8"><meta name="viewport" content="width=794, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
                     <style>${styleText}</style>
                 </head>
