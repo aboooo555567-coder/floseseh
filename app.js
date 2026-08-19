@@ -700,35 +700,42 @@ const pdfElement = document.getElementById('pdf-content');
 // Ensure the element is completely visible before rendering
 pdfElement.parentElement.style.opacity = '1';
 pdfElement.parentElement.style.zIndex = '9999';
+pdfElement.parentElement.style.position = 'fixed';
 pdfElement.parentElement.style.top = '0';
 pdfElement.parentElement.style.left = '0';
+pdfElement.parentElement.style.right = 'auto';
+document.body.style.overflow = 'visible';
+document.documentElement.style.overflow = 'visible';
 
-            
-            // html2canvas gets confused if the element is inside a wrapper that has scaling or weird RTL offsets
-            // So we explicitly force the dimensions and bypass viewport limits
             const opt = {
                 margin: 0,
                 filename: 'sickLeaves.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
+                image: { type: 'jpeg', quality: 1 },
                 html2canvas: { 
                     scale: 2, 
                     useCORS: true, 
                     windowWidth: 794, 
                     width: 794, 
-                    windowHeight: 1123, 
-                    height: 1123, 
+                    windowHeight: 1122, 
+                    height: 1122, 
                     scrollY: 0, 
-                    scrollX: 0 
+                    scrollX: 0,
+                    allowTaint: true,
+                    letterRendering: true
                 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait', hotfixes: ["px_scaling"] }
             };
 
             const pdfBase64 = await html2pdf().from(pdfElement).set(opt).outputPdf('datauristring');
+
 // Hide it again
 pdfElement.parentElement.style.opacity = '0.01';
 pdfElement.parentElement.style.zIndex = '-9999';
+pdfElement.parentElement.style.position = 'absolute';
 pdfElement.parentElement.style.top = '-10000px';
 pdfElement.parentElement.style.left = '-10000px';
+document.body.style.overflow = '';
+document.documentElement.style.overflow = '';
 
     
 
