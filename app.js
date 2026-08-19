@@ -700,12 +700,25 @@ const pdfElement = document.getElementById('pdf-content');
 // Ensure the element is completely visible before rendering
 pdfElement.parentElement.style.opacity = '1';
 pdfElement.parentElement.style.zIndex = '9999';
-pdfElement.parentElement.style.position = 'fixed';
+pdfElement.parentElement.style.position = 'absolute'; // Use absolute to prevent fixed viewport issues
 pdfElement.parentElement.style.top = '0';
 pdfElement.parentElement.style.left = '0';
 pdfElement.parentElement.style.right = 'auto';
+
+// Very important for RTL pages: html2canvas calculates X incorrectly if the page is RTL.
+const originalHtmlDir = document.documentElement.getAttribute('dir');
+const originalBodyDir = document.body.getAttribute('dir');
+document.documentElement.setAttribute('dir', 'ltr');
+document.body.setAttribute('dir', 'ltr');
+
+// Prevent body overflow clipping
+const originalOverflow = document.body.style.overflow;
+const originalDocOverflow = document.documentElement.style.overflow;
 document.body.style.overflow = 'visible';
 document.documentElement.style.overflow = 'visible';
+
+// Scroll to top-left to ensure capture area is within viewport coordinates
+window.scrollTo(0, 0);
 
             const opt = {
                 margin: 0,
@@ -720,6 +733,8 @@ document.documentElement.style.overflow = 'visible';
                     height: 1122, 
                     scrollY: 0, 
                     scrollX: 0,
+                    x: 0,
+                    y: 0,
                     allowTaint: true,
                     letterRendering: true
                 },
@@ -734,8 +749,14 @@ pdfElement.parentElement.style.zIndex = '-9999';
 pdfElement.parentElement.style.position = 'absolute';
 pdfElement.parentElement.style.top = '-10000px';
 pdfElement.parentElement.style.left = '-10000px';
-document.body.style.overflow = '';
-document.documentElement.style.overflow = '';
+
+// Restore page states
+document.body.style.overflow = originalOverflow;
+document.documentElement.style.overflow = originalDocOverflow;
+if(originalHtmlDir) document.documentElement.setAttribute('dir', originalHtmlDir);
+else document.documentElement.removeAttribute('dir');
+if(originalBodyDir) document.body.setAttribute('dir', originalBodyDir);
+else document.body.removeAttribute('dir');
 
     
 
