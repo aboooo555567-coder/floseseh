@@ -129,6 +129,8 @@ const app = {
         const logoInput = document.getElementById('hospital_logo');
         if(logoInput) logoInput.addEventListener('change', (e) => this.handleLogoUpload(e));
         
+        await this.loadPdfTemplate();
+        
         // Sync with server asynchronously
         this.syncDataWithServer().catch(err => console.warn('Offline mode active', err));
     },
