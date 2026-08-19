@@ -736,7 +736,7 @@ window.scrollTo(0, 0);
                     x: 0,
                     y: 0,
                     allowTaint: true,
-                    letterRendering: true
+                    letterRendering: false
                 },
                 jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait', hotfixes: ["px_scaling"] }
             };
