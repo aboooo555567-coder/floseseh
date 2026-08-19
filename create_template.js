@@ -1,4 +1,5 @@
-<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122px; box-sizing: border-box; background: white; font-family: 'Tajawal', 'Arial', sans-serif; position: relative; overflow: hidden; margin: 0; padding: 40px; display: flex; flex-direction: column;">
+const fs = require('fs');
+const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122px; box-sizing: border-box; background: white; font-family: 'Tajawal', 'Arial', sans-serif; position: relative; overflow: hidden; margin: 0; padding: 40px; display: flex; flex-direction: column;">
     
     <!-- === HEADER === -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; height: 90px; margin-bottom: 25px;">
@@ -153,4 +154,6 @@
         
     </div>
 
-</div>
+</div>`;
+fs.writeFileSync('pdf-template.html', html, 'utf8');
+console.log("pdf-template.html created successfully.");

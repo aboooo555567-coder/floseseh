@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -41,22 +41,22 @@
                 </div>
 
                 <div class="header-center">
-                    <div class="status-badge" id="sub-status-badge">ظ†ط´ط· - ظ…طھط¨ظ‚ظٹ 0 ظٹظˆظ…</div>
-                    <button class="btn-renew" onclick="app.navigate('packages')">طھط¬ط¯ظٹط¯</button>
+                    <div class="status-badge" id="sub-status-badge">نشط - متبقي 0 يوم</div>
+                    <button class="btn-renew" onclick="app.navigate('packages')">تجديد</button>
                 </div>
 
                 <div class="header-left">
                     <div class="balance-card">
-                        <span>ط±طµظٹط¯ظƒ: <strong id="points-balance-display">0</strong> ظ†ظ‚ط·ط©</span>
-                        <span class="coin-icon">ًںھ™</span>
+                        <span>رصيدك: <strong id="points-balance-display">0</strong> نقطة</span>
+                        <span class="coin-icon">🪙</span>
                     </div>
                 </div>
                 <span id="points-balance" style="display:none;">0</span>
             </header>
             
             <div class="reports-header" style="text-align: center; margin-bottom: 15px; padding: 0 10px;">
-                <h2 style="color: var(--primary-dark); margin-bottom: 10px;">ط³ط¬ظ„ ط§ظ„طھظ‚ط§ط±ظٹط±</h2>
-                <input type="text" id="report-search" placeholder="ًں”چ ط¨ط­ط« ط¨ط§ط³ظ… ط§ظ„ظ…ط±ظٹط¶ ط£ظˆ ط§ظ„ظ‡ظˆظٹط©..." 
+                <h2 style="color: var(--primary-dark); margin-bottom: 10px;">سجل التقارير</h2>
+                <input type="text" id="report-search" placeholder="🔍 بحث باسم المريض أو الهوية..." 
                     onkeyup="app.searchReports()" 
                     style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: 'Tajawal', sans-serif;">
             </div>
@@ -70,10 +70,10 @@
                 <button type="button" class="fab" id="fab-main" onclick="app.toggleFab()">+</button>
                 <div class="fab-menu-items" id="fab-menu-items">
                     <div class="fab-menu-item" onclick="app.startForm('companion')">
-                        ظ…ط±ط§ظپظ‚ط© ظ…ط±ظٹط¶ ًں‘¥
+                        مرافقة مريض 👥
                     </div>
                     <div class="fab-menu-item" onclick="app.startForm('sickleave')">
-                        ط¥ط¬ط§ط²ط© ظ…ط±ط¶ظٹط© ًں¤’
+                        إجازة مرضية 🤒
                     </div>
                 </div>
             </div>
@@ -83,66 +83,66 @@
         <!-- Packages Screen -->
         <section id="packages-screen" class="screen">
             <header class="app-header">
-                <h2>ط¨ط§ظ‚ط§طھ ط§ظ„ط§ط´طھط±ط§ظƒ ظˆط§ظ„ط´ط­ظ†</h2>
-                <button class="btn-back" onclick="app.navigate('dashboard')">â‌¯</button>
+                <h2>باقات الاشتراك والشحن</h2>
+                <button class="btn-back" onclick="app.navigate('dashboard')">❯</button>
             </header>
 
             <main class="packages-container">
                 <div class="package-section">
-                    <h3 class="section-title">ًں“… ط§ظ„ط§ط´طھط±ط§ظƒ ط§ظ„ط´ظ‡ط±ظٹ ط§ظ„ظ„ط§ظ…ط­ط¯ظˆط¯</h3>
+                    <h3 class="section-title">📅 الاشتراك الشهري اللامحدود</h3>
                     <div class="package-card" onclick="app.buyPackage('Month 1')">
                         <div class="package-details">
                             <h4>Month 1</h4>
-                            <p>طµظ„ط§ط­ظٹط© 30 ظٹظˆظ… (ط¥ظ†ط´ط§ط، طھظ‚ط§ط±ظٹط± ط؛ظٹط± ظ…ط­ط¯ظˆط¯)</p>
+                            <p>صلاحية 30 يوم (إنشاء تقارير غير محدود)</p>
                             <div class="referral-bonus-badge">
-                                ًںژپ + ظ…ظ†ط­ 50 ظ†ظ‚ط·ط© ط¥ط¶ط§ظپظٹط© ظ„ظ„ط´ط®طµ ط§ظ„ط°ظٹ ط£ط­ط§ظ„ظƒ
+                                🎁 + منح 50 نقطة إضافية للشخص الذي أحالك
                             </div>
                         </div>
-                        <div class="package-price">100<br>ط±ظٹط§ظ„</div>
+                        <div class="package-price">100<br>ريال</div>
                     </div>
                 </div>
                 
                 <div class="package-section" style="margin-top: 25px;">
-                    <h3 class="section-title">ًںھ™ ط­ط²ظ… ط´ط­ظ† ط§ظ„ظ†ظ‚ط§ط·</h3>
+                    <h3 class="section-title">🪙 حزم شحن النقاط</h3>
                     
                     <div class="package-card" onclick="app.buyPackage('Basic')">
                         <div class="package-details">
-                            <h4>ط­ط²ظ…ط© ط§ظ„ظ†ظ‚ط§ط· ط§ظ„ط£ط³ط§ط³ظٹط© (30 ظ†ظ‚ط·ط©)</h4>
-                            <p>طھظ…ظ†ط­ظƒ 30 ظ†ظ‚ط·ط© (ط¨ط¯ظˆظ† طھط§ط±ظٹط® ط§ظ†طھظ‡ط§ط،)</p>
+                            <h4>حزمة النقاط الأساسية (30 نقطة)</h4>
+                            <p>تمنحك 30 نقطة (بدون تاريخ انتهاء)</p>
                             <div class="referral-bonus-badge">
-                                ًںژپ + ظ…ظ†ط­ 10 ظ†ظ‚ط·ط© ط¥ط¶ط§ظپظٹط© ظ„ظ„ط´ط®طµ ط§ظ„ط°ظٹ ط£ط­ط§ظ„ظƒ
+                                🎁 + منح 10 نقطة إضافية للشخص الذي أحالك
                             </div>
                         </div>
-                        <div class="package-price">20<br>ط±ظٹط§ظ„</div>
+                        <div class="package-price">20<br>ريال</div>
                     </div>
 
                     <div class="package-card recommended" onclick="app.buyPackage('Recommended')">
                         <div class="package-details">
-                            <h4>ط­ط²ظ…ط© ط§ظ„ظ†ظ‚ط§ط· ط§ظ„ظ…ظˆطµظ‰ ط¨ظ‡ط§ (100 ظ†ظ‚ط·ط©)</h4>
-                            <p>طھظ…ظ†ط­ظƒ 100 ظ†ظ‚ط·ط© (ط¨ط¯ظˆظ† طھط§ط±ظٹط® ط§ظ†طھظ‡ط§ط،)</p>
+                            <h4>حزمة النقاط الموصى بها (100 نقطة)</h4>
+                            <p>تمنحك 100 نقطة (بدون تاريخ انتهاء)</p>
                             <div class="referral-bonus-badge">
-                                ًںژپ + ظ…ظ†ط­ 25 ظ†ظ‚ط·ط© ط¥ط¶ط§ظپظٹط© ظ„ظ„ط´ط®طµ ط§ظ„ط°ظٹ ط£ط­ط§ظ„ظƒ
+                                🎁 + منح 25 نقطة إضافية للشخص الذي أحالك
                             </div>
                         </div>
-                        <div class="package-price">50<br>ط±ظٹط§ظ„</div>
+                        <div class="package-price">50<br>ريال</div>
                     </div>
 
                     <div class="package-card" onclick="app.buyPackage('Advanced')">
                         <div class="package-details">
-                            <h4>ط­ط²ظ…ط© ط§ظ„ظ†ظ‚ط§ط· ط§ظ„ظ…طھظ‚ط¯ظ…ط© (200 ظ†ظ‚ط·ط©)</h4>
-                            <p>طھظ…ظ†ط­ظƒ 200 ظ†ظ‚ط·ط© (ط¨ط¯ظˆظ† طھط§ط±ظٹط® ط§ظ†طھظ‡ط§ط،)</p>
+                            <h4>حزمة النقاط المتقدمة (200 نقطة)</h4>
+                            <p>تمنحك 200 نقطة (بدون تاريخ انتهاء)</p>
                             <div class="referral-bonus-badge">
-                                ًںژپ + ظ…ظ†ط­ 50 ظ†ظ‚ط·ط© ط¥ط¶ط§ظپظٹط© ظ„ظ„ط´ط®طµ ط§ظ„ط°ظٹ ط£ط­ط§ظ„ظƒ
+                                🎁 + منح 50 نقطة إضافية للشخص الذي أحالك
                             </div>
                         </div>
-                        <div class="package-price">80<br>ط±ظٹط§ظ„</div>
+                        <div class="package-price">80<br>ريال</div>
                     </div>
                 </div>
                 
                 <div style="text-align:center; padding:20px 0 30px 0;">
-                    <p style="text-align:center; font-size: 14px; color: #555;">ط§ظ„ط¥طµط¯ط§ط± v32 (طھط®ظپظٹط¶ ط­ط¬ظ… ظ…ظ„ظپ ط§ظ„طھظ‚ط±ظٹط±)</p>
-                    <p style="font-size:0.9rem; margin-bottom:12px;">ًں“‍ ظٹطھظ… ط§ظ„طھظپط¹ظٹظ„ ظٹط¯ظˆظٹط§ظ‹ ط¨ط§ظ„طھط­ظˆظٹظ„ ط§ظ„ط¨ظ†ظƒظٹ ط¨ط§ظ„طھظˆط§طµظ„ ظ…ط¹ ط§ظ„ظ…ط§ظ„ظƒ:</p>
-                    <a href="https://t.me/zakmmm_1211" target="_blank" class="btn-renew" style="display:inline-block; padding:10px 22px; text-decoration:none; border-radius:20px; margin:0;">طھظˆط§طµظ„ ظ…ط¹ ط§ظ„ظ…ط§ظ„ظƒ ظ„ظ„طھظپط¹ظٹظ„ ًں’¬</a>
+                    <p style="text-align:center; font-size: 14px; color: #555;">الإصدار v32 (تخفيض حجم ملف التقرير)</p>
+                    <p style="font-size:0.9rem; margin-bottom:12px;">📞 يتم التفعيل يدوياً بالتحويل البنكي بالتواصل مع المالك:</p>
+                    <a href="https://t.me/zakmmm_1211" target="_blank" class="btn-renew" style="display:inline-block; padding:10px 22px; text-decoration:none; border-radius:20px; margin:0;">تواصل مع المالك للتفعيل 💬</a>
                 </div>
             </main>
         </section>
@@ -150,8 +150,8 @@
         <!-- Form Wizard Screen -->
         <section id="form-screen" class="screen">
             <header class="app-header">
-                <h2 id="form-title">ط¥طµط¯ط§ط± طھظ‚ط±ظٹط± ط¬ط¯ظٹط¯</h2>
-                <button class="btn-back" onclick="app.navigate('dashboard')">â‌¯</button>
+                <h2 id="form-title">إصدار تقرير جديد</h2>
+                <button class="btn-back" onclick="app.navigate('dashboard')">❯</button>
             </header>
             
             <div class="progress-bar-container">
@@ -162,164 +162,164 @@
                 <!-- Step 1: Dates -->
                 <div class="form-step active" id="step-1">
                     <div class="form-group">
-                        <label>ظ†ظˆط¹ ط§ظ„طھظ‚ط±ظٹط±</label>
+                        <label>نوع التقرير</label>
                         <select id="leave_type" required>
-                            <option value="GSL">GSL (ط­ظƒظˆظ…ظٹ)</option>
-<option value="PSL">PSL (ط®ط§طµ)</option>
+                            <option value="GSL">GSL (حكومي)</option>
+<option value="PSL">PSL (خاص)</option>
                         </select>
                     </div>
                     
                     <div class="dates-row">
                         <div class="form-group half">
-                            <label>طھط§ط±ظٹط® ط§ظ„ط¯ط®ظˆظ„</label>
+                            <label>تاريخ الدخول</label>
                             <input type="date" id="admission_date" required>
                         </div>
                         <div class="form-group half">
-                            <label>طھط§ط±ظٹط® ط§ظ„ط®ط±ظˆط¬</label>
+                            <label>تاريخ الخروج</label>
                             <input type="date" id="discharge_date" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>ظ…ط¯ط© ط§ظ„ط¥ط¬ط§ط²ط© (ط¨ط§ظ„ط£ظٹط§ظ…)</label>
+                        <label>مدة الإجازة (بالأيام)</label>
                         <input type="number" id="duration" value="1" min="1" required>
                     </div>
 
                     <div class="dates-row">
                         <div class="form-group half">
-                            <label>طھط§ط±ظٹط® ط¥طµط¯ط§ط± ط§ظ„طھظ‚ط±ظٹط±</label>
+                            <label>تاريخ إصدار التقرير</label>
                             <input type="date" id="issue_date" required>
                         </div>
                         <div class="form-group half">
-                            <label>ظˆظ‚طھ ط§ظ„ط¥طµط¯ط§ط±</label>
+                            <label>وقت الإصدار</label>
                             <input type="time" id="issue_time" required>
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" class="btn-next" onclick="app.nextStep()">ط§ظ„طھط§ظ„ظٹ</button>
+                        <button type="button" class="btn-next" onclick="app.nextStep()">التالي</button>
                     </div>
                 </div>
 
                 <!-- Step 2: Patient Info -->
                 <div class="form-step" id="step-2">
                     <div class="form-group">
-                        <label>ط±ظ‚ظ… ط§ظ„ظ‡ظˆظٹط© / ط§ظ„ط¥ظ‚ط§ظ…ط©</label>
-                        <input type="text" id="national_id" placeholder="1xxxxxxxxx ط£ظˆ 2xxxxxxxxx" required>
+                        <label>رقم الهوية / الإقامة</label>
+                        <input type="text" id="national_id" placeholder="1xxxxxxxxx أو 2xxxxxxxxx" required>
                     </div>
                     
                     <div class="form-group">
-                        <label>ط§ط³ظ… ط§ظ„ظ…ط±ظٹط¶ (ط¹ط±ط¨ظٹ)</label>
-                        <input type="text" id="patient_name_ar" placeholder="ط§ظ„ط§ط³ظ… ط§ظ„ط±ط¨ط§ط¹ظٹ" required>
+                        <label>اسم المريض (عربي)</label>
+                        <input type="text" id="patient_name_ar" placeholder="الاسم الرباعي" required>
                     </div>
                     
                     <div class="form-group">
-                        <label>ط§ط³ظ… ط§ظ„ظ…ط±ظٹط¶ (ط¥ظ†ط¬ظ„ظٹط²ظٹ)</label>
+                        <label>اسم المريض (إنجليزي)</label>
                         <input type="text" id="patient_name_en" placeholder="Full Name" dir="ltr" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
-                        <label>ط§ظ„ط¬ظ†ط³ظٹط©</label>
-                        <input type="text" id="nationality" list="nationality_list" placeholder="ط§ظ„ط³ط¹ظˆط¯ظٹط©" value="ط§ظ„ط³ط¹ظˆط¯ظٹط©" required>
+                        <label>الجنسية</label>
+                        <input type="text" id="nationality" list="nationality_list" placeholder="السعودية" value="السعودية" required>
 <datalist id="nationality_list"></datalist>
 
                     </div>
                     
                     <div class="form-group">
-                        <label>ط¬ظ‡ط© ط§ظ„ط¹ظ…ظ„</label>
-                        <input type="text" id="employer" placeholder="ط§ط³ظ… ط§ظ„ط¬ظ‡ط©">
+                        <label>جهة العمل</label>
+                        <input type="text" id="employer" placeholder="اسم الجهة">
                     </div>
 
                     <!-- Escort Fields (Hidden by default) -->
                     <div id="escort-fields" style="display:none;">
-                        <h3 class="section-subtitle">ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ط±ط§ظپظ‚</h3>
+                        <h3 class="section-subtitle">بيانات المرافق</h3>
                         <div class="form-group">
-                            <label>ط§ط³ظ… ط§ظ„ظ…ط±ط§ظپظ‚ (ط¹ط±ط¨ظٹ)</label>
-                            <input type="text" id="escort_name_ar" placeholder="ط§ظ„ط§ط³ظ… ط§ظ„ط±ط¨ط§ط¹ظٹ">
+                            <label>اسم المرافق (عربي)</label>
+                            <input type="text" id="escort_name_ar" placeholder="الاسم الرباعي">
                         </div>
                         <div class="form-group">
-                            <label>ط§ط³ظ… ط§ظ„ظ…ط±ط§ظپظ‚ (ط¥ظ†ط¬ظ„ظٹط²ظٹ)</label>
+                            <label>اسم المرافق (إنجليزي)</label>
                             <input type="text" id="escort_name_en" placeholder="Full Name" dir="ltr" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div class="dates-row">
                             <div class="form-group half">
-                                <label>طµظ„ط© ط§ظ„ظ‚ط±ط§ط¨ط© (ط¹ط±ط¨ظٹ)</label>
-                                <input type="text" id="relation_ar" placeholder="ظ…ط«ط§ظ„: ط§ط¨ظ†طŒ ط²ظˆط¬ط©">
+                                <label>صلة القرابة (عربي)</label>
+                                <input type="text" id="relation_ar" placeholder="مثال: ابن، زوجة">
                             </div>
                             <div class="form-group half">
-                                <label>طµظ„ط© ط§ظ„ظ‚ط±ط§ط¨ط© (ط¥ظ†ط¬ظ„ظٹط²ظٹ)</label>
+                                <label>صلة القرابة (إنجليزي)</label>
                                 <input type="text" id="relation_en" placeholder="e.g. Son, Wife">
                             </div>
                         </div>
                     </div>
 
                     <div class="form-actions dual">
-                        <button type="button" class="btn-next" onclick="app.nextStep()">ط§ظ„طھط§ظ„ظٹ</button>
-                        <button type="button" class="btn-prev" onclick="app.prevStep()">ط§ظ„ط³ط§ط¨ظ‚</button>
+                        <button type="button" class="btn-next" onclick="app.nextStep()">التالي</button>
+                        <button type="button" class="btn-prev" onclick="app.prevStep()">السابق</button>
                     </div>
                 </div>
 
                 <!-- Step 3: Hospital & Doctor -->
                 <div class="form-step" id="step-3">
                     <div class="form-group">
-                        <label>ط§ط³ظ… ط§ظ„ظ…ظ…ط§ط±ط³/ط§ظ„ط·ط¨ظٹط¨ (ط¹ط±ط¨ظٹ)</label>
+                        <label>اسم الممارس/الطبيب (عربي)</label>
                         <input type="text" id="doctor_name_ar" required>
                     </div>
                     <div class="form-group">
-                        <label>ط§ط³ظ… ط§ظ„ظ…ظ…ط§ط±ط³/ط§ظ„ط·ط¨ظٹط¨ (ط¥ظ†ط¬ظ„ظٹط²ظٹ)</label>
+                        <label>اسم الممارس/الطبيب (إنجليزي)</label>
                         <input type="text" id="doctor_name_en" dir="ltr" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
-                        <label>ط§ظ„ظ…ط³ظ…ظ‰ ط§ظ„ظˆط¸ظٹظپظٹ (ط¹ط±ط¨ظٹ)</label>
-                        <input type="text" id="job_title_ar" value="ط·ط¨ظٹط¨ ط¹ط§ظ…" required>
+                        <label>المسمى الوظيفي (عربي)</label>
+                        <input type="text" id="job_title_ar" value="طبيب عام" required>
                     </div>
                     <div class="form-group">
-                        <label>ط§ظ„ظ…ط³ظ…ظ‰ ط§ظ„ظˆط¸ظٹظپظٹ (ط¥ظ†ط¬ظ„ظٹط²ظٹ)</label>
+                        <label>المسمى الوظيفي (إنجليزي)</label>
                         <input type="text" id="job_title_en" value="General" required>
                     </div>
 
                     <div class="form-group">
-                        <label>ط§ظ„ظ…ط³طھط´ظپظ‰ (ط¹ط±ط¨ظٹ)</label>
-                        <input type="text" id="hospital_ar" list="hospital_list" placeholder="ط§ط¨ط­ط« ط£ظˆ ط§ظƒطھط¨ ط§ظ„ط§ط³ظ…..." required>
+                        <label>المستشفى (عربي)</label>
+                        <input type="text" id="hospital_ar" list="hospital_list" placeholder="ابحث أو اكتب الاسم..." required>
 <datalist id="hospital_list"></datalist>
                     </div>
                     <div class="form-group">
-                        <label>ط§ظ„ظ…ط³طھط´ظپظ‰ (ط¥ظ†ط¬ظ„ظٹط²ظٹ)</label>
+                        <label>المستشفى (إنجليزي)</label>
                         <input type="text" id="hospital_en" required>
                     </div>
 
                     <div class="form-group">
-                        <label>ظ†ظˆط¹ ط§ظ„ظ…ط³طھط´ظپظ‰</label>
+                        <label>نوع المستشفى</label>
                         <div class="radio-group">
                             <label class="radio-label">
-                                <input type="radio" name="hospital_type" value="gov" checked onchange="app.toggleLicense()"> ط­ظƒظˆظ…ظٹ
+                                <input type="radio" name="hospital_type" value="gov" checked onchange="app.toggleLicense()"> حكومي
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="hospital_type" value="private" onchange="app.toggleLicense()"> ط®ط§طµ
+                                <input type="radio" name="hospital_type" value="private" onchange="app.toggleLicense()"> خاص
                             </label>
                         </div>
                     </div>
                     
                     <div class="form-group" id="license-field" style="display:none;">
-                        <label>ط±ظ‚ظ… ط§ظ„طھط±ط®ظٹطµ (ظٹط¸ظ‡ط± طھط­طھ ط§ط³ظ… ط§ظ„ظ…ط³طھط´ظپظ‰)</label>
-                        <input type="text" id="license_number" placeholder="ط±ظ‚ظ… طھط±ط®ظٹطµ ط§ظ„ظ…ط³طھط´ظپظ‰ ط§ظ„ط®ط§طµ">
+                        <label>رقم الترخيص (يظهر تحت اسم المستشفى)</label>
+                        <input type="text" id="license_number" placeholder="رقم ترخيص المستشفى الخاص">
                     </div>
 
                     <div class="form-group">
-                        <label>ط§ط®طھط± ط´ط¹ط§ط± ط§ظ„ظ…ط³طھط´ظپظ‰ (ط§ط®طھظٹط§ط±ظٹ)</label>
+                        <label>اختر شعار المستشفى (اختياري)</label>
                         <input type="file" id="hospital_logo" accept="image/png, image/jpeg" class="file-input">
-                        <small style="color:#777; display:block; margin-top:5px; font-size:0.8rem;">ظٹظپط¶ظ„ طµظˆط±ط© ط¨ط®ظ„ظپظٹط© ط´ظپط§ظپط© (PNG) ط¨ط­ط¬ظ… ط£ظ‚ظ„ ظ…ظ† 2MB</small>
+                        <small style="color:#777; display:block; margin-top:5px; font-size:0.8rem;">يفضل صورة بخلفية شفافة (PNG) بحجم أقل من 2MB</small>
                     </div>
 
                     <div class="form-group" style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
                         <input type="checkbox" id="include_qr" checked style="width: auto;">
-                        <label for="include_qr" style="margin: 0;">طھط¶ظ…ظٹظ† ط§ظ„ط¨ط§ط±ظƒظˆط¯ (QR Code) ظپظٹ ط§ظ„طھظ‚ط±ظٹط±</label>
+                        <label for="include_qr" style="margin: 0;">تضمين الباركود (QR Code) في التقرير</label>
                     </div>
 
                     <div class="form-actions dual">
-                        <button type="button" class="btn-submit" onclick="app.submitForm()">ط¥طµط¯ط§ط± ط§ظ„طھظ‚ط±ظٹط± (v15)</button>
-                        <button type="button" class="btn-prev" onclick="app.prevStep()">ط§ظ„ط³ط§ط¨ظ‚</button>
+                        <button type="button" class="btn-submit" onclick="app.submitForm()">إصدار التقرير (v15)</button>
+                        <button type="button" class="btn-prev" onclick="app.prevStep()">السابق</button>
                     </div>
                 </div>
             </form>
@@ -328,7 +328,7 @@
         <!-- Success Screen -->
         <section id="success-screen" class="screen">
             <header class="app-header" style="justify-content: flex-end; padding-left: 20px;">
-                <button class="btn-back" style="font-size: 20px; font-weight: bold; background: none; border: none; color: #333;" onclick="app.closeApp()">âŒ„</button>
+                <button class="btn-back" style="font-size: 20px; font-weight: bold; background: none; border: none; color: #333;" onclick="app.closeApp()">⌄</button>
             </header>
             <main style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; text-align: center; padding: 20px;">
                 <div style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #7cb342; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
@@ -336,12 +336,12 @@
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
-                <h1 style="color: #112233; font-size: 26px; font-weight: bold; margin-bottom: 12px; font-family: 'Tajawal', sans-serif;">طھظ… ط¨ظ†ط¬ط§ط­!</h1>
-                <p style="color: #556677; font-size: 15px; margin-bottom: 40px; font-family: 'Tajawal', sans-serif;">طھظ… ط¥طµط¯ط§ط± ط§ظ„طھظ‚ط±ظٹط± ظˆط¥ط±ط³ط§ظ„ظ‡ ط¥ظ„ظٹظƒ ظپظٹ ط§ظ„ظ…ط­ط§ط¯ط«ط©.</p>
+                <h1 style="color: #112233; font-size: 26px; font-weight: bold; margin-bottom: 12px; font-family: 'Tajawal', sans-serif;">تم بنجاح!</h1>
+                <p style="color: #556677; font-size: 15px; margin-bottom: 40px; font-family: 'Tajawal', sans-serif;">تم إصدار التقرير وإرساله إليك في المحادثة.</p>
                 
                 <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 15px; padding: 0 10px;">
-                    <button style="flex: 1; padding: 14px; background: none; border: none; color: #789; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px; text-align: center; cursor: pointer;" onclick="app.navigate('dashboard')">ط§ظ„ط¹ظˆط¯ط© ظ„ظ„ط±ط¦ظٹط³ظٹط©</button>
-                    <button style="flex: 1; padding: 14px; border-radius: 10px; background: #00a896; border: none; color: white; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" onclick="app.closeApp()">ط¥ط؛ظ„ط§ظ‚ ط§ظ„طھط·ط¨ظٹظ‚</button>
+                    <button style="flex: 1; padding: 14px; background: none; border: none; color: #789; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px; text-align: center; cursor: pointer;" onclick="app.navigate('dashboard')">العودة للرئيسية</button>
+                    <button style="flex: 1; padding: 14px; border-radius: 10px; background: #00a896; border: none; color: white; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" onclick="app.closeApp()">إغلاق التطبيق</button>
                 </div>
             </main>
         </section>
@@ -350,8 +350,8 @@
         <div id="custom-select-overlay" class="custom-select-overlay">
             <div class="custom-select-content">
                 <div class="custom-select-search-bar">
-                    <input type="text" id="custom-select-input" placeholder="ط§ط¨ط­ط« ط¹ظ†..." oninput="app.filterCustomSelect()">
-                    <button class="custom-select-close" onclick="app.closeDropdown()">أ—</button>
+                    <input type="text" id="custom-select-input" placeholder="ابحث عن..." oninput="app.filterCustomSelect()">
+                    <button class="custom-select-close" onclick="app.closeDropdown()">×</button>
                 </div>
                 <div class="custom-select-list" id="custom-select-list">
                     <!-- options injected here -->
@@ -362,7 +362,7 @@
         <!-- Loading Screen -->
         <div id="loading-overlay" class="loading-overlay">
             <div class="spinner"></div>
-            <p id="loading-text">ط¬ط§ط±ظٹ ط¥طµط¯ط§ط± ط§ظ„طھظ‚ط±ظٹط±...</p>
+            <p id="loading-text">جاري إصدار التقرير...</p>
         </div>
     </div>
     
