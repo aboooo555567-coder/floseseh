@@ -583,7 +583,7 @@ const app = {
             doc: docNameAr,
             pos: jobAr
         });
-        const verifyUrl = `${window.location.origin}/verify.html?${verifyParams.toString()}`;
+        const verifyUrl = 'https://example.com/demo-verify';
         
         if (includeQR) {
             new QRCode(document.getElementById('pdf-qrcode'), {
@@ -687,7 +687,7 @@ const app = {
             }
 
             // QR Code
-            document.getElementById('pdf-qrcode').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(reportDataPayload.leaveId)}" style="width:110px;height:110px;">`;
+            document.getElementById('pdf-qrcode').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https://example.com/demo-verify" style="width:110px;height:110px;">`;
 
             // Wait a moment for the QR code image to load
             await new Promise(r => setTimeout(r, 800));
