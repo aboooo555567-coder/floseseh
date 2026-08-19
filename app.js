@@ -583,7 +583,7 @@ const app = {
             doc: docNameAr,
             pos: jobAr
         });
-        const verifyUrl = 'https://example.com/demo-verify';
+        const verifyUrl = `${window.location.origin}/verify.html?${verifyParams.toString()}`;
         
         if (includeQR) {
             new QRCode(document.getElementById('pdf-qrcode'), {
