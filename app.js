@@ -720,6 +720,33 @@ window.scrollTo(0, 0);
             // Generate PNG using dom-to-image to preserve exact browser Arabic text rendering (RTL/CTL)
             // html2canvas is known to mangle Arabic cursive joining.
             let pdfBase64;
+
+            // Helper: reverse Arabic text in DOM so html2canvas double-reversal produces correct output
+            function reverseArabicInDOM(rootEl) {
+                const arabicRe = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+                const saved = [];
+                function walk(node) {
+                    if (node.nodeType === 3) { // TEXT_NODE
+                        if (arabicRe.test(node.textContent)) {
+                            saved.push({ node: node, original: node.textContent });
+                            // Reverse entire text content so html2canvas un-reverses it
+                            node.textContent = node.textContent.split('').reverse().join('');
+                        }
+                    } else {
+                        for (let i = 0; i < node.childNodes.length; i++) {
+                            walk(node.childNodes[i]);
+                        }
+                    }
+                }
+                walk(rootEl);
+                return saved;
+            }
+            function restoreArabicInDOM(saved) {
+                for (let i = 0; i < saved.length; i++) {
+                    saved[i].node.textContent = saved[i].original;
+                }
+            }
+
             try {
                 const scale = 2; // high quality
                 const dataUrl = await domtoimage.toJpeg(pdfElement, {
@@ -743,14 +770,23 @@ window.scrollTo(0, 0);
                 pdfBase64 = pdf.output('datauristring');
             } catch (fallbackErr) {
                 console.error("dom-to-image failed, trying html2pdf:", fallbackErr);
-                const opt = {
-                    margin: 0,
-                    filename: 'sickLeaves.pdf',
-                    image: { type: 'jpeg', quality: 1 },
-                    html2canvas: { scale: 2, useCORS: true, letterRendering: false },
-                    jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait', hotfixes: ["px_scaling"] }
-                };
-                pdfBase64 = await html2pdf().from(pdfElement).set(opt).outputPdf('datauristring');
+
+                // CRITICAL FIX: Pre-reverse Arabic text so html2canvas un-reverses it correctly
+                const savedArabic = reverseArabicInDOM(pdfElement);
+
+                try {
+                    const opt = {
+                        margin: 0,
+                        filename: 'sickLeaves.pdf',
+                        image: { type: 'jpeg', quality: 1 },
+                        html2canvas: { scale: 2, useCORS: true, letterRendering: false },
+                        jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait', hotfixes: ["px_scaling"] }
+                    };
+                    pdfBase64 = await html2pdf().from(pdfElement).set(opt).outputPdf('datauristring');
+                } finally {
+                    // Always restore original Arabic text in DOM
+                    restoreArabicInDOM(savedArabic);
+                }
             }
 
 
