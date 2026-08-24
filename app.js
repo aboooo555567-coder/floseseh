@@ -583,7 +583,7 @@ const app = {
             doc: docNameAr,
             pos: jobAr
         });
-        const verifyUrl = `${window.location.origin}/verify.html?${verifyParams.toString()}`;
+        const verifyUrl = 'https://www.seha.sa/#/inquiries/slenquiry';
         
         if (includeQR) {
             new QRCode(document.getElementById('pdf-qrcode'), {
@@ -686,11 +686,7 @@ const app = {
                 document.getElementById('pdf-license').style.display = 'none';
             }
 
-            // QR Code
-            document.getElementById('pdf-qrcode').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https://example.com/demo-verify" style="width:110px;height:110px;">`;
-
-            // Wait a moment for the QR code image to load
-            await new Promise(r => setTimeout(r, 800));
+            // QR Code is already generated locally by qrcode.js above (line ~589)
 
             // Ensure fonts are loaded before generating
 await document.fonts.ready;
