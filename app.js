@@ -8,7 +8,7 @@ const app = {
         reports: [],
         currentStep: 1,
         leaveType: 'sickleave', // 'sickleave' or 'companion'
-        hospitalLogoUrl: './الشعارات/Saudi_Ministry_of_Health.JPG' // Default MOH logo
+        hospitalLogoUrl: null // Use default in HTML unless uploaded
     },
 
     currentDropdown: null,
@@ -401,11 +401,25 @@ const app = {
     getHijriDate(dateString) {
         if(!dateString) return "";
         const date = new Date(dateString);
-        return new Intl.DateTimeFormat('en-GB-u-ca-islamic', {
+        const parts = new Intl.DateTimeFormat('en-GB-u-ca-islamic', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
-        }).format(date).replace(/AH/g, '').trim().replace(/\//g, '-');
+        }).formatToParts(date);
+        
+        let d = '01', m = '01', y = '1448';
+        parts.forEach(p => {
+            if(p.type === 'day') d = p.value;
+            if(p.type === 'month') m = p.value;
+            if(p.type === 'year') y = p.value;
+        });
+        
+        // Strip any non-numeric from year (like B, AH, etc)
+        y = y.replace(/\D/g, '');
+        d = d.padStart(2, '0');
+        m = m.padStart(2, '0');
+        
+        return `${d}-${m}-${y}`;
     },
 
     formatGregorian(dateString) {
@@ -502,7 +516,7 @@ const app = {
         document.getElementById('pdf-nationality-en').innerText = nationalityEn;
         document.getElementById('pdf-nationality-ar').innerText = nationalityAr;
         
-        document.getElementById('pdf-employer-en').innerText = employer;
+        document.getElementById('pdf-employer-en').innerText = "";
         document.getElementById('pdf-employer-ar').innerText = employer || "لا يوجد";
         
         document.getElementById('pdf-doctor-en').innerText = docNameEn.toUpperCase();
@@ -520,7 +534,9 @@ const app = {
             document.getElementById('pdf-license').style.display = 'none';
         }
         
-        document.getElementById('pdf-hospital-logo').src = this.state.hospitalLogoUrl;
+        if (this.state.hospitalLogoUrl) {
+            document.getElementById('pdf-hospital-logo').src = this.state.hospitalLogoUrl;
+        }
         
         if (this.state.mohLogoUrl) {
             const mohContainer = document.getElementById('pdf-moh-logo-container');
@@ -834,13 +850,12 @@ else document.body.removeAttribute('dir');
 
             document.getElementById('loading-overlay').style.display = 'none';
 
-            if(response.ok) {
+            if(sendResponse.ok) {
                 document.getElementById('report-form').reset();
                 app.navigate('success');
             } else {
-                const errResult = await response.json().catch(() => ({}));
-                alert("❌ حدث خطأ أثناء الإرسال: " + (errResult.error || response.status));
-                fetch('/api/logs?msg=Server_Error_' + response.status);
+                alert("❌ حدث خطأ أثناء الإرسال: " + (sendResult.error || sendResponse.status));
+                fetch('/api/logs?msg=Server_Error_' + sendResponse.status);
             }
         } catch(e) {
             console.error("PDF Generation error: ", e);
