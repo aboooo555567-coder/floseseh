@@ -720,160 +720,22 @@ const app = {
 
             // QR Code is already generated locally by qrcode.js above (line ~589)
 
-            // Ensure fonts are loaded before generating
-await document.fonts.ready;
-await new Promise(r => setTimeout(r, 800)); // allow QR and images to settle
-
-const pdfElement = document.getElementById('pdf-content');
-// Ensure the element is completely visible before rendering
-pdfElement.parentElement.style.opacity = '1';
-pdfElement.parentElement.style.zIndex = '9999';
-pdfElement.parentElement.style.position = 'absolute'; // Use absolute to prevent fixed viewport issues
-pdfElement.parentElement.style.top = '0';
-pdfElement.parentElement.style.left = '0';
-pdfElement.parentElement.style.right = 'auto';
-
-// Very important for RTL pages: html2canvas calculates X incorrectly if the page is RTL.
-const originalHtmlDir = document.documentElement.getAttribute('dir');
-const originalBodyDir = document.body.getAttribute('dir');
-document.documentElement.setAttribute('dir', 'ltr');
-document.body.setAttribute('dir', 'ltr');
-
-// Prevent body overflow clipping
-const originalOverflow = document.body.style.overflow;
-const originalDocOverflow = document.documentElement.style.overflow;
-document.body.style.overflow = 'visible';
-document.documentElement.style.overflow = 'visible';
-
-// Scroll to top-left to ensure capture area is within viewport coordinates
-window.scrollTo(0, 0);
-
-            // Temporarily move pdf-container into viewport
-            const pdfContainer = document.getElementById('pdf-container');
-            const origTop = pdfContainer.style.top;
-            const origLeft = pdfContainer.style.left;
-            const origZIndex = pdfContainer.style.zIndex;
             
-            pdfContainer.style.top = '0';
-            pdfContainer.style.left = '0';
-            pdfContainer.style.zIndex = '1000';
-
-            // Generate PNG using html-to-image to preserve exact browser Arabic text rendering (RTL/CTL)
-            // html2canvas is known to mangle Arabic cursive joining.
-            let pdfBase64;
-
-            try {
-                const scale = 2; // high quality
-                const dataUrl = await htmlToImage.toJpeg(pdfElement, {
-                    quality: 0.98,
-                    backgroundColor: '#ffffff',
-                    width: 794 * scale,
-                    height: 1122 * scale,
-                    
-                    style: {
-                        transform: 'scale(' + scale + ')',
-                        transformOrigin: 'top left',
-                        width: '794px',
-                        height: '1122px'
-                    }
-                });
-
-                // Create jsPDF and inject the perfectly rendered image
-                const jsPDFClass = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
-                if (!jsPDFClass) throw new Error("jsPDF not loaded");
-                const pdf = new jsPDFClass({ unit: 'px', format: [794, 1122], orientation: 'portrait', hotfixes: ["px_scaling"] });
-                document.body.style.overflow = originalOverflow;
-                document.documentElement.style.overflow = originalDocOverflow;
-                pdfContainer.style.top = origTop;
-                pdfContainer.style.left = origLeft;
-                pdfContainer.style.zIndex = origZIndex;
-                pdf.addImage(dataUrl, 'JPEG', 0, 0, 794, 1122);
-                pdfBase64 = pdf.output('datauristring');
-            } catch (fallbackErr) {
-                // Restore pdf-container position
-                pdfContainer.style.top = origTop;
-                pdfContainer.style.left = origLeft;
-                pdfContainer.style.zIndex = origZIndex;
-                console.error("html-to-image failed, trying html2pdf:", fallbackErr);
-                try {
-                    console.log("Applying Arabic Reshaper for html2canvas fallback...");
-                    document.documentElement.setAttribute('dir', 'ltr');
-                    document.body.setAttribute('dir', 'ltr');
-                    if (window.ArabicReshaper) {
-                        const walker = document.createTreeWalker(pdfElement, NodeFilter.SHOW_TEXT, null, false);
-                        const texts = [];
-                        let node;
-                        while(node = walker.nextNode()) {
-                           if(node.nodeValue.trim().length > 0) {
-                               // Reshape arabic characters to presentation forms
-                               const reshaped = window.ArabicReshaper.convertArabic(node.nodeValue);
-                               // html2canvas renders RTL completely wrong. A proven trick for html2canvas+arabic is reversing.
-                               // We only reverse the Arabic parts if possible, but for simplicity, we reverse the whole string.
-                               // Wait, reversing English messes it up.
-                               // Better approach: use regex to match only Arabic and reverse it!
-                               const words = reshaped.split(/([a-zA-Z0-9\-_./\s()]+)/);
-                               const reversedText = words.map(w => {
-                                   if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(w)) {
-                                       return w.split('').reverse().join('');
-                                   }
-                                   return w;
-                               }).reverse().join('');
-                               
-                               node.nodeValue = reversedText;
-                           }
-                        }
-                        // Need to set css dir="ltr" on the container so html2canvas doesn't try to apply its own broken RTL layout logic
-                        pdfElement.setAttribute('dir', 'ltr');
-                        pdfElement.style.direction = 'ltr';
-                    }
-
-                    const opt = {
-                        margin: 0,
-                        filename: 'sickLeaves.pdf',
-                        image: { type: 'jpeg', quality: 1 },
-                        html2canvas: { scale: 2, useCORS: true, letterRendering: false },
-                        jsPDF: { unit: 'px', format: [794, 1122], orientation: 'portrait', hotfixes: ["px_scaling"] }
-                    };
-                    pdfBase64 = await html2pdf().from(pdfElement).set(opt).outputPdf('datauristring');
-                } catch(e) {
-                    console.error("html2pdf fallback also failed", e);
-                }
-            }
-
-
-// Hide it again
-pdfElement.parentElement.style.opacity = '0.01';
-pdfElement.parentElement.style.zIndex = '-9999';
-pdfElement.parentElement.style.position = 'absolute';
-pdfElement.parentElement.style.top = '-10000px';
-pdfElement.parentElement.style.left = '-10000px';
-
-// Restore page states
-document.body.style.overflow = originalOverflow;
-document.documentElement.style.overflow = originalDocOverflow;
-if(originalHtmlDir) document.documentElement.setAttribute('dir', originalHtmlDir);
-else document.documentElement.removeAttribute('dir');
-if(originalBodyDir) document.body.setAttribute('dir', originalBodyDir);
-else document.body.removeAttribute('dir');
-
-    
-
-
-            // Send generated PDF back to server to send via Telegram
-            const sendResponse = await fetch('/api/send-generated-pdf', {
+            // SERVER-SIDE GENERATION FIX
+            const res = await fetch('/api/generate-native-pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     chatId: app.state.chatId,
-                    pdfBase64: pdfBase64,
+                    reportData: reportDataPayload,
                     filename: 'sickLeaves.pdf',
                     reportId: reportId
                 })
             });
             
-            const sendResult = await sendResponse.json();
-            if (!sendResult.success) {
-                throw new Error(sendResult.error || 'Failed to send PDF');
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.error || 'فشل توليد التقرير');
             }
 
             // Also save report data
@@ -915,14 +777,9 @@ else document.body.removeAttribute('dir');
             });
 
             document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('report-form').reset();
+            app.navigate('success');
 
-            if(sendResponse.ok) {
-                document.getElementById('report-form').reset();
-                app.navigate('success');
-            } else {
-                alert("❌ حدث خطأ أثناء الإرسال: " + (sendResult.error || sendResponse.status));
-                fetch('/api/logs?msg=Server_Error_' + sendResponse.status);
-            }
         } catch(e) {
             console.error("PDF Generation error: ", e);
             fetch('/api/logs?msg=' + encodeURIComponent('Client_Error: ' + e.message));
