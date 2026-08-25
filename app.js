@@ -797,6 +797,8 @@ window.scrollTo(0, 0);
                 console.error("html-to-image failed, trying html2pdf:", fallbackErr);
                 try {
                     console.log("Applying Arabic Reshaper for html2canvas fallback...");
+                    document.documentElement.setAttribute('dir', 'ltr');
+                    document.body.setAttribute('dir', 'ltr');
                     if (window.ArabicReshaper) {
                         const walker = document.createTreeWalker(pdfElement, NodeFilter.SHOW_TEXT, null, false);
                         const texts = [];
