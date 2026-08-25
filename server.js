@@ -1008,9 +1008,34 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 </body>
 </html>`;
 
-        // We no longer generate PDF on the server due to Render environment limitations.
-        // Instead, we return the HTML and the client uses html2pdf.js to generate the PDF natively.
-        res.json({ success: true, html: html, reportId: reportId });
+        
+        addLog('Launching puppeteer...');
+        const browser = await puppeteer.launch({
+            headless: "new",
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        });
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        
+        addLog('Generating PDF via Puppeteer...');
+        const pdfBuffer = await page.pdf({
+            printBackground: true,
+            width: '794px',
+            height: '1123px',
+            pageRanges: '1'
+        });
+        await browser.close();
+        
+        addLog('Sending PDF to Telegram...');
+        const message = await bot.sendDocument(chatId, pdfBuffer, {
+            caption: 'تم إصدار التقرير بنجاح ✅'
+        }, {
+            filename: filename || 'sickLeaves.pdf',
+            contentType: 'application/pdf'
+        });
+        
+        res.json({ success: true, fileId: message.document.file_id, reportId: reportId });
+
     } catch (err) {
         addLog(`Error generating HTML for PDF: ${err.message}`);
         res.status(500).json({ success: false, error: err.message });
