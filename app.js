@@ -744,6 +744,7 @@ window.scrollTo(0, 0);
                     backgroundColor: '#ffffff',
                     width: 794 * scale,
                     height: 1122 * scale,
+                    skipFonts: true, // CRITICAL FIX FOR IOS SAFARI
                     style: {
                         transform: 'scale(' + scale + ')',
                         transformOrigin: 'top left',
