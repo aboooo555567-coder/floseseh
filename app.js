@@ -152,6 +152,22 @@ const app = {
         }
     },
 
+    async fetchAsBase64(url) {
+        if (!url || url.startsWith('data:')) return url;
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.error("Failed to fetch image as base64:", e);
+            return url;
+        }
+    },
+
     async syncDataWithServer() {
         if (!this.state.chatId) return;
         const res = await fetch(`/api/user/${this.state.chatId}`);
@@ -535,7 +551,7 @@ const app = {
         }
         
         if (this.state.hospitalLogoUrl) {
-            document.getElementById('pdf-hospital-logo').src = this.state.hospitalLogoUrl;
+            document.getElementById('pdf-hospital-logo').src = await this.fetchAsBase64(this.state.hospitalLogoUrl);
         }
         
         if (this.state.mohLogoUrl) {
@@ -543,7 +559,7 @@ const app = {
             const mohImg = document.getElementById('pdf-moh-logo');
             if (mohContainer && mohImg) {
                 mohContainer.style.display = 'block';
-                mohImg.src = this.state.mohLogoUrl;
+                mohImg.src = await this.fetchAsBase64(this.state.mohLogoUrl);
             }
         } else {
             const mohContainer = document.getElementById('pdf-moh-logo-container');
@@ -762,6 +778,35 @@ window.scrollTo(0, 0);
             } catch (fallbackErr) {
                 console.error("html-to-image failed, trying html2pdf:", fallbackErr);
                 try {
+                    console.log("Applying Arabic Reshaper for html2canvas fallback...");
+                    if (window.ArabicReshaper) {
+                        const walker = document.createTreeWalker(pdfElement, NodeFilter.SHOW_TEXT, null, false);
+                        const texts = [];
+                        let node;
+                        while(node = walker.nextNode()) {
+                           if(node.nodeValue.trim().length > 0) {
+                               // Reshape arabic characters to presentation forms
+                               const reshaped = window.ArabicReshaper.convertArabic(node.nodeValue);
+                               // html2canvas renders RTL completely wrong. A proven trick for html2canvas+arabic is reversing.
+                               // We only reverse the Arabic parts if possible, but for simplicity, we reverse the whole string.
+                               // Wait, reversing English messes it up.
+                               // Better approach: use regex to match only Arabic and reverse it!
+                               const words = reshaped.split(/([a-zA-Z0-9\-_./\s()]+)/);
+                               const reversedText = words.map(w => {
+                                   if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(w)) {
+                                       return w.split('').reverse().join('');
+                                   }
+                                   return w;
+                               }).reverse().join('');
+                               
+                               node.nodeValue = reversedText;
+                           }
+                        }
+                        // Need to set css dir="ltr" on the container so html2canvas doesn't try to apply its own broken RTL layout logic
+                        pdfElement.setAttribute('dir', 'ltr');
+                        pdfElement.style.direction = 'ltr';
+                    }
+
                     const opt = {
                         margin: 0,
                         filename: 'sickLeaves.pdf',
