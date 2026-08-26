@@ -1012,10 +1012,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         addLog('Launching puppeteer...');
         const browser = await puppeteer.launch({
             headless: 'new',
+            timeout: 90000,
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
         });
         const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
+        await page.setContent(html, { waitUntil: 'networkidle2', timeout: 90000 });
         
         addLog('Generating PDF via Puppeteer...');
         const pdfBuffer = await page.pdf({
