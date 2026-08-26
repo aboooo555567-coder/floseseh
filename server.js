@@ -939,7 +939,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <img src="${sehaLogo}" style="position:absolute;top:15px;left:40px;width:145px;">
   
   <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:140px;height:55px;object-fit:contain;">
+  <img src="${ksaCalligraphy}" style="position:absolute;top:50px;left:50%;transform:translateX(-50%);width:280px;height:120px;object-fit:contain;">
   
   <!-- Header: Kingdom text -->
   <div style="display:none; position:absolute;top:78px;left:0;width:794px;text-align:center;">
