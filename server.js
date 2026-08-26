@@ -1306,6 +1306,17 @@ const startServer = async () => {
         // Configure Open button with the correct Render URL
         await configureChatMenuButton();
 
+        
+        // Ensure Puppeteer Chrome is installed on Render
+        try {
+            console.log('Checking and installing Puppeteer Chrome if missing...');
+            const { execSync } = require('child_process');
+            execSync('npx puppeteer browsers install chrome', { stdio: 'inherit' });
+            console.log('Chrome installation verified.');
+        } catch (err) {
+            console.error('Failed to ensure Chrome:', err.message);
+        }
+
         app.listen(PORT, () => {
             console.log(`\n=== SEHA Sick Leave App ===`);
             console.log(`✓ Server running at http://localhost:${PORT}`);

@@ -5,6 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "postinstall": "npx puppeteer browsers install chrome",
+    "build": "npm install && npx puppeteer browsers install chrome",
     "auto": "node auto-start.js",
     "dev": "node auto-start.js"
   },
