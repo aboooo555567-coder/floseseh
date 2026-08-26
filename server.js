@@ -1039,7 +1039,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </table>
 
   <!-- ===== FOOTER ===== -->
-  <div style="display:flex; justify-content:space-between; margin-top:40px; height:240px;">
+  <div style="display:flex; justify-content:space-between; margin-top:40px; height:270px;">
     <!-- Left Footer: QR Code + Verification Text + Date/Time -->
     <div style="width:300px; display:flex; flex-direction:column; justify-content:space-between;">
       <div>
@@ -1072,8 +1072,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         ${d.licenseNumber ? `<p style="font-size:10px;color:#555;margin:0 0 10px 0;">رقم الترخيص : ${d.licenseNumber}</p>` : '<div style="height:10px;"></div>'}
       </div>
       <!-- NHIC Logo -->
-      <div style="text-align:right; margin-top:15px; margin-right:-20px;">
-        <img src="${nhicLogo}" style="height:95px;">
+      <div style="text-align:right; margin-top:15px; margin-right:-30px;">
+        <img src="${nhicLogo}" style="height:140px;">
       </div>
     </div>
   </div>
