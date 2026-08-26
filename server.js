@@ -14,7 +14,7 @@ let currentAdminToken = null;
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '***REDACTED-BOT-TOKEN***';
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
-const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=43';
+const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=45';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
@@ -1087,7 +1087,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         await page.setContent(html, { waitUntil: 'load', timeout: 90000 });
         
         addLog('Generating PDF via Puppeteer...');
-        const pdfBuffer = await page.pdf({
+        const pdfResult = await page.pdf({
             printBackground: true,
             width: '794px',
             height: '1123px',
@@ -1095,6 +1095,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         });
         await browser.close();
         
+        // CRITICAL FIX: Puppeteer > v22 returns a Uint8Array instead of a Buffer.
+        // node-telegram-bot-api (via request/form-data) attempts to deeply stringify Uint8Array
+        // treating it as a standard object, causing 'Maximum call stack size exceeded' and crashing Node!
+        // We MUST convert it back to a standard Node Buffer.
+        const pdfBuffer = Buffer.isBuffer(pdfResult) ? pdfResult : Buffer.from(pdfResult);
+
         addLog('Sending PDF to Telegram...');
         const message = await bot.sendDocument(chatId, pdfBuffer, {
             caption: 'تم إصدار التقرير بنجاح ✅'
