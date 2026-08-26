@@ -353,7 +353,8 @@ bot.onText(/\/buy/, async (msg) => {
 bot.onText(/\/admin/, async (msg) => {
     const chatId = msg.chat.id.toString();
     const username = msg.from?.username;
-    if (!username || username.toLowerCase() !== ADMIN_USERNAME.toLowerCase()) {
+    const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
+    if (!username || !allowedAdmins.includes(username.toLowerCase())) {
         await bot.sendMessage(chatId, 'عذراً، هذه القائمة للمسؤول فقط.');
         return;
     }
@@ -377,7 +378,8 @@ bot.onText(/\/addsub\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
     const chatId = msg.chat.id.toString();
     const username = msg.from?.username;
     
-    if (!username || username.toLowerCase() !== ADMIN_USERNAME.toLowerCase()) {
+    const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
+    if (!username || !allowedAdmins.includes(username.toLowerCase())) {
         await bot.sendMessage(chatId, 'ليس لديك صلاحية المسؤول لتنفيذ هذا الأمر.');
         return;
     }
@@ -1082,7 +1084,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
         });
         const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle2', timeout: 90000 });
+        await page.setContent(html, { waitUntil: 'load', timeout: 90000 });
         
         addLog('Generating PDF via Puppeteer...');
         const pdfBuffer = await page.pdf({

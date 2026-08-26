@@ -226,8 +226,8 @@
 
                     <div class="form-group">
                         <label>الجنسية</label>
-                        <input type="text" id="nationality" list="nationality_list" placeholder="السعودية" value="السعودية" required>
-<datalist id="nationality_list"></datalist>
+                        <input type="text" id="nationality" onclick="app.openDropdown('nationality')" placeholder="الجنسية" value="سعودي" autocomplete="off" required>
+
 
                     </div>
                     
@@ -287,8 +287,8 @@
 
                     <div class="form-group">
                         <label>المستشفى (عربي)</label>
-                        <input type="text" id="hospital_ar" list="hospital_list" placeholder="ابحث أو اكتب الاسم..." oninput="app.syncHospitalEn()" required>
-<datalist id="hospital_list"></datalist>
+                        <input type="text" id="hospital_ar" onclick="app.openDropdown('hospital')" placeholder="اختر من القائمة أو اكتب يدوياً..." oninput="app.syncHospitalEn()" autocomplete="off" required>
+
                     </div>
                     <div class="form-group">
                         <label>المستشفى (إنجليزي)</label>

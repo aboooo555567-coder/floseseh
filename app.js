@@ -291,12 +291,21 @@ const app = {
         });
     },
 
+    
     filterCustomSelect() {
         if(!this.currentDropdown) return;
-        const query = document.getElementById('custom-select-input').value.toLowerCase();
-        const filtered = this.dropdownData[this.currentDropdown].filter(item => item.toLowerCase().includes(query));
+        const query = document.getElementById('custom-select-input').value;
+        const queryLower = query.toLowerCase();
+        let filtered = this.dropdownData[this.currentDropdown].filter(item => item.toLowerCase().includes(queryLower));
+        
+        // Allow manual custom entry
+        if (query.trim() !== '' && !filtered.includes(query.trim())) {
+            filtered.unshift(query.trim());
+        }
+        
         this.renderDropdownList(filtered);
     },
+
 
     async init() {
         if (this.tg) {
