@@ -814,7 +814,7 @@ const app = {
             nationalityAr: nationalityAr,
             relationEn: type === 'companion' ? relEn : '',
             relationAr: type === 'companion' ? relAr : '',
-            employerEn: employer,
+            employerEn: "",
             employerAr: employer || 'غير محدد',
             docLabelEn: type === 'companion' ? 'Physician Name' : 'Practitioner Name',
             docLabelAr: type === 'companion' ? 'اسم الطبيب' : 'اسم الممارس',
