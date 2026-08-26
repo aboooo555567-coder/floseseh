@@ -939,7 +939,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <img src="${sehaLogo}" style="position:absolute;top:15px;left:40px;width:145px;">
   
   <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:50px;left:50%;transform:translateX(-50%);width:280px;height:120px;object-fit:contain;">
+  <img src="${ksaCalligraphy}" style="position:absolute;top:40px;left:50%;transform:translateX(-50%);width:340px;height:145px;object-fit:contain;">
   
   <!-- Header: Kingdom text -->
   <div style="display:none; position:absolute;top:78px;left:0;width:794px;text-align:center;">
@@ -965,7 +965,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="display:none; position:absolute;top:170px;left:40px;width:714px;height:1px;background:#dee2e6;"></div>
 
   <!-- Data Table -->
-  <div style="position:absolute;top:185px;left:40px;width:714px;">
+  <div style="position:absolute;top:205px;left:40px;width:714px;">
   <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:155px;">Leave ID</td>
