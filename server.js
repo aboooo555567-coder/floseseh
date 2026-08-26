@@ -942,7 +942,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <img src="${ksaCalligraphy}" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:140px;height:55px;object-fit:contain;">
   
   <!-- Header: Kingdom text -->
-  <div style="position:absolute;top:78px;left:0;width:794px;text-align:center;">
+  <div style="display:none; position:absolute;top:78px;left:0;width:794px;text-align:center;">
     <p style="font-family:'Times New Roman',serif;font-size:14px;color:#000;font-weight:bold;">Kingdom of Saudi Arabia</p>
   </div>
   
