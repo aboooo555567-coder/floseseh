@@ -929,8 +929,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
   .label-en { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 12px; width: 155px; text-decoration: underline; font-style: italic; text-align: left; }
   .label-ar { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 13px; width: 155px; text-align: right; }
-  .val { border: 1px solid #dee2e6; padding: 10px 8px; color: #333; font-size: 12px; }
-  .dur-row td { background-color: #2b4b7c; color: white; border: 1px solid #4a6a9a; padding: 10px 8px; font-size: 12px; }
+  .val { border: 1px solid #dee2e6; padding: 10px 8px; color: #333; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
+  .dur-row td { background-color: #2b4b7c; color: white; border: 1px solid #4a6a9a; padding: 10px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
   .dur-label { font-weight: bold; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
