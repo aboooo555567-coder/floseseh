@@ -947,12 +947,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </div>
   
   <!-- Header: Arabic Title -->
-  <div style="position:absolute;top:108px;left:0;width:794px;text-align:center;">
+  <div style="display:none; position:absolute;top:108px;left:0;width:794px;text-align:center;">
     <h1 style="color:#216ba5;font-size:22px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
   </div>
   
   <!-- Header: English Title -->
-  <div style="position:absolute;top:138px;left:0;width:794px;text-align:center;">
+  <div style="display:none; position:absolute;top:138px;left:0;width:794px;text-align:center;">
     <h2 style="color:#216ba5;font-size:14px;font-weight:bold;margin:0;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
   
@@ -962,7 +962,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </svg>
 
   <!-- Horizontal separator line -->
-  <div style="position:absolute;top:170px;left:40px;width:714px;height:1px;background:#dee2e6;"></div>
+  <div style="display:none; position:absolute;top:170px;left:40px;width:714px;height:1px;background:#dee2e6;"></div>
 
   <!-- Data Table -->
   <div style="position:absolute;top:185px;left:40px;width:714px;">
