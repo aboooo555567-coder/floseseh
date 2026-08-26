@@ -939,21 +939,21 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <img src="${sehaLogo}" style="position:absolute;top:15px;left:40px;width:145px;">
   
   <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:140px;height:55px;object-fit:contain;">
+  <img src="${ksaCalligraphy}" style="position:absolute;top:25px;left:50%;transform:translateX(-50%);width:160px;height:65px;object-fit:contain;">
   
   <!-- Header: Kingdom text -->
-  <div style="display:none; position:absolute;top:78px;left:0;width:794px;text-align:center;">
-    <p style="font-family:'Times New Roman',serif;font-size:14px;color:#000;font-weight:bold;">Kingdom of Saudi Arabia</p>
+  <div style="position:absolute;top:90px;left:0;width:794px;text-align:center;">
+    <p style="font-family:'Times New Roman',serif;font-size:16px;color:#000;font-weight:bold;">Kingdom of Saudi Arabia</p>
   </div>
   
   <!-- Header: Arabic Title -->
-  <div style="display:none; position:absolute;top:108px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#216ba5;font-size:22px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+  <div style="position:absolute;top:125px;left:0;width:794px;text-align:center;">
+    <h1 style="color:#216ba5;font-size:24px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
   </div>
   
   <!-- Header: English Title -->
-  <div style="display:none; position:absolute;top:138px;left:0;width:794px;text-align:center;">
-    <h2 style="color:#216ba5;font-size:14px;font-weight:bold;margin:0;">${d.titleEn || 'Sick Leave Report'}</h2>
+  <div style="position:absolute;top:158px;left:0;width:794px;text-align:center;">
+    <h2 style="color:#216ba5;font-size:16px;font-weight:bold;margin:0;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
   
   <!-- Header: Geometric graphic (right) -->
@@ -965,7 +965,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="display:none; position:absolute;top:170px;left:40px;width:714px;height:1px;background:#dee2e6;"></div>
 
   <!-- Data Table -->
-  <div style="position:absolute;top:185px;left:40px;width:714px;">
+  <div style="position:absolute;top:200px;left:40px;width:714px;">
   <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:155px;">Leave ID</td>
