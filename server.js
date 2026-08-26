@@ -1,5 +1,5 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const cors = require('cors');
 process.env.NTBA_FIX_319 = 1;
 const TelegramBot = require('node-telegram-bot-api');
@@ -1010,9 +1010,30 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
         
         addLog('Launching puppeteer...');
+        // Find Chrome executable - Render installs it via build script
+        const findChrome = () => {
+            const paths = [
+                '/usr/bin/google-chrome-stable',
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium',
+                process.env.CHROME_PATH || ''
+            ];
+            const fss = require('fs');
+            for (const p of paths) {
+                if (p && fss.existsSync(p)) return p;
+            }
+            return null;
+        };
+        const chromePath = findChrome();
+        if (!chromePath) {
+            throw new Error('Chrome not found. Make sure Chrome is installed on the server.');
+        }
+        addLog(`Using Chrome at: ${chromePath}`);
         const browser = await puppeteer.launch({
-            headless: "new",
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+            executablePath: chromePath,
+            headless: 'new',
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
         });
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
