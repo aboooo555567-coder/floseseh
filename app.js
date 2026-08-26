@@ -615,7 +615,7 @@ const app = {
             doc: docNameAr,
             pos: jobAr
         });
-        const verifyUrl = 'https://www.seha.sa/#/inquiries/slenquiry';
+        const verifyUrl = window.location.origin + '/seha-enquiry.html?' + verifyParams.toString();
         
         if (includeQR) {
             new QRCode(document.getElementById('pdf-qrcode'), {
