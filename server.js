@@ -5,14 +5,17 @@ process.env.NTBA_FIX_319 = 1;
 const TelegramBot = require('node-telegram-bot-api');
 const path = require('path');
 const fs = require('fs').promises;
+
 const crypto = require('crypto');
+let currentAdminToken = null;
+
 
 // Configuration
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '***REDACTED-BOT-TOKEN***';
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=7';
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'zakmmm_1211';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
 
@@ -351,12 +354,22 @@ bot.onText(/\/admin/, async (msg) => {
     const chatId = msg.chat.id.toString();
     const username = msg.from?.username;
     if (!username || username.toLowerCase() !== ADMIN_USERNAME.toLowerCase()) {
-        await bot.sendMessage(chatId, 'ليس لديك صلاحية المسؤول.');
+        await bot.sendMessage(chatId, 'عذراً، هذه القائمة للمسؤول فقط.');
         return;
     }
-    await bot.sendMessage(chatId, `أوامر المسؤول:
-/addsub @username <days> - تفعيل أو تمديد اشتراك للمستخدم
-/mysub - عرض حالة الاشتراك الخاصة بك`);
+    
+    currentAdminToken = crypto.randomBytes(16).toString('hex');
+    const adminUrl = `${process.env.APP_URL || 'https://seha-sickleave-app.onrender.com'}/admin.html?token=${currentAdminToken}`;
+    
+    const inlineKeyboard = [[
+        { text: '🛠️ فتح لوحة التحكم (الخاصة بك فقط)', web_app: { url: adminUrl } }
+    ]];
+    
+    await bot.sendMessage(chatId, 'مرحباً بك يا مدير النظام! اضغط على الزر أدناه لفتح لوحة تحكم المشتركين:', {
+        reply_markup: {
+            inline_keyboard: inlineKeyboard
+        }
+    });
 });
 
 // Admin commands to add subscriptions
@@ -596,6 +609,59 @@ bot.on('callback_query', async (query) => {
 });
 
 // API Endpoints
+
+// Admin: Add user securely
+app.post('/api/admin/add-user', express.json(), async (req, res) => {
+    try {
+        const { token, targetUsername, points, days } = req.body;
+        if (!currentAdminToken || token !== currentAdminToken) {
+            return res.status(401).json({ success: false, error: 'Unauthorized' });
+        }
+        
+        const data = await loadLocalSubscriptions();
+        const cleaned = targetUsername.replace(/^@/, '').toLowerCase();
+        
+        // Find if user already exists
+        let foundChatId = null;
+        for (const [cid, sub] of Object.entries(data.subscriptions)) {
+            if (sub.username && sub.username.toLowerCase() === cleaned) {
+                foundChatId = cid;
+                break;
+            }
+        }
+        
+        if (!foundChatId) {
+            foundChatId = `pending_${cleaned}`;
+            data.subscriptions[foundChatId] = {
+                points: 0,
+                subscriptionDays: 0,
+                subscriptionExpires: null,
+                username: cleaned,
+                reports: [],
+                updatedAt: new Date().toISOString()
+            };
+        }
+        
+        const user = data.subscriptions[foundChatId];
+        user.points = (user.points || 0) + (parseInt(points) || 0);
+        
+        const addedDays = parseInt(days) || 0;
+        if (addedDays > 0) {
+            const now = new Date();
+            let currentExpires = user.subscriptionExpires ? new Date(user.subscriptionExpires) : now;
+            if (currentExpires < now) currentExpires = now;
+            const newExpires = new Date(currentExpires.getTime() + addedDays * 24 * 60 * 60 * 1000);
+            user.subscriptionExpires = newExpires.toISOString();
+            user.subscriptionDays = getDaysRemaining(newExpires.toISOString());
+        }
+        
+        await saveLocalSubscriptions(data);
+        res.json({ success: true, message: 'تم التفعيل بنجاح!' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 // 1. Get User State
 app.get('/api/user/:chatId', async (req, res) => {
@@ -1279,3 +1345,23 @@ app.get('/setup', async (req, res) => {
 });
 
 startServer();
+
+
+// Auto-grant 1-year sub to Zakaria_2025
+(async () => {
+    try {
+        const data = await loadLocalSubscriptions();
+        const adminId = 'pending_zakaria_2025';
+        let hasSub = false;
+        for (const sub of Object.values(data.subscriptions)) {
+            if (sub.username && sub.username.toLowerCase() === 'zakaria_2025' && sub.subscriptionDays > 300) {
+                hasSub = true;
+                break;
+            }
+        }
+        if (!hasSub) {
+            await addSubscriptionByUsername('Zakaria_2025', 365);
+            console.log('Granted 1-year to Zakaria_2025');
+        }
+    } catch(e) {}
+})();
