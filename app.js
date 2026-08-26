@@ -334,24 +334,6 @@ const app = {
         }
 
 
-        // Populate datalists
-        const hospList = document.getElementById('hospital_list');
-        if (hospList) {
-            this.dropdownData.hospital.forEach(h => {
-                const opt = document.createElement('option');
-                opt.value = h;
-                hospList.appendChild(opt);
-            });
-        }
-        const natList = document.getElementById('nationality_list');
-        if (natList) {
-            this.dropdownData.nationality.forEach(n => {
-                const opt = document.createElement('option');
-                opt.value = n;
-                natList.appendChild(opt);
-            });
-        }
-
         
         // Listeners for file upload
         const logoInput = document.getElementById('hospital_logo');
