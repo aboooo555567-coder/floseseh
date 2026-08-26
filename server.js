@@ -1072,12 +1072,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         ${d.licenseNumber ? `<p style="font-size:10px;color:#555;margin:0 0 10px 0;">رقم الترخيص : ${d.licenseNumber}</p>` : '<div style="height:10px;"></div>'}
       </div>
       <!-- NHIC Logo & Custom Text -->
-      <div style="margin-top:5px; margin-right:-50px; margin-left:auto; display:flex; flex-direction:column; align-items:center; width:180px;">
+      <div style="margin-top:5px; margin-right:-50px; margin-left:auto; display:flex; flex-direction:column; align-items:center; width:220px;">
         <div style="width: 75px; height: 55px; overflow: hidden; position: relative; margin-bottom: 2px;">
           <img src="${nhicLogo}" style="width: 75px; height: 75px; position: absolute; top: 0; left: 0; object-fit: cover; object-position: top;">
         </div>
-        <h4 style="font-size:11px; font-weight:bold; font-family:'Tajawal',sans-serif; color:#333; margin:0; line-height:1.2; text-align:center;">المركز الوطني للمعلومات الصحية</h4>
-        <h5 style="font-size:8px; font-weight:bold; font-family:'Arial',sans-serif; color:#666; margin:2px 0 0 0; line-height:1.2; text-align:center;">National Health Information Center</h5>
+        <h4 style="font-size:10px; font-weight:bold; font-family:'Tajawal',sans-serif; color:#333; margin:0; line-height:1.2; text-align:center;">المركز الوطني للمعلومات الصحية</h4>
+        <h5 style="font-size:8px; font-weight:bold; font-family:'Arial',sans-serif; color:#666; margin:2px 0 0 0; line-height:1.2; text-align:center;">NATIONAL HEALTH INFORMATION CENTER</h5>
       </div>
     </div>
   </div>
