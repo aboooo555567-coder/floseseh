@@ -965,7 +965,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="position:absolute;top:170px;left:40px;width:714px;height:1px;background:#dee2e6;"></div>
 
   <!-- Data Table -->
-  <table style="position:absolute;top:185px;left:40px;width:714px;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
+  <div style="position:absolute;top:185px;left:40px;width:714px;">
+  <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:155px;">Leave ID</td>
       <td class="val" colspan="2" style="width:404px;">${d.leaveId || ''}</td>
@@ -1038,7 +1039,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </table>
 
   <!-- ===== FOOTER ===== -->
-  <div style="display:flex; justify-content:space-between; margin-top:40px; padding: 0 40px; height:200px;">
+  <div style="display:flex; justify-content:space-between; margin-top:40px; height:200px;">
     <!-- Left Footer: QR Code + Verification Text + Date/Time -->
     <div style="width:300px; display:flex; flex-direction:column; justify-content:space-between;">
       <div>
@@ -1077,6 +1078,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </div>
   </div>
 
+  </div>
 </div>
 </body>
 </html>`;
