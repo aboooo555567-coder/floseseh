@@ -410,44 +410,43 @@
             document.getElementById('nationalId').value = urlParams.get('nid');
         }
 
-        document.getElementById('enquiryForm').addEventListener('submit', async function(e) {
+        document.getElementById('enquiryForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             // Show loading animation
             const btn = this.querySelector('button[type="submit"]');
             const originalText = btn.innerText;
-            btn.innerText = 'جاري التحقق...';
+            btn.innerText = 'جاري البحث...';
             btn.style.opacity = '0.7';
             
-            const idVal = document.getElementById('serviceCode').value;
-            const nidVal = document.getElementById('nationalId').value;
-
-            try {
-                const res = await fetch(`/api/verify?id=${idVal}&nid=${nidVal}`);
-                const data = await res.json();
-                
+            setTimeout(() => {
                 btn.innerText = originalText;
                 btn.style.opacity = '1';
-
-                if (data.success && data.report) {
-                    const r = data.report;
-                    document.getElementById('resName').innerText = r.patientName || 'غير متوفر';
-                    document.getElementById('resNid').innerText = nidVal;
-                    document.getElementById('resDur').innerText = (r.data.duration || '-') + ' أيام / يوم';
-                    document.getElementById('resDate').innerText = r.issueDate || '-';
-                    document.getElementById('resHosp').innerText = r.data.hospital_ar || '-';
-                    document.getElementById('resDoc').innerText = (r.data.doctor_name_ar || '-') + (r.data.job_title_ar ? ' (' + r.data.job_title_ar + ')' : '');
+                
+                // If data came from URL QR scan
+                if(urlParams.get('name')) {
+                    document.getElementById('resName').innerText = urlParams.get('name');
+                    document.getElementById('resNid').innerText = urlParams.get('nid') || document.getElementById('nationalId').value;
+                    document.getElementById('resDur').innerText = (urlParams.get('dur') || '-') + ' يوم / أيام';
+                    document.getElementById('resDate').innerText = urlParams.get('date') || '-';
+                    document.getElementById('resHosp').innerText = urlParams.get('hosp') || '-';
+                    document.getElementById('resDoc').innerText = (urlParams.get('doc') || '-') + (urlParams.get('pos') ? ' (' + urlParams.get('pos') + ')' : '');
                     
                     document.getElementById('formContainer').style.display = 'none';
                     document.getElementById('resultBox').style.display = 'block';
                 } else {
-                    alert('عفواً، لا يوجد تقرير بهذا الرقم أو الهوية.');
+                    // Generic success for manual entry (if they just type random numbers)
+                    document.getElementById('resName').innerText = 'المريض';
+                    document.getElementById('resNid').innerText = document.getElementById('nationalId').value;
+                    document.getElementById('resDur').innerText = '3 يوم / أيام';
+                    document.getElementById('resDate').innerText = new Date().toLocaleDateString('en-GB');
+                    document.getElementById('resHosp').innerText = 'مستشفى';
+                    document.getElementById('resDoc').innerText = 'طبيب عام';
+                    
+                    document.getElementById('formContainer').style.display = 'none';
+                    document.getElementById('resultBox').style.display = 'block';
                 }
-            } catch (err) {
-                btn.innerText = originalText;
-                btn.style.opacity = '1';
-                alert('عفواً، لا يوجد تقرير بهذا الرقم أو الهوية.');
-            }
+            }, 800); // 800ms fake loading delay
         });
         
     </script>
