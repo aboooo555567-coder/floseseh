@@ -879,18 +879,13 @@ const app = {
         document.getElementById('pdf-qrcode').innerHTML = "";
         const includeQR = document.getElementById('include_qr') ? document.getElementById('include_qr').checked : true;
         
+        
         const verifyParams = new URLSearchParams({
             id: reportId,
-            nid: idNum,
-            name: type === 'companion' ? escAr : pNameAr,
-            issue: issueDate,
-            start: admission,
-            end: discharge,
-            dur: duration,
-            doc: docNameAr,
-            pos: jobAr
+            nid: idNum
         });
         const verifyUrl = window.location.origin + '/seha-enquiry.html?' + verifyParams.toString();
+
         
         if (includeQR) {
             new QRCode(document.getElementById('pdf-qrcode'), {

@@ -360,7 +360,7 @@ bot.onText(/\/admin/, async (msg) => {
     }
     
     currentAdminToken = crypto.randomBytes(16).toString('hex');
-    const adminUrl = `${process.env.APP_URL || 'https://seha-sickleave-app.onrender.com'}/admin.html?token=${currentAdminToken}`;
+    const adminUrl = `${WEB_APP_URL}/admin.html?token=${currentAdminToken}&v=${Date.now()}`;
     
     const inlineKeyboard = [[
         { text: '🛠️ فتح لوحة التحكم (الخاصة بك فقط)', web_app: { url: adminUrl } }
