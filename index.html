@@ -1,4 +1,4 @@
-๏ปฟ<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -13,7 +13,7 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=36"></script>
+    <script src="app.js?v=38"></script>
     <style>
         /* Logo Auto-Adjust */
         #pdf-hospital-logo {
@@ -47,22 +47,22 @@
                 </div>
 
                 <div class="header-center">
-                    <div class="status-badge" id="sub-status-badge">ูุดุท - ู…ุชุจูู 0 ููู…</div>
-                    <button class="btn-renew" onclick="app.navigate('packages')">ุชุฌุฏูุฏ</button>
+                    <div class="status-badge" id="sub-status-badge">ไิุ - ใสศÞํ 0 ํๆใ</div>
+                    <button class="btn-renew" onclick="app.navigate('packages')">สฬฯํฯ</button>
                 </div>
 
                 <div class="header-left">
                     <div class="balance-card">
-                        <span>ุฑุตูุฏู: <strong id="points-balance-display">0</strong> ููุทุฉ</span>
-                        <span class="coin-icon">๐ช</span>
+                        <span>ัีํฯ฿: <strong id="points-balance-display">0</strong> ไÞุษ</span>
+                        <span class="coin-icon">??</span>
                     </div>
                 </div>
                 <span id="points-balance" style="display:none;">0</span>
             </header>
             
             <div class="reports-header" style="text-align: center; margin-bottom: 15px; padding: 0 10px;">
-                <h2 style="color: var(--primary-dark); margin-bottom: 10px;">ุณุฌู ุงูุชูุงุฑูุฑ</h2>
-                <input type="text" id="report-search" placeholder="๐” ุจุญุซ ุจุงุณู… ุงูู…ุฑูุถ ุฃู ุงููููุฉ..." 
+                <h2 style="color: var(--primary-dark); margin-bottom: 10px;">ำฬแ วแสÞวัํั</h2>
+                <input type="text" id="report-search" placeholder="?? ศอห ศวำใ วแใัํึ รๆ วแๅๆํษ..." 
                     onkeyup="app.searchReports()" 
                     style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: 'Tajawal', sans-serif;">
             </div>
@@ -76,10 +76,10 @@
                 <button type="button" class="fab" id="fab-main" onclick="app.toggleFab()">+</button>
                 <div class="fab-menu-items" id="fab-menu-items">
                     <div class="fab-menu-item" onclick="app.startForm('companion')">
-                        ู…ุฑุงููุฉ ู…ุฑูุถ ๐‘ฅ
+                        ใัวÝÞษ ใัํึ ??
                     </div>
                     <div class="fab-menu-item" onclick="app.startForm('sickleave')">
-                        ุฅุฌุงุฒุฉ ู…ุฑุถูุฉ ๐ค’
+                        ลฬวาษ ใัึํษ ??
                     </div>
                 </div>
             </div>
@@ -89,66 +89,66 @@
         <!-- Packages Screen -->
         <section id="packages-screen" class="screen">
             <header class="app-header">
-                <h2>ุจุงูุงุช ุงูุงุดุชุฑุงู ูุงูุดุญู</h2>
-                <button class="btn-back" onclick="app.navigate('dashboard')">โฏ</button>
+                <h2>ศวÞวส วแวิสัว฿ ๆวแิอไ</h2>
+                <button class="btn-back" onclick="app.navigate('dashboard')">?</button>
             </header>
 
             <main class="packages-container">
                 <div class="package-section">
-                    <h3 class="section-title">๐“… ุงูุงุดุชุฑุงู ุงูุดูุฑู ุงููุงู…ุญุฏูุฏ</h3>
+                    <h3 class="section-title">?? วแวิสัว฿ วแิๅัํ วแแวใอฯๆฯ</h3>
                     <div class="package-card" onclick="app.buyPackage('Month 1')">
                         <div class="package-details">
                             <h4>Month 1</h4>
-                            <p>ุตูุงุญูุฉ 30 ููู… (ุฅูุดุงุก ุชูุงุฑูุฑ ุบูุฑ ู…ุญุฏูุฏ)</p>
+                            <p>ีแวอํษ 30 ํๆใ (ลไิวม สÞวัํั Ûํั ใอฯๆฯ)</p>
                             <div class="referral-bonus-badge">
-                                ๐ + ู…ูุญ 50 ููุทุฉ ุฅุถุงููุฉ ููุดุฎุต ุงูุฐู ุฃุญุงูู
+                                ?? + ใไอ 50 ไÞุษ ลึวÝํษ แแิฮี วแะํ รอวแ฿
                             </div>
                         </div>
-                        <div class="package-price">100<br>ุฑูุงู</div>
+                        <div class="package-price">100<br>ัํวแ</div>
                     </div>
                 </div>
                 
                 <div class="package-section" style="margin-top: 25px;">
-                    <h3 class="section-title">๐ช ุญุฒู… ุดุญู ุงูููุงุท</h3>
+                    <h3 class="section-title">?? อาใ ิอไ วแไÞวุ</h3>
                     
                     <div class="package-card" onclick="app.buyPackage('Basic')">
                         <div class="package-details">
-                            <h4>ุญุฒู…ุฉ ุงูููุงุท ุงูุฃุณุงุณูุฉ (30 ููุทุฉ)</h4>
-                            <p>ุชู…ูุญู 30 ููุทุฉ (ุจุฏูู ุชุงุฑูุฎ ุงูุชูุงุก)</p>
+                            <h4>อาใษ วแไÞวุ วแรำวำํษ (30 ไÞุษ)</h4>
+                            <p>สใไอ฿ 30 ไÞุษ (ศฯๆไ สวัํฮ วไสๅวม)</p>
                             <div class="referral-bonus-badge">
-                                ๐ + ู…ูุญ 10 ููุทุฉ ุฅุถุงููุฉ ููุดุฎุต ุงูุฐู ุฃุญุงูู
+                                ?? + ใไอ 10 ไÞุษ ลึวÝํษ แแิฮี วแะํ รอวแ฿
                             </div>
                         </div>
-                        <div class="package-price">20<br>ุฑูุงู</div>
+                        <div class="package-price">20<br>ัํวแ</div>
                     </div>
 
                     <div class="package-card recommended" onclick="app.buyPackage('Recommended')">
                         <div class="package-details">
-                            <h4>ุญุฒู…ุฉ ุงูููุงุท ุงูู…ูุตู ุจูุง (100 ููุทุฉ)</h4>
-                            <p>ุชู…ูุญู 100 ููุทุฉ (ุจุฏูู ุชุงุฑูุฎ ุงูุชูุงุก)</p>
+                            <h4>อาใษ วแไÞวุ วแใๆี์ ศๅว (100 ไÞุษ)</h4>
+                            <p>สใไอ฿ 100 ไÞุษ (ศฯๆไ สวัํฮ วไสๅวม)</p>
                             <div class="referral-bonus-badge">
-                                ๐ + ู…ูุญ 25 ููุทุฉ ุฅุถุงููุฉ ููุดุฎุต ุงูุฐู ุฃุญุงูู
+                                ?? + ใไอ 25 ไÞุษ ลึวÝํษ แแิฮี วแะํ รอวแ฿
                             </div>
                         </div>
-                        <div class="package-price">50<br>ุฑูุงู</div>
+                        <div class="package-price">50<br>ัํวแ</div>
                     </div>
 
                     <div class="package-card" onclick="app.buyPackage('Advanced')">
                         <div class="package-details">
-                            <h4>ุญุฒู…ุฉ ุงูููุงุท ุงูู…ุชูุฏู…ุฉ (200 ููุทุฉ)</h4>
-                            <p>ุชู…ูุญู 200 ููุทุฉ (ุจุฏูู ุชุงุฑูุฎ ุงูุชูุงุก)</p>
+                            <h4>อาใษ วแไÞวุ วแใสÞฯใษ (200 ไÞุษ)</h4>
+                            <p>สใไอ฿ 200 ไÞุษ (ศฯๆไ สวัํฮ วไสๅวม)</p>
                             <div class="referral-bonus-badge">
-                                ๐ + ู…ูุญ 50 ููุทุฉ ุฅุถุงููุฉ ููุดุฎุต ุงูุฐู ุฃุญุงูู
+                                ?? + ใไอ 50 ไÞุษ ลึวÝํษ แแิฮี วแะํ รอวแ฿
                             </div>
                         </div>
-                        <div class="package-price">80<br>ุฑูุงู</div>
+                        <div class="package-price">80<br>ัํวแ</div>
                     </div>
                 </div>
                 
                 <div style="text-align:center; padding:20px 0 30px 0;">
-                    <p style="text-align:center; font-size: 14px; color: #555;">ุงูุฅุตุฏุงุฑ v32 (ุชุฎููุถ ุญุฌู… ู…ูู ุงูุชูุฑูุฑ)</p>
-                    <p style="font-size:0.9rem; margin-bottom:12px;">๐“ ูุชู… ุงูุชูุนูู ูุฏููุงู ุจุงูุชุญููู ุงูุจููู ุจุงูุชูุงุตู ู…ุน ุงูู…ุงูู:</p>
-                    <a href="https://t.me/zakmmm_1211" target="_blank" class="btn-renew" style="display:inline-block; padding:10px 22px; text-decoration:none; border-radius:20px; margin:0;">ุชูุงุตู ู…ุน ุงูู…ุงูู ููุชูุนูู ๐’ฌ</a>
+                    <p style="text-align:center; font-size: 14px; color: #555;">วแลีฯวั v32 (สฮÝํึ อฬใ ใแÝ วแสÞัํั)</p>
+                    <p style="font-size:0.9rem; margin-bottom:12px;">?? ํสใ วแสÝฺํแ ํฯๆํว๐ ศวแสอๆํแ วแศไ฿ํ ศวแสๆวีแ ใฺ วแใวแ฿:</p>
+                    <a href="https://t.me/zakmmm_1211" target="_blank" class="btn-renew" style="display:inline-block; padding:10px 22px; text-decoration:none; border-radius:20px; margin:0;">สๆวีแ ใฺ วแใวแ฿ แแสÝฺํแ ??</a>
                 </div>
             </main>
         </section>
@@ -156,8 +156,8 @@
         <!-- Form Wizard Screen -->
         <section id="form-screen" class="screen">
             <header class="app-header">
-                <h2 id="form-title">ุฅุตุฏุงุฑ ุชูุฑูุฑ ุฌุฏูุฏ</h2>
-                <button class="btn-back" onclick="app.navigate('dashboard')">โฏ</button>
+                <h2 id="form-title">ลีฯวั สÞัํั ฬฯํฯ</h2>
+                <button class="btn-back" onclick="app.navigate('dashboard')">?</button>
             </header>
             
             <div class="progress-bar-container">
@@ -168,164 +168,164 @@
                 <!-- Step 1: Dates -->
                 <div class="form-step active" id="step-1">
                     <div class="form-group">
-                        <label>ููุน ุงูุชูุฑูุฑ</label>
+                        <label>ไๆฺ วแสÞัํั</label>
                         <select id="leave_type" required>
-                            <option value="GSL">GSL (ุญููู…ู)</option>
-<option value="PSL">PSL (ุฎุงุต)</option>
+                            <option value="GSL">GSL (อ฿ๆใํ)</option>
+<option value="PSL">PSL (ฮวี)</option>
                         </select>
                     </div>
                     
                     <div class="dates-row">
                         <div class="form-group half">
-                            <label>ุชุงุฑูุฎ ุงูุฏุฎูู</label>
+                            <label>สวัํฮ วแฯฮๆแ</label>
                             <input type="date" id="admission_date" required>
                         </div>
                         <div class="form-group half">
-                            <label>ุชุงุฑูุฎ ุงูุฎุฑูุฌ</label>
+                            <label>สวัํฮ วแฮัๆฬ</label>
                             <input type="date" id="discharge_date" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>ู…ุฏุฉ ุงูุฅุฌุงุฒุฉ (ุจุงูุฃูุงู…)</label>
+                        <label>ใฯษ วแลฬวาษ (ศวแรํวใ)</label>
                         <input type="number" id="duration" value="1" min="1" required>
                     </div>
 
                     <div class="dates-row">
                         <div class="form-group half">
-                            <label>ุชุงุฑูุฎ ุฅุตุฏุงุฑ ุงูุชูุฑูุฑ</label>
+                            <label>สวัํฮ ลีฯวั วแสÞัํั</label>
                             <input type="date" id="issue_date" required>
                         </div>
                         <div class="form-group half">
-                            <label>ููุช ุงูุฅุตุฏุงุฑ</label>
+                            <label>ๆÞส วแลีฯวั</label>
                             <input type="time" id="issue_time" required>
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" class="btn-next" onclick="app.nextStep()">ุงูุชุงูู</button>
+                        <button type="button" class="btn-next" onclick="app.nextStep()">วแสวแํ</button>
                     </div>
                 </div>
 
                 <!-- Step 2: Patient Info -->
                 <div class="form-step" id="step-2">
                     <div class="form-group">
-                        <label>ุฑูู… ุงููููุฉ / ุงูุฅูุงู…ุฉ</label>
-                        <input type="text" id="national_id" placeholder="1xxxxxxxxx ุฃู 2xxxxxxxxx" required>
+                        <label>ัÞใ วแๅๆํษ / วแลÞวใษ</label>
+                        <input type="text" id="national_id" placeholder="1xxxxxxxxx รๆ 2xxxxxxxxx" required>
                     </div>
                     
                     <div class="form-group">
-                        <label>ุงุณู… ุงูู…ุฑูุถ (ุนุฑุจู)</label>
-                        <input type="text" id="patient_name_ar" placeholder="ุงูุงุณู… ุงูุฑุจุงุนู" required>
+                        <label>วำใ วแใัํึ (ฺัศํ)</label>
+                        <input type="text" id="patient_name_ar" placeholder="วแวำใ วแัศวฺํ" required>
                     </div>
                     
                     <div class="form-group">
-                        <label>ุงุณู… ุงูู…ุฑูุถ (ุฅูุฌููุฒู)</label>
+                        <label>วำใ วแใัํึ (ลไฬแําํ)</label>
                         <input type="text" id="patient_name_en" placeholder="Full Name" dir="ltr" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
-                        <label>ุงูุฌูุณูุฉ</label>
-                        <input type="text" id="nationality" onclick="app.openDropdown('nationality')" placeholder="ุงูุฌูุณูุฉ" value="ุณุนูุฏู" autocomplete="off" required>
+                        <label>วแฬไำํษ</label>
+                        <input type="text" id="nationality" onclick="app.openDropdown('nationality')" placeholder="วแฬไำํษ" value="ำฺๆฯํ" autocomplete="off" required>
 
 
                     </div>
                     
                     <div class="form-group">
-                        <label>ุฌูุฉ ุงูุนู…ู</label>
-                        <input type="text" id="employer" placeholder="ุงุณู… ุงูุฌูุฉ">
+                        <label>ฬๅษ วแฺใแ</label>
+                        <input type="text" id="employer" placeholder="วำใ วแฬๅษ">
                     </div>
 
                     <!-- Escort Fields (Hidden by default) -->
                     <div id="escort-fields" style="display:none;">
-                        <h3 class="section-subtitle">ุจูุงูุงุช ุงูู…ุฑุงูู</h3>
+                        <h3 class="section-subtitle">ศํวไวส วแใัวÝÞ</h3>
                         <div class="form-group">
-                            <label>ุงุณู… ุงูู…ุฑุงูู (ุนุฑุจู)</label>
-                            <input type="text" id="escort_name_ar" placeholder="ุงูุงุณู… ุงูุฑุจุงุนู">
+                            <label>วำใ วแใัวÝÞ (ฺัศํ)</label>
+                            <input type="text" id="escort_name_ar" placeholder="วแวำใ วแัศวฺํ">
                         </div>
                         <div class="form-group">
-                            <label>ุงุณู… ุงูู…ุฑุงูู (ุฅูุฌููุฒู)</label>
+                            <label>วำใ วแใัวÝÞ (ลไฬแําํ)</label>
                             <input type="text" id="escort_name_en" placeholder="Full Name" dir="ltr" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div class="dates-row">
                             <div class="form-group half">
-                                <label>ุตูุฉ ุงููุฑุงุจุฉ (ุนุฑุจู)</label>
-                                <input type="text" id="relation_ar" placeholder="ู…ุซุงู: ุงุจูุ ุฒูุฌุฉ">
+                                <label>ีแษ วแÞัวศษ (ฺัศํ)</label>
+                                <input type="text" id="relation_ar" placeholder="ใหวแ: วศไก าๆฬษ">
                             </div>
                             <div class="form-group half">
-                                <label>ุตูุฉ ุงููุฑุงุจุฉ (ุฅูุฌููุฒู)</label>
+                                <label>ีแษ วแÞัวศษ (ลไฬแําํ)</label>
                                 <input type="text" id="relation_en" placeholder="e.g. Son, Wife">
                             </div>
                         </div>
                     </div>
 
                     <div class="form-actions dual">
-                        <button type="button" class="btn-next" onclick="app.nextStep()">ุงูุชุงูู</button>
-                        <button type="button" class="btn-prev" onclick="app.prevStep()">ุงูุณุงุจู</button>
+                        <button type="button" class="btn-next" onclick="app.nextStep()">วแสวแํ</button>
+                        <button type="button" class="btn-prev" onclick="app.prevStep()">วแำวศÞ</button>
                     </div>
                 </div>
 
                 <!-- Step 3: Hospital & Doctor -->
                 <div class="form-step" id="step-3">
                     <div class="form-group">
-                        <label>ุงุณู… ุงูู…ู…ุงุฑุณ/ุงูุทุจูุจ (ุนุฑุจู)</label>
+                        <label>วำใ วแใใวัำ/วแุศํศ (ฺัศํ)</label>
                         <input type="text" id="doctor_name_ar" required>
                     </div>
                     <div class="form-group">
-                        <label>ุงุณู… ุงูู…ู…ุงุฑุณ/ุงูุทุจูุจ (ุฅูุฌููุฒู)</label>
+                        <label>วำใ วแใใวัำ/วแุศํศ (ลไฬแําํ)</label>
                         <input type="text" id="doctor_name_en" dir="ltr" oninput="this.value = this.value.toUpperCase()" required>
                     </div>
 
                     <div class="form-group">
-                        <label>ุงูู…ุณู…ู ุงููุธููู (ุนุฑุจู)</label>
-                        <input type="text" id="job_title_ar" value="ุทุจูุจ ุนุงู…" required>
+                        <label>วแใำใ์ วแๆูํÝํ (ฺัศํ)</label>
+                        <input type="text" id="job_title_ar" value="ุศํศ ฺวใ" required>
                     </div>
                     <div class="form-group">
-                        <label>ุงูู…ุณู…ู ุงููุธููู (ุฅูุฌููุฒู)</label>
+                        <label>วแใำใ์ วแๆูํÝํ (ลไฬแําํ)</label>
                         <input type="text" id="job_title_en" value="General" required>
                     </div>
 
                     <div class="form-group">
-                        <label>ุงูู…ุณุชุดูู (ุนุฑุจู)</label>
-                        <input type="text" id="hospital_ar" onclick="app.openDropdown('hospital')" placeholder="ุงุฎุชุฑ ู…ู ุงููุงุฆู…ุฉ ุฃู ุงูุชุจ ูุฏููุงู..." oninput="app.syncHospitalEn()" autocomplete="off" required>
+                        <label>วแใำสิÝ์ (ฺัศํ)</label>
+                        <input type="text" id="hospital_ar" onclick="app.openDropdown('hospital')" placeholder="วฮสั ใไ วแÞวฦใษ รๆ ว฿สศ ํฯๆํว๐..." oninput="app.syncHospitalEn()" autocomplete="off" required>
 
                     </div>
                     <div class="form-group">
-                        <label>ุงูู…ุณุชุดูู (ุฅูุฌููุฒู)</label>
+                        <label>วแใำสิÝ์ (ลไฬแําํ)</label>
                         <input type="text" id="hospital_en" required>
                     </div>
 
                     <div class="form-group">
-                        <label>ููุน ุงูู…ุณุชุดูู</label>
+                        <label>ไๆฺ วแใำสิÝ์</label>
                         <div class="radio-group">
                             <label class="radio-label">
-                                <input type="radio" name="hospital_type" value="gov" checked onchange="app.toggleLicense()"> ุญููู…ู
+                                <input type="radio" name="hospital_type" value="gov" checked onchange="app.toggleLicense()"> อ฿ๆใํ
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="hospital_type" value="private" onchange="app.toggleLicense()"> ุฎุงุต
+                                <input type="radio" name="hospital_type" value="private" onchange="app.toggleLicense()"> ฮวี
                             </label>
                         </div>
                     </div>
                     
                     <div class="form-group" id="license-field" style="display:none;">
-                        <label>ุฑูู… ุงูุชุฑุฎูุต (ูุธูุฑ ุชุญุช ุงุณู… ุงูู…ุณุชุดูู)</label>
-                        <input type="text" id="license_number" placeholder="ุฑูู… ุชุฑุฎูุต ุงูู…ุณุชุดูู ุงูุฎุงุต">
+                        <label>ัÞใ วแสัฮํี (ํูๅั สอส วำใ วแใำสิÝ์)</label>
+                        <input type="text" id="license_number" placeholder="ัÞใ สัฮํี วแใำสิÝ์ วแฮวี">
                     </div>
 
                     <div class="form-group">
-                        <label>ุงุฎุชุฑ ุดุนุงุฑ ุงูู…ุณุชุดูู (ุงุฎุชูุงุฑู)</label>
+                        <label>วฮสั ิฺวั วแใำสิÝ์ (วฮสํวัํ)</label>
                         <input type="file" id="hospital_logo" accept="image/png, image/jpeg" class="file-input">
-                        <small style="color:#777; display:block; margin-top:5px; font-size:0.8rem;">ููุถู ุตูุฑุฉ ุจุฎูููุฉ ุดูุงูุฉ (PNG) ุจุญุฌู… ุฃูู ู…ู 2MB</small>
+                        <small style="color:#777; display:block; margin-top:5px; font-size:0.8rem;">ํÝึแ ีๆัษ ศฮแÝํษ ิÝวÝษ (PNG) ศอฬใ รÞแ ใไ 2MB</small>
                     </div>
 
                     <div class="form-group" style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
                         <input type="checkbox" id="include_qr" checked style="width: auto;">
-                        <label for="include_qr" style="margin: 0;">ุชุถู…ูู ุงูุจุงุฑููุฏ (QR Code) ูู ุงูุชูุฑูุฑ</label>
+                        <label for="include_qr" style="margin: 0;">สึใํไ วแศวั฿ๆฯ (QR Code) Ýํ วแสÞัํั</label>
                     </div>
 
                     <div class="form-actions dual">
-                        <button type="button" class="btn-submit" onclick="app.submitForm()">ุฅุตุฏุงุฑ ุงูุชูุฑูุฑ (v15)</button>
-                        <button type="button" class="btn-prev" onclick="app.prevStep()">ุงูุณุงุจู</button>
+                        <button type="button" class="btn-submit" onclick="app.submitForm()">ลีฯวั วแสÞัํั (v15)</button>
+                        <button type="button" class="btn-prev" onclick="app.prevStep()">วแำวศÞ</button>
                     </div>
                 </div>
             </form>
@@ -334,7 +334,7 @@
         <!-- Success Screen -->
         <section id="success-screen" class="screen">
             <header class="app-header" style="justify-content: flex-end; padding-left: 20px;">
-                <button class="btn-back" style="font-size: 20px; font-weight: bold; background: none; border: none; color: #333;" onclick="app.closeApp()">โ</button>
+                <button class="btn-back" style="font-size: 20px; font-weight: bold; background: none; border: none; color: #333;" onclick="app.closeApp()">?</button>
             </header>
             <main style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; text-align: center; padding: 20px;">
                 <div style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #7cb342; display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
@@ -342,12 +342,12 @@
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
-                <h1 style="color: #112233; font-size: 26px; font-weight: bold; margin-bottom: 12px; font-family: 'Tajawal', sans-serif;">ุชู… ุจูุฌุงุญ!</h1>
-                <p style="color: #556677; font-size: 15px; margin-bottom: 40px; font-family: 'Tajawal', sans-serif;">ุชู… ุฅุตุฏุงุฑ ุงูุชูุฑูุฑ ูุฅุฑุณุงูู ุฅููู ูู ุงูู…ุญุงุฏุซุฉ.</p>
+                <h1 style="color: #112233; font-size: 26px; font-weight: bold; margin-bottom: 12px; font-family: 'Tajawal', sans-serif;">สใ ศไฬวอ!</h1>
+                <p style="color: #556677; font-size: 15px; margin-bottom: 40px; font-family: 'Tajawal', sans-serif;">สใ ลีฯวั วแสÞัํั ๆลัำวแๅ ลแํ฿ Ýํ วแใอวฯหษ.</p>
                 
                 <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 15px; padding: 0 10px;">
-                    <button style="flex: 1; padding: 14px; background: none; border: none; color: #789; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px; text-align: center; cursor: pointer;" onclick="app.navigate('dashboard')">ุงูุนูุฏุฉ ููุฑุฆูุณูุฉ</button>
-                    <button style="flex: 1; padding: 14px; border-radius: 10px; background: #00a896; border: none; color: white; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" onclick="app.closeApp()">ุฅุบูุงู ุงูุชุทุจูู</button>
+                    <button style="flex: 1; padding: 14px; background: none; border: none; color: #789; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px; text-align: center; cursor: pointer;" onclick="app.navigate('dashboard')">วแฺๆฯษ แแัฦํำํษ</button>
+                    <button style="flex: 1; padding: 14px; border-radius: 10px; background: #00a896; border: none; color: white; font-family: 'Tajawal', sans-serif; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" onclick="app.closeApp()">ลÛแวÞ วแสุศํÞ</button>
                 </div>
             </main>
         </section>
@@ -356,8 +356,8 @@
         <div id="custom-select-overlay" class="custom-select-overlay">
             <div class="custom-select-content">
                 <div class="custom-select-search-bar">
-                    <input type="text" id="custom-select-input" placeholder="ุงุจุญุซ ุนู..." oninput="app.filterCustomSelect()">
-                    <button class="custom-select-close" onclick="app.closeDropdown()">ร—</button>
+                    <input type="text" id="custom-select-input" placeholder="วศอห ฺไ..." oninput="app.filterCustomSelect()">
+                    <button class="custom-select-close" onclick="app.closeDropdown()">ื</button>
                 </div>
                 <div class="custom-select-list" id="custom-select-list">
                     <!-- options injected here -->
@@ -368,7 +368,7 @@
         <!-- Loading Screen -->
         <div id="loading-overlay" class="loading-overlay">
             <div class="spinner"></div>
-            <p id="loading-text">ุฌุงุฑู ุฅุตุฏุงุฑ ุงูุชูุฑูุฑ...</p>
+            <p id="loading-text">ฬวัํ ลีฯวั วแสÞัํั...</p>
         </div>
     </div>
     
@@ -382,7 +382,7 @@
 
     <script src="arabic-reshaper.js"></script>
     <!-- Application Logic -->
-    <script src="app.js?v=36"></script>
+    <script src="app.js?v=38"></script>
     <!-- Version Label for debugging -->
     <script>
         const vLabel = document.createElement('div');
