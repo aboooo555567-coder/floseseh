@@ -1073,7 +1073,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       </div>
       <!-- NHIC Logo -->
       <div style="text-align:right; margin-top:15px; margin-right:-20px;">
-        <img src="${nhicLogo}" style="height:75px;">
+        <img src="${nhicLogo}" style="height:95px;">
       </div>
     </div>
   </div>
