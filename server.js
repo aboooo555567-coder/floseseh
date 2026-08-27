@@ -718,6 +718,55 @@ app.post('/api/generate', async (req, res) => {
 });
 
 // 2. Buy Package (Update User Subscription)
+
+// Secure Admin Endpoint to Add Packages
+app.post('/api/admin/package', async (req, res) => {
+    try {
+        const { token, chatId, points, subscriptionDays } = req.body;
+        
+        if (!currentAdminToken || token !== currentAdminToken) {
+            return res.status(401).json({ success: false, error: 'غير مصرح لك (Unauthorized)' });
+        }
+        
+        const data = await loadLocalSubscriptions();
+        const chatIdStr = chatId.toString();
+        
+        if (!data.subscriptions[chatIdStr]) {
+            data.subscriptions[chatIdStr] = {
+                points: 0,
+                subscriptionDays: 0,
+                subscriptionExpires: null,
+                username: null,
+                reports: [],
+                updatedAt: new Date().toISOString()
+            };
+        }
+        
+        const userSub = data.subscriptions[chatIdStr];
+        const normalized = normalizeSubscription(userSub);
+        
+        if (subscriptionDays > 0) {
+            const now = new Date();
+            let currentExpires = normalized.subscriptionExpires ? new Date(normalized.subscriptionExpires) : now;
+            if (currentExpires < now) currentExpires = now;
+            currentExpires.setDate(currentExpires.getDate() + subscriptionDays);
+            normalized.subscriptionExpires = currentExpires.toISOString();
+            normalized.subscriptionDays = subscriptionDays;
+        }
+        
+        normalized.points = (normalized.points || 0) + (points || 0);
+        normalized.updatedAt = new Date().toISOString();
+        
+        // Write back
+        data.subscriptions[chatIdStr] = normalized;
+        await saveLocalSubscriptions(data);
+        
+        res.json({ success: true, points: normalized.points, subscriptionDays: normalized.subscriptionDays });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.post('/api/user/:chatId/package', async (req, res) => {
     try {
         const { chatId } = req.params;

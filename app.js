@@ -4,6 +4,7 @@ const app = {
         chatId: null,
         user: null,
         points: 0,
+        adminToken: null,
         subscriptionDays: 0,
         reports: [],
         currentStep: 1,
@@ -309,6 +310,9 @@ const app = {
 
     
     async init() {
+        const urlParams = new URLSearchParams(window.location.search);
+        this.state.adminToken = urlParams.get('token');
+        
         if (window.location.href.includes('screen=admin')) {
             this.navigate('admin');
             // Hide fab just in case
@@ -482,16 +486,23 @@ const app = {
     
     async addSubscriber() {
         const id = document.getElementById('admin_chat_id').value.trim();
-        const days = parseInt(document.getElementById('admin_days').value) || 0;
-        const points = parseInt(document.getElementById('admin_points').value) || 0;
+        const subType = document.querySelector('input[name="admin_sub_type"]:checked').value;
+        
+        let days = 0;
+        let points = 0;
+        if (subType === 'unlimited') {
+            days = parseInt(document.getElementById('admin_days').value) || 0;
+        } else {
+            points = parseInt(document.getElementById('admin_points').value) || 0;
+        }
         
         if (!id) return alert('الرجاء إدخال ايدي المشترك');
         
         try {
-            const res = await fetch(`/api/user/${id}/package`, {
+            const res = await fetch(`/api/admin/package`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ points: points, subscriptionDays: days })
+                body: JSON.stringify({ token: this.state.adminToken, chatId: id, points: points, subscriptionDays: days })
             });
             const data = await res.json();
             if (data.success) {
@@ -777,7 +788,7 @@ const app = {
 
     async submitForm() {
         // Final Validation
-        if(this.state.points < 5 && this.state.subscriptionDays <= 0) {
+        if(this.state.points < 1 && this.state.subscriptionDays <= 0) {
             if(this.tg) this.tg.showAlert("رصيدك غير كافٍ. تحتاج إلى 5 نقاط على الأقل.");
             else alert("رصيدك غير كافٍ. تحتاج إلى 5 نقاط على الأقل.");
             return;
@@ -869,7 +880,7 @@ const app = {
         };
 
         try {
-            app.state.points -= 5;
+            if (app.state.subscriptionDays <= 0) { app.state.points -= 1; }
             app.updateDashboardUI();
 
             // SERVER-SIDE GENERATION
