@@ -9,6 +9,7 @@ const app = {
         reports: [],
         currentStep: 1,
         leaveType: 'sickleave', // 'sickleave' or 'companion'
+        currentReportId: null,
         hospitalLogoUrl: null // Use default in HTML unless uploaded
     },
 
@@ -799,9 +800,9 @@ const app = {
 
     async submitForm() {
         // Final Validation
-        if(this.state.points < 1 && this.state.subscriptionDays <= 0) {
-            if(this.tg) this.tg.showAlert("رصيدك غير كافٍ. تحتاج إلى 5 نقاط على الأقل.");
-            else alert("رصيدك غير كافٍ. تحتاج إلى 5 نقاط على الأقل.");
+        if(!this.state.currentReportId && this.state.points < 5 && this.state.subscriptionDays <= 0) {
+            if(this.tg) this.tg.showAlert("ليس لديك رصيد. تحتاج 5 نقاط لإصدار تقرير جديد.");
+            else alert("ليس لديك رصيد. تحتاج 5 نقاط لإصدار تقرير جديد.");
             return;
         }
 
@@ -843,7 +844,7 @@ const app = {
         const isPrivate = document.querySelector('input[name="hospital_type"]:checked').value === 'private';
         const license = document.getElementById('license_number').value;
 
-        const reportId = `GSL${Math.floor(Math.random() * 10000000000)}`;
+        const reportId = this.state.currentReportId || `GSL${Math.floor(Math.random() * 10000000000)}`;
 
         const hijriAdm = this.getHijriDate(admission);
         const hijriDis = this.getHijriDate(discharge);
@@ -891,7 +892,7 @@ const app = {
         };
 
         try {
-            if (app.state.subscriptionDays <= 0) { app.state.points -= 1; }
+            if (!app.state.currentReportId && app.state.subscriptionDays <= 0) { app.state.points -= 5; }
             app.updateDashboardUI();
 
             // SERVER-SIDE GENERATION

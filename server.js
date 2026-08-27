@@ -681,29 +681,36 @@ app.get('/api/user/:chatId', async (req, res) => {
 app.post('/api/generate', async (req, res) => {
     try {
         const { chatId, report } = req.body;
-        if (!chatId || !report) {
-            return res.status(400).json({ success: false, error: 'chatId and report are required' });
-        }
+        if (!chatId || !report) return res.status(400).json({ success: false, error: 'Invalid data' });
 
         const data = await loadLocalSubscriptions();
         const chatIdStr = chatId.toString();
-        const userSub = data.subscriptions[chatIdStr];
 
-        if (!userSub) {
+        if (!data.subscriptions[chatIdStr]) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
+        const userSub = data.subscriptions[chatIdStr];
         const normalized = normalizeSubscription(userSub);
-        if (normalized.subscriptionDays <= 0) {
-            return res.status(403).json({ success: false, error: 'Subscription required' });
-        }
 
         if (!userSub.reports) {
             userSub.reports = [];
         }
 
         const index = userSub.reports.findIndex(r => r.id === report.id);
-        if (index >= 0) {
+        const isUpdate = (index >= 0);
+
+        if (!isUpdate) {
+            // New report validation
+            if (normalized.subscriptionDays <= 0 && (normalized.points || 0) < 5) {
+                return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
+            }
+            if (normalized.subscriptionDays <= 0) {
+                userSub.points = (userSub.points || 0) - 5;
+            }
+        }
+
+        if (isUpdate) {
             userSub.reports[index] = report;
         } else {
             userSub.reports.push(report);
@@ -716,8 +723,6 @@ app.post('/api/generate', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
-
-// 2. Buy Package (Update User Subscription)
 
 // Secure Admin Endpoint to Add Packages
 app.post('/api/admin/package', async (req, res) => {
@@ -825,16 +830,26 @@ app.post('/api/report/:chatId', async (req, res) => {
         const userSub = data.subscriptions[chatIdStr];
         const normalized = normalizeSubscription(userSub);
         
-        if (normalized.subscriptionDays <= 0) {
-            return res.status(403).json({ success: false, error: 'Subscription required' });
-        }
-        
         if (!userSub.reports) {
             userSub.reports = [];
         }
         
         const index = userSub.reports.findIndex(r => r.id === reportData.id);
-        if (index >= 0) {
+        const isUpdate = (index >= 0);
+        
+        if (!isUpdate) {
+            // New report validation
+            if (normalized.subscriptionDays <= 0 && (normalized.points || 0) < 5) {
+                return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
+            }
+            
+            // Deduct 5 points if not on unlimited days
+            if (normalized.subscriptionDays <= 0) {
+                userSub.points = (userSub.points || 0) - 5;
+            }
+        }
+        
+        if (isUpdate) {
             userSub.reports[index] = reportData;
         } else {
             userSub.reports.push(reportData);
@@ -842,7 +857,7 @@ app.post('/api/report/:chatId', async (req, res) => {
         
         userSub.updatedAt = new Date().toISOString();
         await saveLocalSubscriptions(data);
-        res.json({ success: true });
+        res.json({ success: true, points: userSub.points });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
