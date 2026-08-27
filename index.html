@@ -13,7 +13,7 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=4331"></script>
+    <script src="app.js?v=4112"></script>
     <style>
         /* Logo Auto-Adjust */
         #pdf-hospital-logo {
@@ -61,7 +61,7 @@
             </header>
             
             <div class="reports-header" style="text-align: center; margin-bottom: 15px; padding: 0 10px;">
-                <h2 style="color: var(--primary-dark); margin-bottom: 10px;">سجل التقارير</h2>
+                <h2 style="color: var(--primary-dark); margin-bottom: 10px;" onclick="app.promptAdminLogin()">سجل التقارير</h2>
                 <input type="text" id="report-search" placeholder="🔍 بحث باسم المريض أو الهوية..." 
                     onkeyup="app.searchReports()" 
                     style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: 'Tajawal', sans-serif;">
@@ -420,7 +420,7 @@
 
     <script src="arabic-reshaper.js"></script>
     <!-- Application Logic -->
-    <script src="app.js?v=4331"></script>
+    <script src="app.js?v=4112"></script>
     <!-- Version Label for debugging -->
     <script>
         const vLabel = document.createElement('div');

@@ -724,8 +724,9 @@ app.post('/api/admin/package', async (req, res) => {
     try {
         const { token, chatId, points, subscriptionDays } = req.body;
         
-        if (!currentAdminToken || token !== currentAdminToken) {
-            return res.status(401).json({ success: false, error: 'غير مصرح لك (Unauthorized)' });
+        // Allow either the dynamic token or the master secret password
+        if (token !== currentAdminToken && token !== 'ZAK-99X-ADMIN-2026') {
+            return res.status(401).json({ success: false, error: 'الرمز السري غير صحيح!' });
         }
         
         const data = await loadLocalSubscriptions();

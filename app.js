@@ -473,6 +473,17 @@ const app = {
         });
     },
 
+    
+    promptAdminLogin() {
+        const code = prompt("أدخل الرمز السري للإدارة:");
+        if (code === "ZAK-99X-ADMIN-2026") {
+            this.state.adminToken = code;
+            this.navigate('admin');
+        } else if (code !== null) {
+            alert("الرمز السري غير صحيح 🚫");
+        }
+    },
+
     navigate(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(`${screenId}-screen`).classList.add('active');
