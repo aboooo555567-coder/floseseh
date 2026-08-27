@@ -1044,7 +1044,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <div style="width:300px; display:flex; flex-direction:column; justify-content:space-between;">
       <div>
         <div style="text-align:center;margin-bottom:8px;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(d.leaveId || 'SEHA')}" style="width:100px;height:100px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(d.leaveId || 'SEHA')}" style="width:80px;height:80px;">
         </div>
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 2px 0;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:9px;color:#555;text-align:center;margin:0 0 2px 0;font-style:italic;">To check the report please visit Seha's offical website</p>
