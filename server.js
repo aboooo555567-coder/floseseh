@@ -1044,11 +1044,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <div style="width:300px; display:flex; flex-direction:column; justify-content:space-between;">
       <div>
         <div style="text-align:center;margin-top:20px;margin-bottom:8px;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=65x65&data=${encodeURIComponent(d.leaveId || 'SEHA')}" style="width:65px;height:65px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=65x65&data=${encodeURIComponent("https://www.seha.sa/#/inquiries/slenquiry")}" style="width:65px;height:65px;">
         </div>
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 2px 0;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:9px;color:#555;text-align:center;margin:0 0 2px 0;font-style:italic;">To check the report please visit Seha's offical website</p>
-        <p style="font-size:9px;color:#1a73e8;text-align:center;margin:0 0 15px 0;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</p>
+        <p style="font-size:9px;text-align:center;margin:0 0 15px 0;"><a href="https://www.seha.sa/#/inquiries/slenquiry" style="color:#1a73e8;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
       <div style="text-align:left;font-weight:bold;font-size:11px;color:#000;">
         <p style="margin:0 0 3px 0;">${d.time || ''}</p>
