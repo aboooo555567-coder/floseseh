@@ -1039,7 +1039,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </table>
 
   <!-- ===== FOOTER ===== -->
-  <div style="display:flex; justify-content:space-between; margin-top:40px; height:270px;">
+  <div style="display:flex; justify-content:space-between; margin-top:15px; height:290px;">
     <!-- Left Footer: QR Code + Verification Text + Date/Time -->
     <div style="width:300px; display:flex; flex-direction:column; justify-content:space-between;">
       <div>
@@ -1064,7 +1064,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <div>
         <!-- MOH Logo -->
         <div style="margin-bottom:8px;">
-          <img src="${mohLogo}" style="height:105px;object-fit:contain;">
+          <img src="${mohLogo}" style="height:130px;object-fit:contain;">
         </div>
         <!-- Hospital Name -->
         <h3 style="font-size:16px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;color:#333;">${d.hospitalAr || ''}</h3>
