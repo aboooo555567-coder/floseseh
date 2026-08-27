@@ -936,7 +936,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
   <!-- Header: Seha Logo (left) -->
-  <img src="${sehaLogo}" style="position:absolute;top:5px;left:40px;width:175px;">
+  <img src="${sehaLogo}" style="position:absolute;top:-5px;left:15px;width:175px;">
   
   <!-- Header: KSA Calligraphy (center) -->
   <img src="${ksaCalligraphy}" style="position:absolute;top:40px;left:50%;transform:translateX(-50%);width:340px;height:145px;object-fit:contain;">
