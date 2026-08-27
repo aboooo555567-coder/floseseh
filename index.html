@@ -13,7 +13,7 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=677"></script>
+    <script src="app.js?v=566"></script>
     <style>
         /* Logo Auto-Adjust */
         #pdf-hospital-logo {
@@ -81,9 +81,36 @@
                     <div class="fab-menu-item" onclick="app.startForm('sickleave')">
                         إجازة مرضية 🤒
                     </div>
+                    <div class="fab-menu-item" id="admin-fab-item" style="display:none;" onclick="app.navigate('admin')">
+                        إضافة مشتركين 👑
+                    </div>
                 </div>
             </div>
             <div class="overlay" id="fab-overlay" onclick="app.toggleFab()"></div>
+        </section>
+
+        
+        <!-- Admin Screen -->
+        <section id="admin-screen" class="screen">
+            <header class="app-header">
+                <h2>إدارة المشتركين</h2>
+                <button class="btn-back" onclick="app.navigate('dashboard')">🔙</button>
+            </header>
+            <main class="form-container" style="padding:20px;">
+                <div class="form-group">
+                    <label>ايدي المشترك (Chat ID)</label>
+                    <input type="number" id="admin_chat_id" placeholder="مثال: 123456789" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                </div>
+                <div class="form-group">
+                    <label>المدة (بالأيام)</label>
+                    <input type="number" id="admin_days" value="30" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                </div>
+                <div class="form-group">
+                    <label>عدد النقاط</label>
+                    <input type="number" id="admin_points" value="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                </div>
+                <button class="btn-primary" onclick="app.addSubscriber()" style="width:100%; margin-top:20px; font-size:16px;">إضافة / تفعيل</button>
+            </main>
         </section>
 
         <!-- Packages Screen -->
@@ -382,7 +409,7 @@
 
     <script src="arabic-reshaper.js"></script>
     <!-- Application Logic -->
-    <script src="app.js?v=677"></script>
+    <script src="app.js?v=566"></script>
     <!-- Version Label for debugging -->
     <script>
         const vLabel = document.createElement('div');
