@@ -1064,7 +1064,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <div>
         <!-- MOH Logo -->
         <div style="margin-bottom:8px;">
-          <img src="${mohLogo}" style="height:80px;">
+          <img src="${mohLogo}" style="height:105px;object-fit:contain;">
         </div>
         <!-- Hospital Name -->
         <h3 style="font-size:16px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;color:#333;">${d.hospitalAr || ''}</h3>
