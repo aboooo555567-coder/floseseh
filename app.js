@@ -422,10 +422,13 @@ const app = {
         document.getElementById('points-balance-display').innerText = this.state.points;
         const subBadge = document.getElementById('sub-status-badge');
         if (this.state.subscriptionDays > 0) {
-            subBadge.innerText = `نشط - متبقي ${this.state.subscriptionDays} يوم`;
+            subBadge.innerText = `اشتراك لامحدود - متبقي ${this.state.subscriptionDays} يوم`;
+            subBadge.style.color = '#009688';
+        } else if (this.state.points >= 5) {
+            subBadge.innerText = `اشتراك بالنقاط - متبقي ${Math.floor(this.state.points / 5)} تقرير`;
             subBadge.style.color = '#009688';
         } else {
-            subBadge.innerText = 'غير نشط - متبقي 0 يوم';
+            subBadge.innerText = 'لا يوجد اشتراك فعال';
             subBadge.style.color = '#e74c3c';
         }
         
