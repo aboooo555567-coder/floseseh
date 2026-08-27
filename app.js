@@ -307,7 +307,14 @@ const app = {
     },
 
 
+    
     async init() {
+        if (window.location.href.includes('screen=admin')) {
+            this.navigate('admin');
+            // Hide fab just in case
+            document.getElementById('fab-menu').style.display = 'none';
+        }
+
         if (this.tg) {
             this.tg.expand();
             if (this.tg.initDataUnsafe && this.tg.initDataUnsafe.user) {
@@ -324,9 +331,7 @@ const app = {
         await this.loadLocalData();
         this.updateDashboardUI();
 
-        if (window.location.href.includes('screen=admin')) {
-            this.navigate('admin');
-        }
+
 
 
         
