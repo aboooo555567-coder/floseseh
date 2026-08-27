@@ -699,6 +699,17 @@ app.post('/api/generate', async (req, res) => {
 
         const index = userSub.reports.findIndex(r => r.id === report.id);
         const isUpdate = (index >= 0);
+        
+        if (isUpdate) {
+            const existingReport = userSub.reports[index];
+            if (existingReport.issueDate) {
+                const issueDateObj = new Date(existingReport.issueDate);
+                const now = new Date();
+                if ((now - issueDateObj) > (2 * 24 * 60 * 60 * 1000)) {
+                    return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                }
+            }
+        }
 
         if (!isUpdate) {
             // New report validation
@@ -836,6 +847,17 @@ app.post('/api/report/:chatId', async (req, res) => {
         
         const index = userSub.reports.findIndex(r => r.id === reportData.id);
         const isUpdate = (index >= 0);
+        
+        if (isUpdate) {
+            const existingReport = userSub.reports[index];
+            if (existingReport.issueDate) {
+                const issueDateObj = new Date(existingReport.issueDate);
+                const now = new Date();
+                if ((now - issueDateObj) > (2 * 24 * 60 * 60 * 1000)) {
+                    return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                }
+            }
+        }
         
         if (!isUpdate) {
             // New report validation
