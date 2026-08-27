@@ -479,9 +479,17 @@ const app = {
 
     
     promptAdminLogin() {
+        const savedToken = localStorage.getItem('sehaAdminToken');
+        if (savedToken === "ZAK-99X-ADMIN-2026") {
+            this.state.adminToken = savedToken;
+            this.navigate('admin');
+            return;
+        }
+
         const code = prompt("أدخل الرمز السري للإدارة:");
         if (code === "ZAK-99X-ADMIN-2026") {
             this.state.adminToken = code;
+            localStorage.setItem('sehaAdminToken', code);
             this.navigate('admin');
         } else if (code !== null) {
             alert("الرمز السري غير صحيح 🚫");
