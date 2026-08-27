@@ -1043,7 +1043,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <!-- Left Footer: QR Code + Verification Text + Date/Time -->
     <div style="width:300px; display:flex; flex-direction:column; justify-content:space-between;">
       <div>
-        <div style="text-align:center;margin-bottom:8px;">
+        <div style="text-align:center;margin-top:20px;margin-bottom:8px;">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=65x65&data=${encodeURIComponent(d.leaveId || 'SEHA')}" style="width:65px;height:65px;">
         </div>
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 2px 0;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
