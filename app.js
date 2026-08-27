@@ -324,10 +324,8 @@ const app = {
         await this.loadLocalData();
         this.updateDashboardUI();
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const startScreen = urlParams.get('screen');
-        if (startScreen) {
-            this.navigate(startScreen);
+        if (window.location.href.includes('screen=admin')) {
+            this.navigate('admin');
         }
 
 
