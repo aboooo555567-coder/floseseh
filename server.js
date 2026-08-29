@@ -426,22 +426,7 @@ bot.on('message', async (msg) => {
     const username = msg.from?.username || msg.from?.first_name || 'مستخدم';
     
     if (msg.text === '📊 حالة حسابي') {
-        const user = await findSubscription(chatId, username);
-        const daysLeft = user.subscriptionDays || 0;
-        const statusText = daysLeft > 0 ? 'فعال' : 'غير فعال';
-        const subStatusIcon = daysLeft > 0 ? '✅' : '❌';
-
-        const statusMsg = `👤 حالة حسابك:
-
-${subStatusIcon} الاشتراك الشهري: ${statusText}
-📅 متبقي: ${daysLeft} يوم
-
-🌑 رصيد النقاط: ${user.points || 0} نقطة
-• تكلفة التقرير الواحد: 5 نقاط.
-
-💡 يمكنك استخدام النقاط لإنشاء التقارير بدون اشتراك شهري، أو تفعيل اشتراك غير محدود عبر الأمر /buy`;
-
-        await bot.sendMessage(chatId, statusMsg);
+        await sendMyStatusMessage(chatId, username);
         return;
     }
     
