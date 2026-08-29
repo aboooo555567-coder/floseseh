@@ -1171,7 +1171,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         <img src="${mohLogo}" style="height:100px;object-fit:contain;margin-bottom:10px;">
         <h3 style="font-size:13px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;">${d.hospitalAr || ''}</h3>
         <h4 style="font-size:12px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;">${d.hospitalEn || ''}</h4>
-        ${d.licenseNumber ? `<p style="font-size:10px;color:#555;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
+        ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
 
     </div>
