@@ -1034,9 +1034,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
   .label-en { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 12px; width: 155px; text-align: center !important; vertical-align: middle !important; }
   .label-ar { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; }
-  .val { border: 1px solid #dee2e6; padding: 10px 8px; color: #555555; font-weight: normal; font-size: 13px; text-align: center !important; vertical-align: middle !important; }
-  .dur-row td { background-color: #1F3864; color: white; border: 1px solid #dee2e6; padding: 10px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
+  .val { border: 1px solid #dee2e6; padding: 10px 8px; color: #1A365D; font-weight: bold; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 1px solid #dee2e6; padding: 10px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
   .dur-label { font-weight: bold; }
+  tr:nth-child(even) td { background-color: #f8f9fa; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
