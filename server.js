@@ -312,7 +312,20 @@ const handleStartCommand = async (msg) => {
     const statusIcon = daysLeft > 0 ? '✅' : '❌';
     const statusText = daysLeft > 0 ? `فعال - متبقي ${daysLeft} يوم` : `غير فعال - متبقي 0 يوم`;
     
-    const welcomeText = `👋 أهلاً بعودتك ${displayName}!
+    let adminNotice = '';
+    if (user.isNewlyMigrated) {
+        adminNotice = '🎉 <b>تم تفعيل اشتراكك يدوياً من قبل الإدارة!</b> 🥳\n\n';
+        // Clean up flag so it doesn't stay in memory forever
+        delete user.isNewlyMigrated;
+        // Optionally save to remove the flag from disk if it got saved
+        const data = await loadLocalSubscriptions();
+        if (data.subscriptions[chatId]) {
+            delete data.subscriptions[chatId].isNewlyMigrated;
+            await saveLocalSubscriptions(data);
+        }
+    }
+    
+    const welcomeText = `${adminNotice}👋 أهلاً بعودتك ${displayName}!
 
 ${statusIcon} اشتراكك ${statusText}
 🌑 رصيدك الحالي من النقاط: ${user.points || 0} نقطة
@@ -323,6 +336,7 @@ ${statusIcon} اشتراكك ${statusText}
 اضغط على الأزرار أدناه لفتح التطبيق أو التصفح ⚡`;
 
     await bot.sendMessage(chatId, welcomeText, {
+        parse_mode: 'HTML',
         reply_markup: {
             inline_keyboard: [
                 [{ text: '🚀 Open', web_app: { url: WEB_APP_URL_CACHED } }],
