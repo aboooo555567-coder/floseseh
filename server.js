@@ -266,14 +266,7 @@ ${subStatusIcon} حالة الاشتراك: ${statusText}
 
 💡 يمكنك استخدام النقاط لإنشاء التقارير دون الحاجة لاشتراك شهري، أو الاشتراك بالباقة اللامحدودة!`;
 
-    await bot.sendMessage(chatId, statusMsg, {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }],
-                [{ text: '🛒 متجر الباقات', callback_data: 'packages' }, { text: '🔗 برنامج الإحالات', callback_data: 'referrals' }]
-            ]
-        }
-    });
+    await bot.sendMessage(chatId, statusMsg);
 };
 
 // Start Command Handler
@@ -298,9 +291,7 @@ const handleStartCommand = async (msg) => {
     await bot.sendMessage(chatId, `⚡ تم تفعيل قائمة الوصول السريع أسفل الشاشة!`, {
         reply_markup: {
             keyboard: [
-                [{ text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }],
-                [{ text: '🔗 برنامج الإحالات' }, { text: '🛒 متجر الباقات' }],
-                [{ text: '🔗 كسب نقاط (الإحالات)' }],
+                [{ text: '🛒 متجر الباقات' }, { text: '🔗 كسب نقاط (الإحالات)' }],
                 [{ text: '📊 حالة حسابي' }]
             ],
             resize_keyboard: true
