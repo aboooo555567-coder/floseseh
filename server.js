@@ -367,9 +367,11 @@ bot.onText(/\/admin/, async (msg) => {
     currentAdminToken = crypto.randomBytes(16).toString('hex');
     const adminUrl = `${process.env.APP_URL || 'https://seha-sickleave-app.onrender.com'}/index.html?screen=admin&token=${currentAdminToken}`;
     
-    const inlineKeyboard = [[
-        { text: '🚀 فتح', web_app: { url: adminUrl } }
-    ]];
+        const inquiryUrl = `${process.env.APP_URL || 'https://seha-sickleave.onrender.com'}/inquiry`;
+    const inlineKeyboard = [
+        [{ text: '🚀 فتح لوحة التحكم', web_app: { url: adminUrl } }],
+        [{ text: '🔍 فتح الاستعلام الداخلي', web_app: { url: inquiryUrl } }]
+    ];
     
     await bot.sendMessage(chatId, 'مرحباً بك يا مدير النظام! اضغط على الزر أدناه لفتح لوحة تحكم المشتركين:', {
         reply_markup: {
