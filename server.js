@@ -1032,9 +1032,9 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 12px; width: 155px; font-style: italic; text-align: center !important; vertical-align: middle !important; }
+  .label-en { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 12px; width: 155px; text-align: center !important; vertical-align: middle !important; }
   .label-ar { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; }
-  .val { border: 1px solid #dee2e6; padding: 10px 8px; color: #1A365D; font-weight: bold; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
+  .val { border: 1px solid #dee2e6; padding: 10px 8px; color: #555555; font-weight: normal; font-size: 13px; text-align: center !important; vertical-align: middle !important; }
   .dur-row td { background-color: #1F3864; color: white; border: 1px solid #dee2e6; padding: 10px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
   .dur-label { font-weight: bold; }
 </style>
