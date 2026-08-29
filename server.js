@@ -1157,14 +1157,14 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       
       <!-- Left: QR Code + Text -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px; margin-top: 10px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=105x105&data=${encodeURIComponent("https://www.seha.sa/#/inquiries/slenquiry")}" style="width:105px;height:105px;margin-bottom:12px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent("https://www.seha.sa/#/inquiries/slenquiry")}" style="width:90px;height:90px;margin-bottom:12px;">
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="https://www.seha.sa/#/inquiries/slenquiry" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
-      <div style="width:1px; background-color:#cccccc; height:130px; margin-top: 20px;"></div>
+      <div style="width:1px; background-color:#cccccc; height:150px; margin-top: 5px;"></div>
 
       <!-- Right: MOH Logo + Hospital Name -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:15px; padding-top: 0px;">
