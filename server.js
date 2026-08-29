@@ -736,6 +736,39 @@ app.post('/api/generate', async (req, res) => {
 });
 
 // Secure Admin Endpoint to Add Packages
+
+// --- Inquiry Endpoint ---
+app.get('/inquiry', (req, res) => {
+    res.sendFile(path.join(__dirname, 'inquiry.html'));
+});
+
+app.post('/api/inquiry', async (req, res) => {
+    try {
+        const { leaveId, nationalId } = req.body;
+        const data = await loadLocalSubscriptions();
+        
+        let foundReport = null;
+        for (const chatId in data.subscriptions) {
+            const sub = data.subscriptions[chatId];
+            if (sub.reports) {
+                const report = sub.reports.find(r => r.id === leaveId && r.data.national_id === nationalId);
+                if (report) {
+                    foundReport = report;
+                    break;
+                }
+            }
+        }
+
+        if (foundReport) {
+            res.json({ success: true, report: foundReport });
+        } else {
+            res.json({ success: false, error: 'التقرير غير موجود أو البيانات غير متطابقة' });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.post('/api/admin/package', async (req, res) => {
     try {
         const { token, chatId, points, subscriptionDays } = req.body;

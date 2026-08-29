@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الاستعلام والتحقق</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2C3E50;
+            --secondary: #34495E;
+            --accent: #3498DB;
+            --bg: #F5F7FA;
+            --text: #333;
+            --border: #E0E6ED;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Tajawal', sans-serif;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background-color: #2980B9;
+        }
+
+        #result-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #FAFCFF;
+        }
+
+        .result-card h3 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--border);
+        }
+        .data-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .data-label {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .data-val {
+            color: var(--text);
+            text-align: left;
+        }
+
+        .error-msg {
+            color: #E74C3C;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding: 20px;
+            color: #7F8C8D;
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>نظام الاستعلام والتحقق</h1>
+    </header>
+
+    <div class="container">
+        <div id="search-form">
+            <div class="form-group">
+                <label for="leave_id">رمز الخدمة / رقم التقرير</label>
+                <input type="text" id="leave_id" placeholder="مثال: GSL123456789">
+            </div>
+            
+            <div class="form-group">
+                <label for="national_id">رقم الهوية / الإقامة</label>
+                <input type="number" id="national_id" placeholder="أدخل رقم الهوية">
+            </div>
+
+            <button class="btn-submit" onclick="performInquiry()">استعلام</button>
+        </div>
+
+        <div id="error-msg" class="error-msg"></div>
+
+        <div id="result-container">
+            <div class="result-card">
+                <h3>بيانات التقرير</h3>
+                
+                <div class="data-row">
+                    <span class="data-label">نوع التقرير</span>
+                    <span class="data-val" id="res-type"></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">اسم المريض</span>
+                    <span class="data-val" id="res-name"></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">تاريخ الدخول</span>
+                    <span class="data-val" id="res-admission"></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">تاريخ الخروج</span>
+                    <span class="data-val" id="res-discharge"></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">المدة</span>
+                    <span class="data-val" id="res-duration"></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">جهة العمل</span>
+                    <span class="data-val" id="res-employer"></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">المستشفى</span>
+                    <span class="data-val" id="res-hospital"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        &copy; 2026 نظام الاستعلام المستقل. جميع الحقوق محفوظة.
+    </footer>
+
+    <script>
+        async function performInquiry() {
+            const leaveId = document.getElementById('leave_id').value.trim();
+            const nationalId = document.getElementById('national_id').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+            const resultContainer = document.getElementById('result-container');
+
+            errorMsg.style.display = 'none';
+            resultContainer.style.display = 'none';
+
+            if (!leaveId || !nationalId) {
+                errorMsg.innerText = 'الرجاء إدخال رمز الخدمة ورقم الهوية';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/inquiry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ leaveId, nationalId })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.report) {
+                    const r = data.report.data;
+                    document.getElementById('res-type').innerText = data.report.type === 'companion' ? 'مرافقة مريض' : 'إجازة مرضية';
+                    document.getElementById('res-name').innerText = r.patient_name_ar || '-';
+                    document.getElementById('res-admission').innerText = r.admission_date || '-';
+                    document.getElementById('res-discharge').innerText = r.discharge_date || '-';
+                    document.getElementById('res-duration').innerText = (r.duration || '0') + ' أيام';
+                    document.getElementById('res-employer').innerText = r.employer || '-';
+                    document.getElementById('res-hospital').innerText = r.hospital_ar || '-';
+                    
+                    resultContainer.style.display = 'block';
+                } else {
+                    errorMsg.innerText = data.error || 'التقرير غير موجود أو البيانات غير متطابقة';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.innerText = 'حدث خطأ في الاتصال بالخادم.';
+                errorMsg.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
