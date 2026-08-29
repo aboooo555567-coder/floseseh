@@ -269,7 +269,7 @@ ${subStatusIcon} حالة الاشتراك: ${statusText}
     await bot.sendMessage(chatId, statusMsg, {
         reply_markup: {
             inline_keyboard: [
-                [{ text: '🚀 Open', web_app: { url: WEB_APP_URL_CACHED } }],
+                [{ text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }],
                 [{ text: '🛒 متجر الباقات', callback_data: 'packages' }, { text: '🔗 برنامج الإحالات', callback_data: 'referrals' }]
             ]
         }
@@ -298,7 +298,7 @@ const handleStartCommand = async (msg) => {
     await bot.sendMessage(chatId, `⚡ تم تفعيل قائمة الوصول السريع أسفل الشاشة!`, {
         reply_markup: {
             keyboard: [
-                [{ text: '🚀 Open', web_app: { url: WEB_APP_URL_CACHED } }],
+                [{ text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }],
                 [{ text: '🔗 برنامج الإحالات' }, { text: '🛒 متجر الباقات' }],
                 [{ text: '🔗 كسب نقاط (الإحالات)' }],
                 [{ text: '📊 حالة حسابي' }]
@@ -339,8 +339,8 @@ ${statusIcon} اشتراكك ${statusText}
         parse_mode: 'HTML',
         reply_markup: {
             inline_keyboard: [
-                [{ text: '🚀 Open', web_app: { url: WEB_APP_URL_CACHED } }],
-                [{ text: '🚀 Open', web_app: { url: WEB_APP_URL_CACHED } }],
+                [{ text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }],
+                [{ text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }],
                 [{ text: 'دعوة صديق 🎁', callback_data: 'referrals' }],
                 [{ text: 'باقات الاشتراك 💎', callback_data: 'packages' }],
                 [{ text: 'حالة حسابي 📊', callback_data: 'mystatus' }]
@@ -377,7 +377,7 @@ bot.onText(/\/admin/, async (msg) => {
     const adminUrl = `${process.env.APP_URL || 'https://seha-sickleave-app.onrender.com'}/index.html?screen=admin&token=${currentAdminToken}`;
     
     const inlineKeyboard = [[
-        { text: '🚀 Open', web_app: { url: adminUrl } }
+        { text: '🚀 فتح', web_app: { url: adminUrl } }
     ]];
     
     await bot.sendMessage(chatId, 'مرحباً بك يا مدير النظام! اضغط على الزر أدناه لفتح لوحة تحكم المشتركين:', {
@@ -1378,7 +1378,7 @@ const configureChatMenuButton = async (targetChatId = null) => {
             const bodyObj = {
                 menu_button: {
                     type: 'web_app',
-                    text: '🚀 Open', web_app: { url: WEB_APP_URL_CACHED }
+                    text: 'Open', web_app: { url: WEB_APP_URL_CACHED }
                 }
             };
             if (chatIdVal) {
