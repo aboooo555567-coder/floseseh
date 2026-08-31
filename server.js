@@ -958,7 +958,7 @@ app.post('/api/send-pdf', async (req, res) => {
         
         // Send document via Telegram Bot
         const message = await bot.sendDocument(chatId, pdfBuffer, {
-            caption: 'تقرير الإجازة المرضية الخاص بك 📄'
+            caption: '📄 تقرير الإجازة المرضية الخاص بك'
         ,
             reply_markup: {
                 inline_keyboard: [[
@@ -1243,7 +1243,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
         addLog('Sending PDF to Telegram...');
         const message = await bot.sendDocument(chatId, pdfBuffer, {
-            caption: 'تم إصدار التقرير بنجاح ✅'
+            caption: '📄 تقرير الإجازة المرضية الخاص بك'
         ,
             reply_markup: {
                 inline_keyboard: [[
@@ -1273,7 +1273,7 @@ app.post('/api/send-generated-pdf', async (req, res) => {
         const pdfBuffer = Buffer.from(base64Data, 'base64');
         
         const message = await bot.sendDocument(chatId, pdfBuffer, {
-            caption: 'تم إصدار التقرير بنجاح ✅'
+            caption: '📄 تقرير الإجازة المرضية الخاص بك'
         ,
             reply_markup: {
                 inline_keyboard: [[
