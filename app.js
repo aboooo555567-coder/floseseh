@@ -558,7 +558,7 @@ const app = {
         document.getElementById('form-title').innerText = type === 'companion' ? 'إصدار تقرير مرافقة مريض' : 'إصدار تقرير جديد';
         
         const typeSelect = document.getElementById('leave_type');
-        typeSelect.innerHTML = type === 'companion' ? '<option value="Companion">Companion</option>' : '<option value="GSL">GSL</option>';
+        typeSelect.innerHTML = type === 'companion' ? '<option value="Companion">Companion</option>' : '<option value="GSL">GSL</option><option value="PSL">PSL</option>';
         
         document.getElementById('escort-fields').style.display = type === 'companion' ? 'block' : 'none';
         
@@ -855,7 +855,8 @@ const app = {
         const isPrivate = document.querySelector('input[name="hospital_type"]:checked').value === 'private';
         const license = document.getElementById('license_number').value;
 
-        const reportId = this.state.currentReportId || `GSL${Math.floor(Math.random() * 10000000000)}`;
+        const leaveTypeValue = document.getElementById('leave_type').value || 'GSL';
+        const reportId = this.state.currentReportId || `${leaveTypeValue}${Math.floor(Math.random() * 10000000000)}`;
 
         const hijriAdm = this.getHijriDate(admission);
         const hijriDis = this.getHijriDate(discharge);
