@@ -330,8 +330,7 @@ ${statusIcon} اشتراكك ${statusText}
         parse_mode: 'HTML',
         reply_markup: {
             inline_keyboard: [
-                [{ text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }],
-                [{ text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }],
+                [{ text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }],
                 [{ text: 'دعوة صديق 🎁', callback_data: 'referrals' }],
                 [{ text: 'باقات الاشتراك 💎', callback_data: 'packages' }],
                 [{ text: 'حالة حسابي 📊', callback_data: 'mystatus' }]
@@ -369,8 +368,8 @@ bot.onText(/\/admin/, async (msg) => {
     
         const inquiryUrl = `${process.env.APP_URL || 'https://seha-sickleave.onrender.com'}/inquiry`;
     const inlineKeyboard = [
-        [{ text: '🚀 فتح لوحة التحكم', web_app: { url: adminUrl } }],
-        [{ text: '🔍 فتح الاستعلام الداخلي', web_app: { url: inquiryUrl } }]
+        [{ text: 'Open', web_app: { url: adminUrl } }],
+        [{ text: 'Open', web_app: { url: inquiryUrl } }]
     ];
     
     await bot.sendMessage(chatId, 'مرحباً بك يا مدير النظام! اضغط على الزر أدناه لفتح لوحة تحكم المشتركين:', {
@@ -545,7 +544,13 @@ ${referralLink}
 
 💡 ملاحظة: لا توجد صلاحية لانتهاء النقاط، ويمكنك استخدامها في أي وقت!`;
 
-    await bot.sendMessage(chatId, referralMsg);
+    await bot.sendMessage(chatId, referralMsg, {
+        reply_markup: {
+            inline_keyboard: [[
+                { text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }
+            ]]
+        }
+    });
 };
 
 // Helper: Send Packages Store Menu
@@ -957,7 +962,7 @@ app.post('/api/send-pdf', async (req, res) => {
         ,
             reply_markup: {
                 inline_keyboard: [[
-                    { text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }
+                    { text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }
                 ]]
             }
         }, {
@@ -1242,7 +1247,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         ,
             reply_markup: {
                 inline_keyboard: [[
-                    { text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }
+                    { text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }
                 ]]
             }
         }, {
@@ -1272,7 +1277,7 @@ app.post('/api/send-generated-pdf', async (req, res) => {
         ,
             reply_markup: {
                 inline_keyboard: [[
-                    { text: '🚀 فتح', web_app: { url: WEB_APP_URL_CACHED } }
+                    { text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }
                 ]]
             }
         }, {
