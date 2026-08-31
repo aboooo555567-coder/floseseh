@@ -856,7 +856,13 @@ const app = {
         const license = document.getElementById('license_number').value;
 
         const leaveTypeValue = document.getElementById('leave_type').value || 'GSL';
-        const reportId = this.state.currentReportId || `${leaveTypeValue}${Math.floor(Math.random() * 10000000000)}`;
+        const dateObj = new Date();
+        const yy = dateObj.getFullYear().toString().slice(2);
+        const mm = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+        const dd = dateObj.getDate().toString().padStart(2, '0');
+        const rand5 = Math.floor(10000 + Math.random() * 90000); // 5 digits
+        const generatedId = `${leaveTypeValue}${yy}${mm}${dd}${rand5}`;
+        const reportId = this.state.currentReportId || generatedId;
 
         const hijriAdm = this.getHijriDate(admission);
         const hijriDis = this.getHijriDate(discharge);
