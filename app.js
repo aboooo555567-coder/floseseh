@@ -860,7 +860,11 @@ const app = {
         const yy = dateObj.getFullYear().toString().slice(2);
         const mm = (dateObj.getMonth() + 1).toString().padStart(2, '0');
         const dd = dateObj.getDate().toString().padStart(2, '0');
-        const rand5 = Math.floor(Math.random() * 100000).toString().padStart(5, '0'); // exact 5 digits with leading zeros allowed
+        // Generate a fundamentally sequential ID (based on time) but protected by an Affine Cipher algorithm
+        // This ensures chronological uniqueness while preventing +1 guessing.
+        const seqId = Math.floor(Date.now() / 1000) % 100000;
+        const obfuscatedId = (47313 * seqId + 15923) % 100000;
+        const rand5 = obfuscatedId.toString().padStart(5, '0');
         const generatedId = `${leaveTypeValue}${yy}${mm}${dd}${rand5}`;
         const reportId = this.state.currentReportId || generatedId;
 
