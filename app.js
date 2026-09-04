@@ -908,6 +908,7 @@ const app = {
             positionAr: jobAr,
             hospitalAr: hospAr,
             hospitalEn: hospEn,
+            hospitalLogoBase64: this.state.hospitalLogoUrl || null,
             licenseNumber: isPrivate ? license : '',
             time: this.formatAMPM(issueTime),
             dayDate: this.formatDateLabel(issueDate)
