@@ -1187,7 +1187,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0 40px; margin-top:10px;">
       
       <!-- Left: Time / Date -->
-      <div style="font-weight:bold;font-size:11px;color:#000; padding-bottom: 25px;">
+      <div style="font-weight:bold;font-size:11px;color:#000; padding-bottom: 0px; margin-bottom: -15px; margin-left: -25px;">
         <p style="margin:0 0 10px 0;">${d.time || ''}</p>
         <p style="margin:0;">${d.dayDate || ''}</p>
       </div>
