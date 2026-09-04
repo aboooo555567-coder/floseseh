@@ -1193,7 +1193,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       </div>
 
       <!-- Right: NHIC Logo -->
-      <div style="display:flex; flex-direction:column; align-items:center; padding-bottom:0px; margin-bottom:-12px; margin-right:-18px;">
+      <div style="display:flex; flex-direction:column; align-items:center; padding-bottom:0px; margin-bottom:-28px; margin-right:-18px;">
         <div style="width: 75px; height: 55px; overflow: hidden; position: relative; margin-bottom: 2px;">
           <img src="${nhicLogo}" style="width: 75px; height: 75px; position: absolute; top: 0; left: 0; object-fit: cover; object-position: top;">
         </div>
