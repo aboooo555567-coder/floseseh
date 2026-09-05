@@ -1160,7 +1160,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="margin-top:10px;">
     
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; height:180px; margin-top: 0px;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; height:195px; margin-top: 0px;">
       
       <!-- Left: QR Code + Text -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px; padding-top: 0px;">
@@ -1171,7 +1171,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       </div>
 
       <!-- Center Vertical Divider -->
-      <div style="width:1px; background-color:#cccccc; height:150px; margin-top: 5px;"></div>
+      <div style="width:1px; background-color:#cccccc; height:185px; margin-top: 5px;"></div>
 
       <!-- Right: MOH Logo + Hospital Name -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px; padding-top: 0px;">
