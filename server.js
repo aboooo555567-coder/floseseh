@@ -1174,10 +1174,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <div style="width:1px; background-color:#cccccc; height:150px; margin-top: 5px;"></div>
 
       <!-- Right: MOH Logo + Hospital Name -->
-      <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:15px; padding-top: 0px;">
+      <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px; padding-top: 0px;">
         <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:115px;object-fit:contain;margin-bottom:10px;">
-        <h3 style="font-size:11.5px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 15px;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
-        <h4 style="font-size:10.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 15px;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
+        <h3 style="font-size:11.5px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
+        <h4 style="font-size:10.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
 
