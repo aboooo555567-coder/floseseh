@@ -1184,16 +1184,16 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </div>
 
     <!-- Bottom Footer Row: Time/Date & NHIC Logo -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0 40px; margin-top:10px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0 15px; margin-top:10px; margin-bottom:-25px;">
       
       <!-- Left: Time / Date -->
-      <div style="font-weight:bold;font-size:11px;color:#000; padding-bottom: 0px; margin-bottom: -15px; margin-left: -25px;">
+      <div style="font-weight:bold;font-size:11px;color:#000; padding-bottom: 0px; margin-bottom: 0px; margin-left: 0px;">
         <p style="margin:0 0 10px 0;">${d.time || ''}</p>
         <p style="margin:0;">${d.dayDate || ''}</p>
       </div>
 
       <!-- Right: NHIC Logo -->
-      <div style="display:flex; flex-direction:column; align-items:center; padding-bottom:0px; margin-bottom:-35px; margin-right:-30px;">
+      <div style="display:flex; flex-direction:column; align-items:center; padding-bottom:0px; margin-bottom:0px; margin-right:0px;">
         <div style="width: 75px; height: 55px; overflow: hidden; position: relative; margin-bottom: 2px;">
           <img src="${nhicLogo}" style="width: 75px; height: 75px; position: absolute; top: 0; left: 0; object-fit: cover; object-position: top;">
         </div>
