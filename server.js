@@ -1099,8 +1099,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </div>
   
   <!-- Header: Geometric graphic (right) -->
-  <svg width="230" height="90" viewBox="0 0 250 100" style="position:absolute;top:15px;right:0px;opacity:0.65;">
-    <path d="M 10,45 L 35,15 L 45,65 Z M 35,15 L 75,5 L 85,40 Z M 35,15 L 85,40 L 45,65 Z M 45,65 L 85,40 L 105,80 Z M 75,5 L 125,0 L 85,40 Z M 85,40 L 125,0 L 145,45 Z M 85,40 L 145,45 L 105,80 Z M 105,80 L 145,45 L 165,85 Z M 125,0 L 185,5 L 145,45 Z M 145,45 L 185,5 L 195,55 Z M 145,45 L 195,55 L 165,85 Z M 185,5 L 235,15 L 195,55 Z M 195,55 L 235,15 L 250,85 Z" stroke="#7ca9c9" stroke-width="0.7" fill="none" stroke-linejoin="round"/>
+  <svg width="240" height="95" viewBox="0 0 260 100" style="position:absolute;top:20px;right:0px;opacity:0.8;">
+    <path d="M 10,40 L 35,20 L 45,60 Z M 35,20 L 70,10 L 80,45 Z M 35,20 L 80,45 L 45,60 Z M 45,60 L 80,45 L 90,75 Z M 70,10 L 115,5 L 120,40 Z M 70,10 L 120,40 L 80,45 Z M 80,45 L 120,40 L 130,65 Z M 80,45 L 130,65 L 90,75 Z M 90,75 L 130,65 L 140,90 Z M 115,5 L 165,0 L 160,35 Z M 115,5 L 160,35 L 120,40 Z M 120,40 L 160,35 L 170,60 Z M 120,40 L 170,60 L 130,65 Z M 130,65 L 170,60 L 180,85 Z M 130,65 L 180,85 L 140,90 Z M 165,0 L 210,10 L 200,45 Z M 165,0 L 200,45 L 160,35 Z M 160,35 L 200,45 L 215,70 Z M 160,35 L 215,70 L 170,60 Z M 170,60 L 215,70 L 225,95 Z M 170,60 L 225,95 L 180,85 Z M 210,10 L 250,25 L 235,55 Z M 210,10 L 235,55 L 200,45 Z M 200,45 L 235,55 L 245,85 Z M 200,45 L 245,85 L 215,70 Z M 215,70 L 245,85 L 225,95 Z M 235,55 L 260,35 L 245,85 Z" stroke="#8caec4" stroke-width="0.6" fill="none" stroke-linejoin="round"/>
   </svg>
 
   <!-- Horizontal separator line -->
