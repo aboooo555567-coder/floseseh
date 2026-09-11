@@ -1111,7 +1111,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:155px;">Leave ID</td>
-      <td class="val" colspan="2" style="width:404px;">${d.leaveId || ''}</td>
+      <td class="val" colspan="2" style="width:404px; font-family: 'Arial', sans-serif; white-space: nowrap;">${d.leaveId || ''}</td>
       <td class="label-ar" style="width:155px;">رمز الإجازة</td>
     </tr>
     <tr class="dur-row">
@@ -1145,7 +1145,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr>
       <td class="label-en">National ID / Iqama</td>
-      <td class="val" colspan="2">${d.nationalId || ''}</td>
+      <td class="val" colspan="2" style="font-family: 'Arial', sans-serif; white-space: nowrap;">${d.nationalId || ''}</td>
       <td class="label-ar">رقم الهوية/الاقامه</td>
     </tr>
     <tr>
