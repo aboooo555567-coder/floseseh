@@ -562,6 +562,18 @@ const app = {
         
         document.getElementById('escort-fields').style.display = type === 'companion' ? 'block' : 'none';
         
+        // Dynamically move National ID field based on type
+        const idGroup = document.getElementById('national-id-group');
+        if (idGroup) {
+            if (type === 'companion') {
+                const datesRow = document.querySelector('.dates-row');
+                document.getElementById('escort-fields').insertBefore(idGroup, datesRow);
+            } else {
+                const step2 = document.getElementById('step-2');
+                step2.insertBefore(idGroup, step2.firstChild);
+            }
+        }
+        
         this.updateWizardUI();
         this.navigate('form');
         
