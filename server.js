@@ -1208,7 +1208,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </div>
 
     <!-- Bottom Footer Row: Time/Date & NHIC Logo -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0 15px; margin-top:10px; margin-bottom:-25px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:10px; margin-bottom:-25px;">
       
       <!-- Left: Time / Date -->
       <div style="font-weight:bold;font-size:11px;color:#000; padding-bottom: 0px; margin-bottom: 0px; margin-left: 0px;">
