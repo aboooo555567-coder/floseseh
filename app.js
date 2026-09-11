@@ -566,7 +566,7 @@ const app = {
         const idGroup = document.getElementById('national-id-group');
         if (idGroup) {
             if (type === 'companion') {
-                const datesRow = document.querySelector('.dates-row');
+                const datesRow = document.querySelector('#escort-fields .dates-row');
                 document.getElementById('escort-fields').insertBefore(idGroup, datesRow);
             } else {
                 const step2 = document.getElementById('step-2');
