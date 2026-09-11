@@ -1099,8 +1099,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </div>
   
   <!-- Header: Geometric graphic (right) -->
-  <svg width="250" height="150" viewBox="0 0 200 120" style="position:absolute;top:0px;right:0px;opacity:0.85;">
-    <path d="M 20,40 L 50,70 L 90,20 L 140,50 L 190,10 M 50,70 L 80,100 L 120,60 L 170,110 L 190,10 M 90,20 L 120,60 L 140,50 M 20,40 L 40,10 L 90,20 M 120,60 L 150,20 L 190,10 M 80,100 L 90,20" stroke="#5D99C6" stroke-width="1.2" fill="none"/>
+  <svg width="260" height="120" viewBox="0 0 250 120" style="position:absolute;top:0px;right:0px;opacity:0.7;">
+    <path d="M 20,30 L 60,0 M 20,30 L 70,60 M 60,0 L 70,60 M 60,0 L 100,0 M 70,60 L 100,0 M 70,60 L 120,40 M 100,0 L 120,40 M 70,60 L 130,100 M 120,40 L 130,100 M 100,0 L 160,0 M 120,40 L 160,0 M 120,40 L 170,50 M 160,0 L 170,50 M 130,100 L 170,50 M 160,0 L 200,0 M 170,50 L 200,0 M 170,50 L 200,80 M 200,0 L 200,80 M 200,0 L 230,30 M 200,80 L 230,30 M 230,30 L 250,0 M 200,80 L 240,80 M 230,30 L 240,80 M 240,80 L 250,0" stroke="#216ba5" stroke-width="0.7" fill="none"/>
   </svg>
 
   <!-- Horizontal separator line -->
