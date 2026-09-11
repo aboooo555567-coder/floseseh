@@ -558,7 +558,7 @@ const app = {
         document.getElementById('form-title').innerText = type === 'companion' ? 'إصدار تقرير مرافقة مريض' : 'إصدار تقرير جديد';
         
         const typeSelect = document.getElementById('leave_type');
-        typeSelect.innerHTML = type === 'companion' ? '<option value="Companion">Companion</option>' : '<option value="GSL">GSL</option><option value="PSL">PSL</option>';
+        typeSelect.innerHTML = '<option value="GSL">GSL</option><option value="PSL">PSL</option>';
         
         document.getElementById('escort-fields').style.display = type === 'companion' ? 'block' : 'none';
         
