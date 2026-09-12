@@ -458,7 +458,7 @@ const app = {
                 card.innerHTML = `
                     <div class="report-info">
                         <h4>${r.patientName}</h4>
-                        <p>${r.type === 'companion_statement' ? 'مشهد مراجعة' : (r.type === 'companion' ? 'مرافقة مريض' : 'إجازة مرضية')} • ${r.issueDate}</p>
+                        <p>${r.type === 'companion' ? 'مرافقة مريض' : 'إجازة مرضية'} • ${r.issueDate}</p>
                     </div>
                     <div class="report-actions">
                         <button onclick="app.copyReportId('${r.id}')" title="نسخ رقم التقرير">📋</button>
@@ -555,32 +555,17 @@ const app = {
         this.state.leaveType = type;
         this.state.currentStep = 1;
         
-        const isCompanionStatement = type === 'companion_statement';
-        const isCompanion = type === 'companion' || isCompanionStatement;
-        
-        let formTitle = 'إصدار تقرير جديد';
-        if (isCompanionStatement) formTitle = 'إصدار مشهد مراجعة لمرافق';
-        else if (type === 'companion') formTitle = 'إصدار تقرير مرافقة مريض';
-        document.getElementById('form-title').innerText = formTitle;
+        document.getElementById('form-title').innerText = type === 'companion' ? 'إصدار تقرير مرافقة مريض' : 'إصدار تقرير جديد';
         
         const typeSelect = document.getElementById('leave_type');
         typeSelect.innerHTML = '<option value="GSL">GSL</option><option value="PSL">PSL</option>';
         
-        document.getElementById('escort-fields').style.display = isCompanion ? 'block' : 'none';
+        document.getElementById('escort-fields').style.display = type === 'companion' ? 'block' : 'none';
         
-        const timeRow = document.getElementById('time-row');
-        const durationGroup = document.getElementById('duration-group');
-        const waitingPeriodGroup = document.getElementById('waiting-period-group');
-        const visitTypeFields = document.getElementById('visit-type-fields');
-        
-        if (timeRow) timeRow.style.display = isCompanionStatement ? 'flex' : 'none';
-        if (durationGroup) durationGroup.style.display = isCompanionStatement ? 'none' : 'block';
-        if (waitingPeriodGroup) waitingPeriodGroup.style.display = isCompanionStatement ? 'block' : 'none';
-        if (visitTypeFields) visitTypeFields.style.display = isCompanionStatement ? 'block' : 'none';
-        
+        // Dynamically move National ID field based on type
         const idGroup = document.getElementById('national-id-group');
         if (idGroup) {
-            if (isCompanion) {
+            if (type === 'companion') {
                 const datesRow = document.querySelector('#escort-fields .dates-row');
                 document.getElementById('escort-fields').insertBefore(idGroup, datesRow);
             } else {
@@ -592,6 +577,7 @@ const app = {
         this.updateWizardUI();
         this.navigate('form');
         
+        // Auto-fill current date and time
         const now = new Date();
         const offset = now.getTimezoneOffset() * 60000;
         const localISOTime = (new Date(now - offset)).toISOString().slice(0, -1);
@@ -818,17 +804,6 @@ const app = {
         return dateString;
     },
 
-    
-    formatAMPM_Ar(timeStr) {
-        if(!timeStr) return "";
-        let [hours, minutes] = timeStr.split(':');
-        hours = parseInt(hours);
-        let ampm = hours >= 12 ? 'مساءً' : 'صباحاً';
-        hours = hours % 12;
-        hours = hours ? hours : 12; 
-        return `${hours}:${minutes} ${ampm}`;
-    },
-    
     formatAMPM(timeStr) {
         if(!timeStr) return "";
         let [hours, minutes] = timeStr.split(':');
@@ -910,29 +885,14 @@ const app = {
         const gregoAdm = this.formatGregorian(admission);
         const gregoDis = this.formatGregorian(discharge);
 
-        const typeIsStatement = type === 'companion_statement';
-        const typeIsCompanion = type === 'companion' || type === 'companion_statement';
-
-        const escAr = typeIsCompanion ? document.getElementById('escort_name_ar').value : '';
-        const escEn = typeIsCompanion ? document.getElementById('escort_name_en').value : '';
-        const relAr = typeIsCompanion ? document.getElementById('relation_ar').value : '';
-        const relEn = typeIsCompanion ? document.getElementById('relation_en').value : '';
-        
-        const admTime = document.getElementById('admission_time') ? document.getElementById('admission_time').value : '';
-        const disTime = document.getElementById('discharge_time') ? document.getElementById('discharge_time').value : '';
-        const waitingPeriod = document.getElementById('waiting_period') ? document.getElementById('waiting_period').value : '';
-        const visitAr = document.getElementById('visit_type_ar') ? document.getElementById('visit_type_ar').value : '';
-        const visitEn = document.getElementById('visit_type_en') ? document.getElementById('visit_type_en').value : '';
-        const admTimeFormatted = this.formatAMPM(admTime);
-        const disTimeFormatted = this.formatAMPM(disTime);
-
-
-
-
+        const escAr = type === 'companion' ? document.getElementById('escort_name_ar').value : '';
+        const escEn = type === 'companion' ? document.getElementById('escort_name_en').value : '';
+        const relAr = type === 'companion' ? document.getElementById('relation_ar').value : '';
+        const relEn = type === 'companion' ? document.getElementById('relation_en').value : '';
 
         const reportDataPayload = {
-            titleAr: type === 'companion_statement' ? 'مشهد مراجعة لمرافق' : (type === 'companion' ? 'تقرير مرافقة مريض' : 'تقرير إجازة مرضية'),
-            titleEn: type === 'companion_statement' ? 'Companion Statement of Visit' : (type === 'companion' ? 'Patient Companion Report' : 'Sick Leave Report'),
+            titleAr: type === 'companion' ? 'تقرير مرافقة مريض' : 'تقرير إجازة مرضية',
+            titleEn: type === 'companion' ? 'Patient Companion Report' : 'Sick Leave Report',
             leaveId: reportId,
             durationEn: `${duration} day ( ${gregoAdm} to ${gregoDis} )`,
             durationAr: `${duration} يوم ( ${hijriAdm} إلى ${hijriDis} )`,
@@ -941,15 +901,15 @@ const app = {
             dischargeG: gregoDis,
             dischargeH: hijriDis,
             issueDate: this.formatGregorian(issueDate),
-            nameLabelEn: typeIsCompanion ? 'Companion Name' : 'Name',
-            nameLabelAr: typeIsCompanion ? 'اسم المرافق' : 'الاسم',
-            nameEn: typeIsCompanion ? escEn.toUpperCase() : pNameEn.toUpperCase(),
-            nameAr: typeIsCompanion ? escAr : pNameAr,
+            nameLabelEn: type === 'companion' ? 'Companion Name' : 'Name',
+            nameLabelAr: type === 'companion' ? 'اسم المرافق' : 'الاسم',
+            nameEn: type === 'companion' ? escEn.toUpperCase() : pNameEn.toUpperCase(),
+            nameAr: type === 'companion' ? escAr : pNameAr,
             nationalId: idNum,
             nationalityEn: nationalityEn,
             nationalityAr: nationalityAr,
-            relationEn: typeIsCompanion ? relEn : '',
-            relationAr: typeIsCompanion ? relAr : '',
+            relationEn: type === 'companion' ? relEn : '',
+            relationAr: type === 'companion' ? relAr : '',
             employerEn: "",
             employerAr: employer || 'غير محدد',
             docLabelEn: type === 'companion' ? 'Physician Name' : 'Practitioner Name',
@@ -964,15 +924,7 @@ const app = {
             licenseNumber: isPrivate ? license : '',
             time: this.formatAMPM(issueTime),
             dayDate: this.formatDateLabel(issueDate)
-        
-            type: type,
-            admissionTime: admTimeFormatted,
-            admissionTimeAr: admTimeFormattedAr,
-            dischargeTime: disTimeFormatted,
-            dischargeTimeAr: disTimeFormattedAr,
-            waitingPeriod: waitingPeriod,
-            visitTypeAr: visitAr,
-            visitTypeEn: visitEn};
+        };
 
         try {
             if (!app.state.currentReportId && app.state.subscriptionDays <= 0) { app.state.points -= 5; }
