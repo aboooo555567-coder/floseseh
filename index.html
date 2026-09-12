@@ -75,13 +75,15 @@
             <div class="fab-container" id="fab-menu">
                 <button type="button" class="fab" id="fab-main" onclick="app.toggleFab()">+</button>
                 <div class="fab-menu-items" id="fab-menu-items">
-                    <div class="fab-menu-item" onclick="app.startForm('companion')">
-                        مرافقة مريض 👥
+                    <div class="fab-menu-item" onclick="app.startForm('companion_statement')">
+                        مشهد مراجعة لمرافق 📋
                     </div>
                     <div class="fab-menu-item" onclick="app.startForm('sickleave')">
                         إجازة مرضية 🤒
                     </div>
-                    
+                    <div class="fab-menu-item" onclick="app.startForm('companion')">
+                        مرافقة مريض 👥
+                    </div>
                 </div>
             </div>
             <div class="overlay" id="fab-overlay" onclick="app.toggleFab()"></div>
@@ -224,10 +226,28 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    
+                    <div class="dates-row" id="time-row" style="display:none;">
+                        <div class="form-group half">
+                            <label>وقت الدخول</label>
+                            <input type="time" id="admission_time">
+                        </div>
+                        <div class="form-group half">
+                            <label>وقت الخروج</label>
+                            <input type="time" id="discharge_time">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="duration-group">
                         <label>مدة الإجازة (بالأيام)</label>
                         <input type="number" id="duration" value="1" min="1" required>
                     </div>
+
+                    <div class="form-group" id="waiting-period-group" style="display:none;">
+                        <label>فترة الانتظار</label>
+                        <input type="text" id="waiting_period" placeholder="مثال: 1 ساعة و -- دقيقة">
+                    </div>
+
 
                     <div class="dates-row">
                         <div class="form-group half">
@@ -273,6 +293,21 @@
                         <label>جهة العمل</label>
                         <input type="text" id="employer" placeholder="اسم الجهة">
                     </div>
+
+                    <div id="visit-type-fields" style="display:none;">
+                        <h3 class="section-subtitle">بيانات الزيارة</h3>
+                        <div class="dates-row">
+                            <div class="form-group half">
+                                <label>نوع الزيارة (عربي)</label>
+                                <input type="text" id="visit_type_ar" placeholder="مثال: عيادات">
+                            </div>
+                            <div class="form-group half">
+                                <label>نوع الزيارة (إنجليزي)</label>
+                                <input type="text" id="visit_type_en" placeholder="e.g. OutPatient" dir="ltr">
+                            </div>
+                        </div>
+                    </div>
+
 
                     <!-- Escort Fields (Hidden by default) -->
                     <div id="escort-fields" style="display:none;">
