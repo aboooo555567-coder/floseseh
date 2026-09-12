@@ -1099,8 +1099,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </div>
   
   <!-- Header: Geometric graphic (right) -->
-  <svg width="270" height="110" viewBox="0 0 280 120" style="position:absolute;top:15px;right:0px;opacity:0.8;">
-    <path d="M 20,50 L 70,10 L 80,70 Z M 70,10 L 140,20 L 80,70 Z M 80,70 L 140,20 L 150,60 Z M 80,70 L 150,60 L 130,110 Z M 140,20 L 200,0 L 150,60 Z M 150,60 L 200,0 L 210,50 Z M 150,60 L 210,50 L 170,110 Z M 200,0 L 250,10 L 210,50 Z M 210,50 L 250,10 L 250,80 Z M 210,50 L 250,80 L 170,110 Z M 250,10 L 280,45 L 250,80 Z" stroke="#8caec4" stroke-width="0.7" fill="none" stroke-linejoin="round"/>
+  <svg width="270" height="100" viewBox="0 0 260 100" style="position:absolute;top:15px;right:0px;opacity:0.85;">
+    <path d="M 0,50 L 30,20 L 40,75 Z M 30,20 L 70,0 L 80,45 Z M 30,20 L 80,45 L 40,75 Z M 40,75 L 80,45 L 90,90 Z M 70,0 L 130,10 L 80,45 Z M 80,45 L 130,10 L 140,55 Z M 80,45 L 140,55 L 90,90 Z M 90,90 L 140,55 L 150,95 Z M 130,10 L 190,25 L 140,55 Z M 140,55 L 190,25 L 200,70 Z M 140,55 L 200,70 L 150,95 Z M 150,95 L 200,70 L 250,90 Z M 190,25 L 240,35 L 200,70 Z M 200,70 L 240,35 L 250,90 Z M 240,35 L 250,90" stroke="#7ca9c9" stroke-width="0.75" fill="none" stroke-linejoin="round"/>
   </svg>
 
   <!-- Horizontal separator line -->
