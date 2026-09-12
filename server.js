@@ -14,7 +14,7 @@ let currentAdminToken = null;
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2nTthvJR_ysJNaQk';
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
-const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=49';
+const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=50';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
@@ -1395,6 +1395,25 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <td class="dur-label" style="width:155px;">فترة الانتظار</td>
     </tr>
 ` : `
+    ${d.type === 'companion_statement' ? `
+    <tr class="dur-row">
+      <td class="dur-label" style="width:155px;">Admission Date/Time</td>
+      <td style="width:202px;">${d.admissionG || ''} - ${d.admissionTime || ''}</td>
+      <td dir="rtl" style="width:202px;">${d.admissionH || ''} - ${d.admissionTime || ''}</td>
+      <td class="dur-label" style="width:155px;">تاريخ/وقت الدخول</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:155px;">Discharge Date/Time</td>
+      <td style="width:202px;">${d.dischargeG || ''} - ${d.dischargeTime || ''}</td>
+      <td dir="rtl" style="width:202px;">${d.dischargeH || ''} - ${d.dischargeTime || ''}</td>
+      <td class="dur-label" style="width:155px;">تاريخ/وقت الخروج</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:155px;">Waiting Period</td>
+      <td colspan="2" style="width:404px;">${d.waitingPeriod || ''}</td>
+      <td class="dur-label" style="width:155px;">فترة الانتظار</td>
+    </tr>
+` : `
     <tr class="dur-row">
       <td class="dur-label" style="width:155px;">Leave Duration</td>
       <td style="width:202px;">${d.durationEn || ''}</td>
@@ -1413,6 +1432,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <td class="val">${d.dischargeH || ''}</td>
       <td class="label-ar">تاريخ الخروج</td>
     </tr>
+`}
 `}
     <tr>
       <td class="label-en">Issue Date</td>
