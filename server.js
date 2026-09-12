@@ -1099,8 +1099,25 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </div>
   
   <!-- Header: Geometric graphic (right) -->
-  <svg width="270" height="100" viewBox="0 0 260 100" style="position:absolute;top:15px;right:0px;opacity:0.85;">
-    <path d="M 0,50 L 30,20 L 40,75 Z M 30,20 L 70,0 L 80,45 Z M 30,20 L 80,45 L 40,75 Z M 40,75 L 80,45 L 90,90 Z M 70,0 L 130,10 L 80,45 Z M 80,45 L 130,10 L 140,55 Z M 80,45 L 140,55 L 90,90 Z M 90,90 L 140,55 L 150,95 Z M 130,10 L 190,25 L 140,55 Z M 140,55 L 190,25 L 200,70 Z M 140,55 L 200,70 L 150,95 Z M 150,95 L 200,70 L 250,90 Z M 190,25 L 240,35 L 200,70 Z M 200,70 L 240,35 L 250,90 Z M 240,35 L 250,90" stroke="#7ca9c9" stroke-width="0.75" fill="none" stroke-linejoin="round"/>
+  <svg width="280" height="150" viewBox="0 0 320 170" style="position:absolute;top:15px;right:0px;opacity:0.8;">
+    <path d="M 30,40 L 55,60 M 30,40 L 65,50 M 55,60 L 65,50 M 55,60 L 70,100 M 65,50 L 70,100 M 70,100 L 85,35 M 70,100 L 105,70 M 70,100 L 100,110 M 85,35 L 105,70 M 85,35 L 150,30 M 105,70 L 100,110 M 105,70 L 150,30 M 105,70 L 195,60 M 105,70 L 170,80 M 150,30 L 195,60 M 150,30 L 190,40 M 100,110 L 170,80 M 170,80 L 195,60 M 170,80 L 240,90 M 190,40 L 195,60 M 190,40 L 240,90 M 195,60 L 240,90 M 240,90 L 250,40 M 240,90 L 255,85 M 240,90 L 280,130 M 250,40 L 255,85 M 255,85 L 290,30 M 280,130 L 290,30 M 280,130 L 300,160 M 290,30 L 300,160" stroke="#9cb1cd" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+    <circle cx="30" cy="40" r="2.5" fill="#9cb1cd"/>
+    <circle cx="55" cy="60" r="2.5" fill="#9cb1cd"/>
+    <circle cx="65" cy="50" r="2.5" fill="#9cb1cd"/>
+    <circle cx="70" cy="100" r="2.5" fill="#9cb1cd"/>
+    <circle cx="85" cy="35" r="2.5" fill="#9cb1cd"/>
+    <circle cx="105" cy="70" r="2.5" fill="#9cb1cd"/>
+    <circle cx="100" cy="110" r="2.5" fill="#9cb1cd"/>
+    <circle cx="150" cy="30" r="2.5" fill="#9cb1cd"/>
+    <circle cx="170" cy="80" r="2.5" fill="#9cb1cd"/>
+    <circle cx="190" cy="40" r="2.5" fill="#9cb1cd"/>
+    <circle cx="195" cy="60" r="2.5" fill="#9cb1cd"/>
+    <circle cx="240" cy="90" r="2.5" fill="#9cb1cd"/>
+    <circle cx="250" cy="40" r="2.5" fill="#9cb1cd"/>
+    <circle cx="255" cy="85" r="2.5" fill="#9cb1cd"/>
+    <circle cx="280" cy="130" r="2.5" fill="#9cb1cd"/>
+    <circle cx="290" cy="30" r="2.5" fill="#9cb1cd"/>
+    <circle cx="300" cy="160" r="2.5" fill="#9cb1cd"/>
   </svg>
 
   <!-- Horizontal separator line -->
