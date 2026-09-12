@@ -107,8 +107,27 @@ const findSubscription = async (chatId, username, referrerId = null) => {
         
         // If we matched a pending Username subscription, migrate it to the active Chat ID
         if (foundChatId !== chatIdStr) {
+            const existingActive = data.subscriptions[chatIdStr];
+            if (existingActive) {
+                existingActive.points = (existingActive.points || 0) + (userSub.points || 0);
+                if (userSub.subscriptionDays > (existingActive.subscriptionDays || 0)) {
+                    existingActive.subscriptionDays = userSub.subscriptionDays;
+                    existingActive.subscriptionExpires = userSub.subscriptionExpires;
+                }
+                if (userSub.username) existingActive.username = userSub.username;
+                
+                // CRUCIAL: Preserve existing reports!
+                if (!existingActive.reports) existingActive.reports = [];
+                if (userSub.reports && userSub.reports.length > 0) {
+                    existingActive.reports = [...existingActive.reports, ...userSub.reports];
+                }
+                
+                data.subscriptions[chatIdStr] = existingActive;
+                userSub = existingActive; // update the local reference
+            } else {
+                data.subscriptions[chatIdStr] = userSub;
+            }
             delete data.subscriptions[foundChatId];
-            data.subscriptions[chatIdStr] = userSub;
         }
         
         data.subscriptions[chatIdStr].updatedAt = new Date().toISOString();
