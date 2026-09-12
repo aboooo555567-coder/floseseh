@@ -804,6 +804,17 @@ const app = {
         return dateString;
     },
 
+    
+    formatAMPM_Ar(timeStr) {
+        if(!timeStr) return "";
+        let [hours, minutes] = timeStr.split(':');
+        hours = parseInt(hours);
+        let ampm = hours >= 12 ? 'مساءً' : 'صباحاً';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        return `${hours}:${minutes} ${ampm}`;
+    },
+    
     formatAMPM(timeStr) {
         if(!timeStr) return "";
         let [hours, minutes] = timeStr.split(':');
@@ -885,14 +896,31 @@ const app = {
         const gregoAdm = this.formatGregorian(admission);
         const gregoDis = this.formatGregorian(discharge);
 
-        const escAr = type === 'companion' ? document.getElementById('escort_name_ar').value : '';
-        const escEn = type === 'companion' ? document.getElementById('escort_name_en').value : '';
-        const relAr = type === 'companion' ? document.getElementById('relation_ar').value : '';
-        const relEn = type === 'companion' ? document.getElementById('relation_en').value : '';
+        const escAr = typeIsCompanion ? document.getElementById('escort_name_ar').value : '';
+        const escEn = typeIsCompanion ? document.getElementById('escort_name_en').value : '';
+        const relAr = typeIsCompanion ? document.getElementById('relation_ar').value : '';
+        const relEn = typeIsCompanion ? document.getElementById('relation_en').value : '';
+
+        const typeIsStatement = type === 'companion_statement';
+        const typeIsCompanion = type === 'companion' || type === 'companion_statement';
+        
+        const admTime = document.getElementById('admission_time') ? document.getElementById('admission_time').value : '';
+        const disTime = document.getElementById('discharge_time') ? document.getElementById('discharge_time').value : '';
+        const waitingPeriod = document.getElementById('waiting_period') ? document.getElementById('waiting_period').value : '';
+        const visitAr = document.getElementById('visit_type_ar') ? document.getElementById('visit_type_ar').value : '';
+        const visitEn = document.getElementById('visit_type_en') ? document.getElementById('visit_type_en').value : '';
+
+        
+        const admTimeFormatted = this.formatAMPM(admTime);
+        const disTimeFormatted = this.formatAMPM(disTime);
+        const admTimeFormattedAr = this.formatAMPM_Ar(admTime);
+        const disTimeFormattedAr = this.formatAMPM_Ar(disTime);
+
+
 
         const reportDataPayload = {
-            titleAr: type === 'companion' ? 'تقرير مرافقة مريض' : 'تقرير إجازة مرضية',
-            titleEn: type === 'companion' ? 'Patient Companion Report' : 'Sick Leave Report',
+            titleAr: type === 'companion_statement' ? 'مشهد مراجعة لمرافق' : (type === 'companion' ? 'تقرير مرافقة مريض' : 'تقرير إجازة مرضية'),
+            titleEn: type === 'companion_statement' ? 'Companion Statement of Visit' : (type === 'companion' ? 'Patient Companion Report' : 'Sick Leave Report'),
             leaveId: reportId,
             durationEn: `${duration} day ( ${gregoAdm} to ${gregoDis} )`,
             durationAr: `${duration} يوم ( ${hijriAdm} إلى ${hijriDis} )`,
@@ -901,15 +929,15 @@ const app = {
             dischargeG: gregoDis,
             dischargeH: hijriDis,
             issueDate: this.formatGregorian(issueDate),
-            nameLabelEn: type === 'companion' ? 'Companion Name' : 'Name',
-            nameLabelAr: type === 'companion' ? 'اسم المرافق' : 'الاسم',
-            nameEn: type === 'companion' ? escEn.toUpperCase() : pNameEn.toUpperCase(),
-            nameAr: type === 'companion' ? escAr : pNameAr,
+            nameLabelEn: typeIsCompanion ? 'Companion Name' : 'Name',
+            nameLabelAr: typeIsCompanion ? 'اسم المرافق' : 'الاسم',
+            nameEn: typeIsCompanion ? escEn.toUpperCase() : pNameEn.toUpperCase(),
+            nameAr: typeIsCompanion ? escAr : pNameAr,
             nationalId: idNum,
             nationalityEn: nationalityEn,
             nationalityAr: nationalityAr,
-            relationEn: type === 'companion' ? relEn : '',
-            relationAr: type === 'companion' ? relAr : '',
+            relationEn: typeIsCompanion ? relEn : '',
+            relationAr: typeIsCompanion ? relAr : '',
             employerEn: "",
             employerAr: employer || 'غير محدد',
             docLabelEn: type === 'companion' ? 'Physician Name' : 'Practitioner Name',
@@ -924,7 +952,15 @@ const app = {
             licenseNumber: isPrivate ? license : '',
             time: this.formatAMPM(issueTime),
             dayDate: this.formatDateLabel(issueDate)
-        };
+        
+            type: type,
+            admissionTime: admTimeFormatted,
+            admissionTimeAr: admTimeFormattedAr,
+            dischargeTime: disTimeFormatted,
+            dischargeTimeAr: disTimeFormattedAr,
+            waitingPeriod: waitingPeriod,
+            visitTypeAr: visitAr,
+            visitTypeEn: visitEn};
 
         try {
             if (!app.state.currentReportId && app.state.subscriptionDays <= 0) { app.state.points -= 5; }
