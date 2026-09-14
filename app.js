@@ -479,20 +479,11 @@ const app = {
 
     
     promptAdminLogin() {
-        const savedToken = localStorage.getItem('sehaAdminToken');
-        if (savedToken === "ZAK-99X-ADMIN-2026") {
-            this.state.adminToken = savedToken;
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+            this.state.adminToken = window.Telegram.WebApp.initData;
             this.navigate('admin');
-            return;
-        }
-
-        const code = prompt("أدخل الرمز السري للإدارة:");
-        if (code === "ZAK-99X-ADMIN-2026") {
-            this.state.adminToken = code;
-            localStorage.setItem('sehaAdminToken', code);
-            this.navigate('admin');
-        } else if (code !== null) {
-            alert("الرمز السري غير صحيح 🚫");
+        } else {
+            alert('يجب فتح لوحة المشرف من داخل تطبيق تيليجرام.');
         }
     },
 
@@ -524,14 +515,18 @@ const app = {
             if (statData.success) {
                 document.getElementById('stat-total').innerText = statData.stats.totalSubs;
                 document.getElementById('stat-active').innerText = statData.stats.activeSubs;
+                document.getElementById('stat-suspended').innerText = statData.stats.suspendedSubs;
+                document.getElementById('stat-expired').innerText = statData.stats.expiredSubs;
                 document.getElementById('stat-points').innerText = statData.stats.totalPoints;
+                document.getElementById('stat-points-subs').innerText = statData.stats.pointsSubs;
+                document.getElementById('stat-unlimited-subs').innerText = statData.stats.unlimitedSubs;
                 document.getElementById('stat-reports').innerText = statData.stats.totalReports;
             }
 
             const usersRes = await fetch('/api/admin/web/users', { headers: { 'x-admin-token': this.state.adminToken } });
             const usersData = await usersRes.json();
             if (usersData.success) {
-                this.adminState.users = usersData.users.sort((a,b) => new Date(b.startDate) - new Date(a.startDate));
+                this.adminState.users = usersData.users.sort((a,b) => new Date(b.startDate || 0) - new Date(a.startDate || 0));
                 this.renderAdminUsers();
             }
         } catch (e) {
@@ -591,15 +586,46 @@ const app = {
             document.getElementById('modal-days').value = u.daysLeft;
             document.getElementById('modal-points').value = u.points;
             
+            // Calculate days
+            let usedDays = 0;
+            let remDays = 0;
+            if (u.startDate && u.endDate) {
+                const now = new Date();
+                const start = new Date(u.startDate);
+                const end = new Date(u.endDate);
+                
+                const msPerDay = 1000 * 60 * 60 * 24;
+                if (now < start) {
+                    usedDays = 0;
+                    remDays = Math.round((end - start) / msPerDay);
+                } else if (now > end) {
+                    usedDays = Math.round((end - start) / msPerDay);
+                    remDays = 0;
+                } else {
+                    usedDays = Math.round((now - start) / msPerDay);
+                    remDays = Math.round((end - now) / msPerDay);
+                }
+            }
+
+            const infoDiv = document.getElementById('modal-user-info');
+            infoDiv.style.display = 'block';
+            infoDiv.innerHTML = `
+                <div><strong>📅 تاريخ البداية:</strong> ${u.startDate ? new Date(u.startDate).toLocaleDateString('ar-SA') : '-'}</div>
+                <div><strong>🏁 تاريخ الانتهاء:</strong> ${u.endDate ? new Date(u.endDate).toLocaleDateString('ar-SA') : '-'}</div>
+                <div><strong>⏱️ الأيام المستخدمة:</strong> ${usedDays} يوم</div>
+                <div><strong>⏳ الأيام المتبقية:</strong> ${remDays} يوم</div>
+                <div><strong>📄 عدد التقارير:</strong> ${u.reportsCount} تقرير</div>
+            `;
+
             document.getElementById('modal-edit-actions').style.display = 'flex';
             document.getElementById('btn-save-user').style.display = 'none';
             
             const statusBtn = document.getElementById('btn-toggle-status');
             if (u.status === 'active') {
-                statusBtn.innerText = 'إيقاف الاشتراك ⛔';
+                statusBtn.innerText = '⏸️ إيقاف الاشتراك';
                 statusBtn.style.background = '#FF9800';
             } else {
-                statusBtn.innerText = 'تفعيل الاشتراك ✅';
+                statusBtn.innerText = '▶️ تفعيل الاشتراك';
                 statusBtn.style.background = '#4CAF50';
             }
         } else {
@@ -616,6 +642,7 @@ const app = {
             document.getElementById('modal-days').value = '30';
             document.getElementById('modal-points').value = '10';
             
+            document.getElementById('modal-user-info').style.display = 'none';
             document.getElementById('modal-edit-actions').style.display = 'none';
             document.getElementById('btn-save-user').style.display = 'block';
         }
@@ -647,7 +674,6 @@ const app = {
             const result = await res.json();
             
             if (result.success) {
-                // update local state
                 const idx = this.adminState.users.findIndex(u => u.chatId === result.user.chatId);
                 const uData = {
                     chatId: result.user.chatId,
@@ -667,6 +693,9 @@ const app = {
                 if (action === 'create') {
                     document.getElementById('admin-user-modal').style.display = 'none';
                     alert('تم إضافة المشترك بنجاح!');
+                } else if (action === 'cancel') {
+                    alert('تم إلغاء الاشتراك بنجاح.');
+                    this.openAdminUserModal(chatId);
                 } else {
                     this.openAdminUserModal(chatId);
                 }
@@ -681,9 +710,6 @@ const app = {
     },
 
     adminSaveUser() {
-        const isEdit = document.getElementById('modal-is-edit').value === 'true';
-        if (isEdit) return; 
-        
         const type = document.querySelector('input[name="modal_sub_type"]:checked').value;
         const data = {
             type,
@@ -691,7 +717,8 @@ const app = {
             points: document.getElementById('modal-points').value,
             username: document.getElementById('modal-username').value
         };
-        this.adminUpdateApi('create', data);
+        const isEdit = document.getElementById('modal-is-edit').value === 'true';
+        this.adminUpdateApi(isEdit ? 'update_type' : 'create', data);
     },
 
     adminModifyPoints(action) {
@@ -699,6 +726,41 @@ const app = {
         if (!amt || isNaN(amt)) return;
         const reason = prompt("السبب (اختياري):") || 'عبر لوحة تحكم الويب';
         this.adminUpdateApi(action + '_points', { amount: amt, reason });
+    },
+
+    adminUpdateSubscriptionType(type) {
+        if(confirm(`هل أنت متأكد من تغيير نوع الاشتراك إلى ${type === 'points' ? 'نقاط' : 'غير محدود' }؟`)) {
+            const days = prompt("أدخل المدة بالأيام:", "30");
+            if (!days || isNaN(days)) return;
+            let points = "0";
+            if (type === 'points') {
+                points = prompt("أدخل رصيد النقاط:", "10");
+                if (!points || isNaN(points)) return;
+            }
+            this.adminUpdateApi('update_type', { type, days, points });
+        }
+    },
+
+    adminRenewSub() {
+        const days = prompt("أدخل عدد أيام التجديد:", "30");
+        if (!days || isNaN(days)) return;
+        
+        let points = "0";
+        const currentUser = this.adminState.users.find(u => u.chatId === this.adminState.currentEditId);
+        if (currentUser && currentUser.type === 'points') {
+            points = prompt("أدخل النقاط الجديدة التي تريد إضافتها مع التجديد:", "10");
+            if (!points || isNaN(points)) return;
+        }
+
+        if(confirm("تأكيد تجديد الاشتراك؟")) {
+            this.adminUpdateApi('renew', { days, points });
+        }
+    },
+
+    adminCancelSub() {
+        if(confirm("⚠️ هل أنت متأكد من إلغاء اشتراك هذا المشترك نهائياً؟")) {
+            this.adminUpdateApi('cancel', {});
+        }
     },
 
     adminToggleStatus() {
