@@ -504,39 +504,241 @@ const app = {
         } else {
             document.getElementById('fab-menu').style.display = 'none';
         }
+        
+        if (screenId === 'admin') {
+            this.loadAdminDashboard();
+        }
     },
 
     
-    async addSubscriber() {
-        const id = document.getElementById('admin_chat_id').value.trim();
-        const subType = document.querySelector('input[name="admin_sub_type"]:checked').value;
-        
-        let days = 0;
-        let points = 0;
-        if (subType === 'unlimited') {
-            days = parseInt(document.getElementById('admin_days').value) || 0;
-        } else {
-            points = parseInt(document.getElementById('admin_points').value) || 0;
-        }
-        
-        if (!id) return alert('الرجاء إدخال ايدي المشترك');
-        
+    // Admin Dashboard Logic
+    adminState: {
+        users: [],
+        currentEditId: null
+    },
+
+    async loadAdminDashboard() {
         try {
-            const res = await fetch(`/api/admin/package`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: this.state.adminToken, chatId: id, points: points, subscriptionDays: days })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert(`تم تفعيل المشترك بنجاح!\nالرصيد الحالي: ${data.points} تقرير\nأيام الاشتراك: ${data.subscriptionDays} يوم`);
-                document.getElementById('admin_chat_id').value = '';
-                this.navigate('dashboard');
-            } else {
-                alert('خطأ: ' + data.error);
+            const statRes = await fetch('/api/admin/web/stats', { headers: { 'x-admin-token': this.state.adminToken } });
+            const statData = await statRes.json();
+            if (statData.success) {
+                document.getElementById('stat-total').innerText = statData.stats.totalSubs;
+                document.getElementById('stat-active').innerText = statData.stats.activeSubs;
+                document.getElementById('stat-points').innerText = statData.stats.totalPoints;
+                document.getElementById('stat-reports').innerText = statData.stats.totalReports;
+            }
+
+            const usersRes = await fetch('/api/admin/web/users', { headers: { 'x-admin-token': this.state.adminToken } });
+            const usersData = await usersRes.json();
+            if (usersData.success) {
+                this.adminState.users = usersData.users.sort((a,b) => new Date(b.startDate) - new Date(a.startDate));
+                this.renderAdminUsers();
             }
         } catch (e) {
-            alert('حدث خطأ في الاتصال: ' + e.message);
+            console.error('Error loading admin dashboard', e);
+        }
+    },
+
+    renderAdminUsers(filterText = '') {
+        const container = document.getElementById('admin-users-list');
+        container.innerHTML = '';
+        
+        let count = 0;
+        this.adminState.users.forEach(u => {
+            if (filterText && !u.chatId.includes(filterText) && !u.username.includes(filterText)) return;
+            count++;
+            const isUnlimited = u.type === 'unlimited';
+            const icon = u.status === 'active' ? '✅' : (u.status === 'suspended' ? '⏸️' : '❌');
+            const typeStr = isUnlimited ? `غير محدود (${u.daysLeft} يوم)` : `نقاط (${u.points} تقرير)`;
+            
+            const card = document.createElement('div');
+            card.style.cssText = "background:white; padding:15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 5px rgba(0,0,0,0.05); border-right: 4px solid " + (u.status === 'active' ? '#4CAF50' : '#FF9800') + ";";
+            card.innerHTML = `
+                <div style="text-align: right;">
+                    <div style="font-weight:bold; margin-bottom:5px; color: var(--primary-dark);">${u.chatId} <span style="font-size:12px; color:#888;">${u.username ? '@'+u.username : ''}</span></div>
+                    <div style="font-size:13px; color:#555;">${icon} ${u.status === 'active' ? 'فعال' : 'موقوف'} | ${typeStr}</div>
+                </div>
+                <button onclick="app.openAdminUserModal('${u.chatId}')" style="background:#eef2fa; color:var(--primary-dark); border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">إدارة ⚙️</button>
+            `;
+            container.appendChild(card);
+        });
+
+        if (count === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">لا يوجد مشتركين مطابقين للبحث</div>';
+        }
+    },
+
+    filterAdminUsers() {
+        const text = document.getElementById('admin-search-input').value.trim();
+        this.renderAdminUsers(text);
+    },
+
+    openAdminUserModal(chatId = null) {
+        this.adminState.currentEditId = chatId;
+        document.getElementById('admin-user-modal').style.display = 'flex';
+        
+        if (chatId) {
+            // Edit Mode
+            const u = this.adminState.users.find(x => x.chatId === chatId);
+            document.getElementById('modal-user-title').innerText = 'إدارة المشترك';
+            document.getElementById('modal-is-edit').value = 'true';
+            
+            document.getElementById('modal-chat-id').value = u.chatId;
+            document.getElementById('modal-chat-id').disabled = true;
+            document.getElementById('modal-username-group').style.display = 'none';
+            
+            document.querySelector(`input[name="modal_sub_type"][value="${u.type}"]`).checked = true;
+            document.getElementById('modal-days').value = u.daysLeft;
+            document.getElementById('modal-points').value = u.points;
+            
+            document.getElementById('modal-edit-actions').style.display = 'flex';
+            document.getElementById('btn-save-user').style.display = 'none';
+            
+            const statusBtn = document.getElementById('btn-toggle-status');
+            if (u.status === 'active') {
+                statusBtn.innerText = 'إيقاف الاشتراك ⛔';
+                statusBtn.style.background = '#FF9800';
+            } else {
+                statusBtn.innerText = 'تفعيل الاشتراك ✅';
+                statusBtn.style.background = '#4CAF50';
+            }
+        } else {
+            // Add Mode
+            document.getElementById('modal-user-title').innerText = 'إضافة مشترك جديد';
+            document.getElementById('modal-is-edit').value = 'false';
+            
+            document.getElementById('modal-chat-id').value = '';
+            document.getElementById('modal-chat-id').disabled = false;
+            document.getElementById('modal-username').value = '';
+            document.getElementById('modal-username-group').style.display = 'block';
+            
+            document.querySelector('input[name="modal_sub_type"][value="unlimited"]').checked = true;
+            document.getElementById('modal-days').value = '30';
+            document.getElementById('modal-points').value = '10';
+            
+            document.getElementById('modal-edit-actions').style.display = 'none';
+            document.getElementById('btn-save-user').style.display = 'block';
+        }
+        
+        this.toggleAdminModalType();
+    },
+
+    toggleAdminModalType() {
+        const type = document.querySelector('input[name="modal_sub_type"]:checked').value;
+        if (type === 'unlimited') {
+            document.getElementById('modal-days-container').style.display = 'block';
+            document.getElementById('modal-points-container').style.display = 'none';
+        } else {
+            document.getElementById('modal-days-container').style.display = 'none';
+            document.getElementById('modal-points-container').style.display = 'block';
+        }
+    },
+
+    async adminUpdateApi(action, data) {
+        try {
+            const chatId = this.adminState.currentEditId || document.getElementById('modal-chat-id').value.trim();
+            if (!chatId) return alert('يجب إدخال Chat ID');
+
+            const res = await fetch('/api/admin/web/user/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-token': this.state.adminToken },
+                body: JSON.stringify({ chatId, action, data })
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                // update local state
+                const idx = this.adminState.users.findIndex(u => u.chatId === result.user.chatId);
+                const uData = {
+                    chatId: result.user.chatId,
+                    username: result.user.username || '',
+                    status: result.user.status,
+                    type: result.user.subscription_type,
+                    points: result.user.balance_points || 0,
+                    daysLeft: result.user.subscriptionDays,
+                    reportsCount: result.user.reports ? result.user.reports.length : 0,
+                    startDate: result.user.subscription_start_date,
+                    endDate: result.user.subscription_end_date
+                };
+                if (idx > -1) this.adminState.users[idx] = uData;
+                else this.adminState.users.unshift(uData);
+
+                this.renderAdminUsers(document.getElementById('admin-search-input').value.trim());
+                if (action === 'create') {
+                    document.getElementById('admin-user-modal').style.display = 'none';
+                    alert('تم إضافة المشترك بنجاح!');
+                } else {
+                    this.openAdminUserModal(chatId);
+                }
+                
+                this.loadAdminDashboard();
+            } else {
+                alert('خطأ: ' + result.error);
+            }
+        } catch(e) {
+            alert('حدث خطأ: ' + e.message);
+        }
+    },
+
+    adminSaveUser() {
+        const isEdit = document.getElementById('modal-is-edit').value === 'true';
+        if (isEdit) return; 
+        
+        const type = document.querySelector('input[name="modal_sub_type"]:checked').value;
+        const data = {
+            type,
+            days: document.getElementById('modal-days').value,
+            points: document.getElementById('modal-points').value,
+            username: document.getElementById('modal-username').value
+        };
+        this.adminUpdateApi('create', data);
+    },
+
+    adminModifyPoints(action) {
+        const amt = prompt(`أدخل عدد النقاط المراد ${action === 'add' ? 'إضافتها' : 'خصمها'}:`);
+        if (!amt || isNaN(amt)) return;
+        const reason = prompt("السبب (اختياري):") || 'عبر لوحة تحكم الويب';
+        this.adminUpdateApi(action + '_points', { amount: amt, reason });
+    },
+
+    adminToggleStatus() {
+        if(confirm("هل أنت متأكد من تغيير حالة المشترك؟")) {
+            this.adminUpdateApi('toggle_status', {});
+        }
+    },
+
+    async adminViewLogs() {
+        const chatId = this.adminState.currentEditId;
+        if (!chatId) return;
+        try {
+            const res = await fetch(`/api/admin/web/user/${chatId}/logs`, { headers: { 'x-admin-token': this.state.adminToken } });
+            const data = await res.json();
+            if (data.success) {
+                const logsContent = document.getElementById('admin-logs-content');
+                logsContent.innerHTML = '';
+                
+                if (!data.logs || data.logs.length === 0) {
+                    logsContent.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">لا يوجد عمليات مسجلة</div>';
+                } else {
+                    data.logs.slice().reverse().forEach(log => {
+                        const amtStr = log.amount ? `(${log.amount} نقطة)` : '';
+                        const dateStr = new Date(log.date).toLocaleString('ar-SA');
+                        logsContent.innerHTML += `
+                            <div style="background:#f9f9f9; padding:10px; border-radius:8px; border-right: 4px solid #2196F3; font-size:14px; text-align:right;">
+                                <div style="font-weight:bold; color:#333; margin-bottom:5px;">${log.reason} ${amtStr}</div>
+                                <div style="display:flex; justify-content:space-between; color:#666; font-size:12px;">
+                                    <span>قبل: ${log.balance_before || 0} | بعد: ${log.balance_after || 0}</span>
+                                    <span>${dateStr}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('admin-logs-modal').style.display = 'flex';
+            }
+        } catch(e) {
+            alert('Error fetching logs: ' + e.message);
         }
     },
 
