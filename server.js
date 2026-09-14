@@ -384,7 +384,7 @@ bot.onText(/\/admin/, async (msg) => {
     }
     
     currentAdminToken = crypto.randomBytes(16).toString('hex');
-    const adminUrl = `${process.env.APP_URL || 'https://seha-sickleave-app.onrender.com'}/index.html?screen=admin&token=${currentAdminToken}`;
+    const adminUrl = `${process.env.APP_URL || "https://seha-sickleave.onrender.com"}/index.html?screen=admin`;
     
         const inquiryUrl = `${process.env.APP_URL || 'https://seha-sickleave.onrender.com'}/inquiry`;
     const inlineKeyboard = [
@@ -819,45 +819,97 @@ bot.on('callback_query', async (query) => {
 // ==========================================\n// TELEGRAM ADMIN PANEL\n// ==========================================\nconst adminState = {};\nconst isAdmin = (cid) => cid.toString() === ADMIN_CHAT_ID;\n\nbot.onText(/\/admin/, async (msg) => {\n    const chatId = msg.chat.id.toString();\n    if (!isAdmin(chatId)) {\n        await bot.sendMessage(chatId, '⛔ ليس لديك صلاحية للوصول إلى لوحة المشرف.');\n        return;\n    }\n    await showAdminPanel(chatId);\n});\n\nasync function showAdminPanel(chatId, messageId = null) {\n    const data = await loadLocalSubscriptions();\n    const subs = Object.values(data.subscriptions).map(normalizeSubscription);\n    const total = subs.length;\n    const active = subs.filter(s => s.status === 'active').length;\n    const suspended = subs.filter(s => s.status === 'suspended').length;\n    const expired = subs.filter(s => s.status === 'expired').length;\n    \n    let totalReports = 0;\n    let totalPoints = 0;\n    subs.forEach(s => {\n        totalReports += (s.reports ? s.reports.length : 0);\n        if (s.subscription_type === 'points') totalPoints += (s.balance_points || 0);\n    });\n\n    const text = '🔐 *لوحة تحكم المشرف*\n\n' +\n        '👥 المشتركين: ' + total + '\n' +\n        '🟢 الفعالون: ' + active + '\n' +\n        '🔴 الموقوفون: ' + suspended + '\n' +\n        '⚠️ المنتهية: ' + expired + '\n' +\n        '📄 إجمالي التقارير: ' + totalReports + '\n' +\n        '⭐ إجمالي النقاط: ' + totalPoints;\n\n    const opts = {\n        parse_mode: 'Markdown',\n        reply_markup: {\n            inline_keyboard: [\n                [{ text: '👥 إدارة المشتركين', callback_data: 'admin_users' }],\n                [{ text: '➕ إضافة مشترك', callback_data: 'admin_add_user' }],\n                [{ text: '🔎 البحث عن مشترك', callback_data: 'admin_search' }],\n                [{ text: '📊 الإحصائيات', callback_data: 'admin_stats' }],\n                [{ text: '📋 سجل العمليات', callback_data: 'admin_logs_all_0' }],\n                [{ text: '🔄 تحديث', callback_data: 'admin_refresh' }]\n            ]\n        }\n    };\n\n    if (messageId) {\n        try {\n            await bot.editMessageText(text, { chat_id: chatId, message_id: messageId, ...opts });\n        } catch (e) { /* ignore if not modified */ }\n    } else {\n        await bot.sendMessage(chatId, text, opts);\n    }\n}\n\nbot.on('callback_query', async (query) => {\n    const chatId = query.message.chat.id.toString();\n    const data = query.data;\n\n    if (data.startsWith('admin_')) {\n        if (!isAdmin(chatId)) {\n            await bot.answerCallbackQuery(query.id, { text: '⛔ ليس لديك صلاحية.', show_alert: true });\n            return;\n        }\n\n        if (data === 'admin_main' || data === 'admin_refresh') {\n            await showAdminPanel(chatId, query.message.message_id);\n            await bot.answerCallbackQuery(query.id);\n            return;\n        }\n\n        if (data === 'admin_users') {\n            const opts = {\n                reply_markup: {\n                    inline_keyboard: [\n                        [{ text: '🔎 البحث بـ Chat ID', callback_data: 'admin_search' }],\n                        [{ text: '➕ إضافة مشترك', callback_data: 'admin_add_user' }],\n                        [{ text: '📋 جميع المشتركين', callback_data: 'admin_users_list_0' }],\n                        [{ text: '🔙 رجوع', callback_data: 'admin_main' }]\n                    ]\n                }\n            };\n            await bot.editMessageText('👥 *إدارة المشتركين*', { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', ...opts });\n            await bot.answerCallbackQuery(query.id);\n            return;\n        }\n\n        if (data.startsWith('admin_users_list_')) {\n            const page = parseInt(data.split('_').pop());\n            const db = await loadLocalSubscriptions();\n            const subs = Object.entries(db.subscriptions).map(([cid, s]) => ({cid, ...normalizeSubscription(s)})).filter(s => !s.cid.startsWith('pending_'));\n            \n            const perPage = 5;\n            const totalPages = Math.ceil(subs.length / perPage) || 1;\n            const start = page * perPage;\n            const pagedSubs = subs.slice(start, start + perPage);\n\n            let text = '📋 *جميع المشتركين* (صفحة ' + (page + 1) + '/' + totalPages + ')\n\n';\n            const keyboard = [];\n\n            pagedSubs.forEach(s => {\n                const icon = s.status === 'active' ? '🟢' : (s.status === 'suspended' ? '🔴' : '⚠️');\n                const typeIcon = s.subscription_type === 'points' ? '⭐' : '♾️';\n                const reports = s.reports ? s.reports.length : 0;\n                const balance = s.subscription_type === 'points' ? (' - ' + s.balance_points + ' نقطة') : '';\n                text += icon + ' [' + s.cid + '] ' + (s.username ? '@'+s.username : '') + '\n' +\n                        typeIcon + ' ' + (s.subscription_type === 'points' ? 'نقاط' : 'غير محدود') + balance + ' - 📄 ' + reports + ' تقرير\n\n';\n                keyboard.push([{ text: '👤 إدارة ' + s.cid, callback_data: 'admin_user_' + s.cid }]);\n            });\n\n            const navRow = [];\n            if (page > 0) navRow.push({ text: '◀️ السابق', callback_data: 'admin_users_list_' + (page - 1) });\n            if (page < totalPages - 1) navRow.push({ text: 'التالي ▶️', callback_data: 'admin_users_list_' + (page + 1) });\n            if (navRow.length > 0) keyboard.push(navRow);\n            keyboard.push([{ text: '🔙 رجوع', callback_data: 'admin_users' }]);\n\n            await bot.editMessageText(text, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: keyboard } });\n            await bot.answerCallbackQuery(query.id);\n            return;\n        }\n\n        if (data === 'admin_search' || data === 'admin_add_user') {\n            adminState[chatId] = { step: data === 'admin_search' ? 'SEARCH_CHAT_ID' : 'ADD_USER_CHAT_ID' };\n            await bot.sendMessage(chatId, data === 'admin_search' ? 'أرسل Chat ID الخاص بالمشترك للبحث:' : 'أرسل Chat ID للمشترك الجديد:', { reply_markup: { inline_keyboard: [[{ text: 'إلغاء', callback_data: 'admin_main' }]] } });\n            await bot.answerCallbackQuery(query.id);\n            return;\n        }\n\n        if (data.startsWith('admin_user_')) {\n            const parts = data.split('_');\n            if (parts.length === 3) {\n                const targetId = parts[2];\n                await showUserPanel(chatId, targetId, query.message.message_id);\n            } else {\n                const action = parts[2];\n                const targetId = parts[3];\n                const db = await loadLocalSubscriptions();\n                const sub = db.subscriptions[targetId];\n                \n                if (!sub) {\n                    await bot.answerCallbackQuery(query.id, { text: 'غير موجود!', show_alert: true });\n                    return;\n                }\n\n                if (action === 'toggle') {\n                    sub.status = sub.status === 'active' ? 'suspended' : 'active';\n                    logTransaction(sub, targetId, 'status_change', 0, 'تغيير الحالة إلى ' + sub.status, 'admin');\n                    await saveLocalSubscriptions(db);\n                    await showUserPanel(chatId, targetId, query.message.message_id);\n                } else if (action === 'cancel') {\n                    sub.status = 'expired';\n                    sub.subscription_end_date = new Date().toISOString();\n                    logTransaction(sub, targetId, 'status_change', 0, 'إلغاء الاشتراك', 'admin');\n                    await saveLocalSubscriptions(db);\n                    await showUserPanel(chatId, targetId, query.message.message_id);\n                } else if (action === 'addpoints' || action === 'removepoints' || action === 'changetype') {\n                    adminState[chatId] = { step: action.toUpperCase(), targetId, msgId: query.message.message_id };\n                    let prompt = '';\n                    if (action === 'addpoints') prompt = 'كم عدد النقاط التي تريد إضافتها؟';\n                    if (action === 'removepoints') prompt = 'كم عدد النقاط التي تريد خصمها؟';\n                    if (action === 'changetype') prompt = 'أرسل النوع الجديد: points أو unlimited\nإذا كان نقاط، أرسل: points,1000,30 (النوع،الرصيد،الأيام)\nإذا كان غير محدود: unlimited,30 (النوع،الأيام)';\n                    \n                    await bot.sendMessage(chatId, prompt, { reply_markup: { inline_keyboard: [[{ text: 'إلغاء', callback_data: 'admin_user_' + targetId }]] } });\n                } else if (action === 'logs') {\n                    const page = parseInt(parts[4] || 0);\n                    await showUserLogs(chatId, targetId, page, query.message.message_id);\n                }\n            }\n            await bot.answerCallbackQuery(query.id);\n            return;\n        }\n\n    }\n});\n\nfunction logTransaction(sub, cid, type, amount, reason, by) {\n    if (!sub.transactions) sub.transactions = [];\n    sub.transactions.push({\n        id: 'txn_' + Date.now() + Math.floor(Math.random()*1000),\n        chat_id: cid,\n        type,\n        amount,\n        balance_before: sub.balance_points || 0,\n        balance_after: (sub.balance_points || 0) + (type==='points_remove'? -amount : amount),\n        reason,\n        performed_by: by,\n        created_at: new Date().toISOString()\n    });\n}\n\nasync function showUserLogs(chatId, targetId, page, messageId) {\n    const db = await loadLocalSubscriptions();\n    const sub = normalizeSubscription(db.subscriptions[targetId]);\n    if (!sub) return;\n    \n    const txns = [...(sub.transactions || [])].reverse();\n    const perPage = 5;\n    const totalPages = Math.ceil(txns.length / perPage) || 1;\n    const paged = txns.slice(page * perPage, page * perPage + perPage);\n    \n    let text = '📋 *سجل عمليات* ' + targetId + '\n\n';\n    paged.forEach(t => {\n        text += '📅 ' + new Date(t.created_at).toLocaleString() + '\n' +\n                'العملية: ' + t.reason + '\n' +\n                'المبلغ: ' + t.amount + '\n' +\n                'الرصيد: ' + t.balance_before + ' -> ' + t.balance_after + '\n' +\n                'بواسطة: ' + t.performed_by + '\n\n';\n    });\n    if(txns.length === 0) text += 'لا توجد عمليات.';\n\n    const navRow = [];\n    if (page > 0) navRow.push({ text: '◀️ السابق', callback_data: 'admin_user_logs_' + targetId + '_' + (page - 1) });\n    if (page < totalPages - 1) navRow.push({ text: 'التالي ▶️', callback_data: 'admin_user_logs_' + targetId + '_' + (page + 1) });\n    \n    const keyboard = [];\n    if (navRow.length > 0) keyboard.push(navRow);\n    keyboard.push([{ text: '🔙 رجوع للمشترك', callback_data: 'admin_user_' + targetId }]);\n\n    await bot.editMessageText(text, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', reply_markup: { inline_keyboard: keyboard } });\n}\n\nasync function showUserPanel(chatId, targetId, messageId) {\n    const db = await loadLocalSubscriptions();\n    const sub = normalizeSubscription(db.subscriptions[targetId]);\n    if (!sub) {\n        const kb = { inline_keyboard: [[{ text: 'رجوع', callback_data: 'admin_main'}]] };\n        if (messageId) {\n            await bot.editMessageText('⛔ المشترك غير موجود.', { chat_id: chatId, message_id: messageId, reply_markup: kb });\n        } else {\n            await bot.sendMessage(chatId, '⛔ المشترك غير موجود.', { reply_markup: kb });\n        }\n        return;\n    }\n\n    const icon = sub.status === 'active' ? '🟢 فعال' : (sub.status === 'suspended' ? '🔴 موقوف' : '⚠️ منتهي');\n    const type = sub.subscription_type === 'points' ? '⭐ بالنقاط' : '♾️ غير محدود';\n    const repCount = sub.reports ? sub.reports.length : 0;\n    const daysLeft = sub.subscriptionDays;\n    \n    const text = '👤 *بيانات المشترك*\n' +\n                 'Chat ID: `' + targetId + '`\n' +\n                 'Username: ' + (sub.username ? '@'+sub.username : 'لا يوجد') + '\n' +\n                 'الحالة: ' + icon + '\n' +\n                 'نوع الاشتراك: ' + type + '\n' +\n                 'الرصيد الحالي: ' + sub.balance_points + ' نقطة\n' +\n                 'مدة الاشتراك: ' + Math.ceil((new Date(sub.subscription_end_date) - new Date(sub.subscription_start_date)) / 86400000) + ' يوم\n' +\n                 'الأيام المستخدمة: ' + sub.daysUsed + ' يوم\n' +\n                 'الأيام المتبقية: ' + daysLeft + ' يوم\n' +\n                 'البداية: ' + new Date(sub.subscription_start_date).toLocaleDateString() + '\n' +\n                 'النهاية: ' + new Date(sub.subscription_end_date).toLocaleDateString() + '\n' +\n                 'عدد التقارير: ' + repCount;\n\n    const keyboard = [\n        [{ text: '➕ إضافة نقاط', callback_data: 'admin_user_addpoints_' + targetId }, { text: '➖ خصم نقاط', callback_data: 'admin_user_removepoints_' + targetId }],\n        [{ text: '🔄 تغيير نوع الاشتراك', callback_data: 'admin_user_changetype_' + targetId }],\n        [{ text: '📋 سجل العمليات', callback_data: 'admin_user_logs_' + targetId + '_0' }],\n        [{ text: sub.status === 'active' ? '⏸️ إيقاف' : '▶️ تفعيل', callback_data: 'admin_user_toggle_' + targetId }, { text: '❌ إلغاء الاشتراك', callback_data: 'admin_user_cancel_' + targetId }],\n        [{ text: '🔙 رجوع للقائمة', callback_data: 'admin_users_list_0' }]\n    ];\n\n    if (messageId) {\n        try {\n            await bot.editMessageText(text, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown', reply_markup: { inline_keyboard: keyboard } });\n        } catch(e){}\n    } else {\n        await bot.sendMessage(chatId, text, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: keyboard } });\n    }\n}\n\nbot.on('message', async (msg) => {\n    if (!msg.text) return;\n    const chatId = msg.chat.id.toString();\n    if (!isAdmin(chatId)) return;\n    \n    const state = adminState[chatId];\n    if (!state) return;\n\n    if (state.step === 'SEARCH_CHAT_ID' || state.step === 'ADD_USER_CHAT_ID') {\n        const targetId = msg.text.trim();\n        if (!/^\d+$/.test(targetId)) {\n            await bot.sendMessage(chatId, 'يرجى إرسال Chat ID رقمي صحيح.');\n            return;\n        }\n        \n        if (state.step === 'SEARCH_CHAT_ID') {\n            const db = await loadLocalSubscriptions();\n            if (db.subscriptions[targetId]) {\n                await bot.sendMessage(chatId, 'جاري جلب البيانات...');\n                await showUserPanel(chatId, targetId, null);\n            } else {\n                await bot.sendMessage(chatId, 'المشترك غير موجود!');\n            }\n            delete adminState[chatId];\n        } else {\n            state.targetId = targetId;\n            state.step = 'ADD_USER_DETAILS';\n            await bot.sendMessage(chatId, 'أرسل بيانات الاشتراك بالصيغة التالية:\nللنقاط: points,1000,30 (النوع,الرصيد,الأيام)\nلغير المحدود: unlimited,30 (النوع,الأيام)\n\n(مع ملاحظة إذا كان للمستخدم username يمكنك إضافته هكذا: points,1000,30,@user)');\n        }\n        return;\n    }\n    \n    if (state.step === 'ADD_USER_DETAILS' || state.step === 'CHANGETYPE') {\n        const parts = msg.text.split(',');\n        const type = parts[0].trim().toLowerCase();\n        \n        let points = 0, days = 30, username = '';\n        if (type === 'points') {\n            points = parseInt(parts[1]) || 0;\n            days = parseInt(parts[2]) || 30;\n            username = parts[3] ? parts[3].trim().replace('@','') : '';\n        } else if (type === 'unlimited') {\n            days = parseInt(parts[1]) || 30;\n            username = parts[2] ? parts[2].trim().replace('@','') : '';\n        } else {\n            await bot.sendMessage(chatId, 'صيغة خاطئة. يجب أن تبدأ بـ points أو unlimited.');\n            return;\n        }\n\n        const db = await loadLocalSubscriptions();\n        const targetId = state.targetId;\n        const now = new Date();\n        const end = new Date(now.getTime() + days * 86400000).toISOString();\n        \n        if (!db.subscriptions[targetId]) {\n            db.subscriptions[targetId] = { reports: [], transactions: [] };\n        }\n        \n        const sub = db.subscriptions[targetId];\n        sub.status = 'active';\n        sub.subscription_type = type;\n        sub.balance_points = points;\n        sub.points = points;\n        sub.subscription_start_date = now.toISOString();\n        sub.subscription_end_date = end;\n        if (username) sub.username = username;\n        \n        logTransaction(sub, targetId, 'subscription_update', points, state.step === 'ADD_USER_DETAILS' ? 'إنشاء اشتراك جديد' : 'تحديث نوع الاشتراك', 'admin');\n        await saveLocalSubscriptions(db);\n        \n        await bot.sendMessage(chatId, '✅ تم حفظ بيانات المشترك بنجاح!');\n        await showUserPanel(chatId, targetId, null);\n        delete adminState[chatId];\n        return;\n    }\n\n    if (state.step === 'ADDPOINTS' || state.step === 'REMOVEPOINTS') {\n        const amount = parseInt(msg.text);\n        if (isNaN(amount) || amount <= 0) {\n            await bot.sendMessage(chatId, 'يرجى إرسال رقم صحيح أكبر من الصفر.');\n            return;\n        }\n        \n        state.amount = amount;\n        state.step = state.step === 'ADDPOINTS' ? 'ADDPOINTS_REASON' : 'REMOVEPOINTS_REASON';\n        await bot.sendMessage(chatId, 'أرسل سبب العملية:');\n        return;\n    }\n\n    if (state.step === 'ADDPOINTS_REASON' || state.step === 'REMOVEPOINTS_REASON') {\n        const reason = msg.text.trim();\n        const db = await loadLocalSubscriptions();\n        const sub = db.subscriptions[state.targetId];\n        if (sub) {\n            const isAdd = state.step === 'ADDPOINTS_REASON';\n            if (!isAdd && sub.balance_points < state.amount) {\n                await bot.sendMessage(chatId, '⛔ الرصيد الحالي أقل من المبلغ المطلوب خصمه.');\n                delete adminState[chatId];\n                return;\n            }\n            \n            if (sub.balance_points === undefined) sub.balance_points = 0;\n            const before = sub.balance_points;\n            sub.balance_points += isAdd ? state.amount : -state.amount;\n            sub.points = sub.balance_points;\n            \n            logTransaction(sub, state.targetId, isAdd ? 'points_add' : 'points_remove', state.amount, reason, 'admin');\n            await saveLocalSubscriptions(db);\n            await bot.sendMessage(chatId, '✅ تمت العملية بنجاح!');\n            await showUserPanel(chatId, state.targetId, null);\n        }\n        delete adminState[chatId];\n        return;\n    }\n});\n// ==========================================\n\n// API Endpoints
 
 // --- NEW WEB ADMIN APIs ---
-const WEB_ADMIN_TOKEN = "ZAK-99X-ADMIN-2026";
 
-function verifyWebToken(req, res, next) {
-    const token = req.headers['x-admin-token'] || req.body.token || req.query.token;
-    if (token !== WEB_ADMIN_TOKEN) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
+// --- TELEGRAM INIT DATA VERIFICATION ---
+function verifyTelegramWebData(initData) {
+    if (!initData) return false;
+    try {
+        const q = new URLSearchParams(initData);
+        const hash = q.get('hash');
+        q.delete('hash');
+        
+        const keys = Array.from(q.keys());
+        keys.sort();
+        const dataCheckString = keys.map(k => `${k}=${q.get(k)}`).join('\n');
+        
+        const secretKey = crypto.createHmac('sha256', 'WebAppData').update(TOKEN).digest();
+        const computedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+        
+        if (computedHash === hash) {
+            const userStr = q.get('user');
+            if (userStr) {
+                return JSON.parse(userStr);
+            }
+        }
+        return false;
+    } catch (e) {
+        return false;
     }
-    next();
 }
 
-app.get('/api/admin/web/stats', verifyWebToken, async (req, res) => {
+function verifyAdmin(req, res, next) {
+    const initData = req.headers['x-admin-token'] || req.body.token || req.query.token;
+    const user = verifyTelegramWebData(initData);
+    
+    if (!user || user.id.toString() !== ADMIN_CHAT_ID.toString()) {
+        return res.status(403).json({ success: false, error: '⛔ ليس لديك صلاحية للوصول إلى لوحة المشرف.' });
+    }
+    
+    req.adminUser = user;
+    next();
+}
+// -----------------------------------------
+
+app.get('/api/admin/web/stats', verifyAdmin, async (req, res) => {
     try {
         const db = await loadLocalSubscriptions();
         let totalSubs = 0, activeSubs = 0, suspendedSubs = 0, expiredSubs = 0;
-        let totalPoints = 0, totalReports = 0;
+        let totalPoints = 0, totalReports = 0, pointsSubs = 0, unlimitedSubs = 0;
+        const now = new Date();
 
         for (const cid in db.subscriptions) {
             const sub = normalizeSubscription(db.subscriptions[cid]);
             totalSubs++;
+            
+            const isExpired = sub.subscription_end_date && new Date(sub.subscription_end_date) < now;
+            if (isExpired && sub.status === 'active') sub.status = 'expired';
+
             if (sub.status === 'active') activeSubs++;
             else if (sub.status === 'suspended') suspendedSubs++;
             else expiredSubs++;
 
-            totalPoints += (sub.balance_points || 0);
+            if (sub.subscription_type === 'points') {
+                pointsSubs++;
+                totalPoints += (sub.balance_points || 0);
+            } else {
+                unlimitedSubs++;
+            }
+
             totalReports += (sub.reports ? sub.reports.length : 0);
         }
 
-        res.json({ success: true, stats: { totalSubs, activeSubs, suspendedSubs, expiredSubs, totalPoints, totalReports } });
+        res.json({ 
+            success: true, 
+            stats: { 
+                totalSubs, activeSubs, suspendedSubs, expiredSubs, 
+                totalPoints, totalReports, pointsSubs, unlimitedSubs 
+            } 
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-app.get('/api/admin/web/users', verifyWebToken, async (req, res) => {
+app.get('/api/admin/web/users', verifyAdmin, async (req, res) => {
     try {
         const db = await loadLocalSubscriptions();
         const users = [];
+        const now = new Date();
         for (const cid in db.subscriptions) {
             const sub = normalizeSubscription(db.subscriptions[cid]);
+            const isExpired = sub.subscription_end_date && new Date(sub.subscription_end_date) < now;
+            if (isExpired && sub.status === 'active') sub.status = 'expired';
+            
             users.push({
                 chatId: cid,
                 username: sub.username || '',
@@ -876,54 +928,67 @@ app.get('/api/admin/web/users', verifyWebToken, async (req, res) => {
     }
 });
 
-app.post('/api/admin/web/user/update', express.json(), verifyWebToken, async (req, res) => {
+app.post('/api/admin/web/user/update', express.json(), verifyAdmin, async (req, res) => {
     try {
         const { chatId, action, data } = req.body;
         const db = await loadLocalSubscriptions();
-        if (!db.subscriptions[chatId]) {
-            if (action === 'create') {
-                db.subscriptions[chatId] = { reports: [], transactions: [] };
-            } else {
-                return res.status(404).json({ success: false, error: 'User not found' });
-            }
+        if (!db.subscriptions[chatId] && action !== 'create') {
+            return res.status(404).json({ success: false, error: 'المشترك غير موجود' });
+        }
+        if (action === 'create' && !db.subscriptions[chatId]) {
+            db.subscriptions[chatId] = { reports: [], transactions: [] };
         }
 
         const sub = db.subscriptions[chatId];
+        sub.transactions = sub.transactions || [];
         
+        const now = new Date();
+
         if (action === 'add_points' || action === 'remove_points') {
             const amount = parseInt(data.amount);
-            if (!amount || amount <= 0) return res.status(400).json({ success: false, error: 'Invalid amount' });
+            if (!amount || amount <= 0) return res.status(400).json({ success: false, error: 'كمية غير صالحة' });
             if (action === 'remove_points' && (sub.balance_points || 0) < amount) {
-                return res.status(400).json({ success: false, error: 'Insufficient points' });
+                return res.status(400).json({ success: false, error: 'الرصيد لا يكفي ولا يمكن أن يكون سالبًا' });
             }
             
             sub.balance_points = (sub.balance_points || 0) + (action === 'add_points' ? amount : -amount);
             sub.points = sub.balance_points;
-            logTransaction(sub, chatId, action, amount, data.reason || 'Web Admin', 'web_admin');
+            logTransaction(sub, chatId, action, amount, data.reason || 'تعديل يدوي من الإدارة', 'web_admin');
         } 
         else if (action === 'toggle_status') {
             sub.status = sub.status === 'active' ? 'suspended' : 'active';
-            logTransaction(sub, chatId, 'status_change', 0, 'Status changed to ' + sub.status, 'web_admin');
+            logTransaction(sub, chatId, 'status_change', 0, 'تغيير الحالة إلى ' + sub.status, 'web_admin');
         }
-        else if (action === 'create' || action === 'update_type') {
-            const type = data.type; 
+        else if (action === 'cancel') {
+            sub.status = 'cancelled';
+            logTransaction(sub, chatId, 'cancel', 0, 'إلغاء الاشتراك', 'web_admin');
+        }
+        else if (action === 'renew' || action === 'create' || action === 'update_type') {
+            const type = data.type || sub.subscription_type || 'points'; 
             const days = parseInt(data.days) || 30;
             const points = parseInt(data.points) || 0;
             
-            const now = new Date();
-            const end = new Date(now.getTime() + days * 86400000).toISOString();
+            let startDate = now;
+            if (action === 'renew' && sub.subscription_end_date && new Date(sub.subscription_end_date) > now) {
+                startDate = new Date(sub.subscription_end_date);
+            }
+            
+            const end = new Date(startDate.getTime() + days * 86400000).toISOString();
             
             sub.status = 'active';
             sub.subscription_type = type;
-            sub.subscription_start_date = now.toISOString();
+            if (action !== 'update_type' || !sub.subscription_start_date) {
+                sub.subscription_start_date = (action === 'renew' && sub.subscription_start_date) ? sub.subscription_start_date : now.toISOString();
+            }
             sub.subscription_end_date = end;
-            if (type === 'points') {
-                sub.balance_points = points;
-                sub.points = points;
+            
+            if (type === 'points' && (action === 'create' || action === 'renew')) {
+                sub.balance_points = (sub.balance_points || 0) + points;
+                sub.points = sub.balance_points;
             }
             if (data.username) sub.username = data.username.replace('@','');
             
-            logTransaction(sub, chatId, 'subscription_update', type === 'points' ? points : 0, 'Web Admin Update', 'web_admin');
+            logTransaction(sub, chatId, action, type === 'points' ? points : 0, `${action} - ${days} يوم`, 'web_admin');
         }
 
         await saveLocalSubscriptions(db);
@@ -933,7 +998,7 @@ app.post('/api/admin/web/user/update', express.json(), verifyWebToken, async (re
     }
 });
 
-app.get('/api/admin/web/user/:id/logs', verifyWebToken, async (req, res) => {
+app.get('/api/admin/web/user/:id/logs', verifyAdmin, async (req, res) => {
     try {
         const db = await loadLocalSubscriptions();
         const sub = db.subscriptions[req.params.id];
@@ -944,7 +1009,6 @@ app.get('/api/admin/web/user/:id/logs', verifyWebToken, async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
-
 // --- END NEW WEB ADMIN APIs ---
 
 
@@ -1036,16 +1100,12 @@ app.post('/api/generate', async (req, res) => {
         const chatIdStr = chatId.toString();
 
         if (!data.subscriptions[chatIdStr]) {
-            return res.status(404).json({ success: false, error: 'User not found' });
+            return res.status(404).json({ success: false, error: 'المشترك غير موجود' });
         }
 
         const userSub = data.subscriptions[chatIdStr];
-        const normalized = normalizeSubscription(userSub);
-
-        if (!userSub.reports) {
-            userSub.reports = [];
-        }
-
+        
+        if (!userSub.reports) userSub.reports = [];
         const index = userSub.reports.findIndex(r => r.id === report.id);
         const isUpdate = (index >= 0);
         
@@ -1055,18 +1115,33 @@ app.post('/api/generate', async (req, res) => {
                 const issueDateObj = new Date(existingReport.issueDate);
                 const now = new Date();
                 if ((now - issueDateObj) > (2 * 24 * 60 * 60 * 1000)) {
-                    return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                    return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين.' });
                 }
             }
         }
 
         if (!isUpdate) {
             // New report validation
-            if (normalized.subscriptionDays <= 0 && (normalized.points || 0) < 5) {
-                return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
+            if (userSub.status !== 'active') {
+                return res.status(403).json({ success: false, error: 'الاشتراك غير فعال أو موقوف.' });
             }
-            if (normalized.subscriptionDays <= 0) {
-                userSub.points = (userSub.points || 0) - 5;
+            
+            const now = new Date();
+            if (userSub.subscription_end_date && new Date(userSub.subscription_end_date) < now) {
+                userSub.status = 'expired';
+                await saveLocalSubscriptions(data);
+                return res.status(403).json({ success: false, error: 'عذراً، لقد انتهت مدة الاشتراك.' });
+            }
+
+            if (userSub.subscription_type === 'points') {
+                const bal = userSub.balance_points || userSub.points || 0;
+                if (bal < 5) {
+                    return res.status(403).json({ success: false, error: 'رصيد النقاط غير كافٍ. تحتاج إلى 5 نقاط على الأقل لإنشاء التقرير.' });
+                }
+                // Deduct 5 points inside transaction
+                userSub.balance_points = bal - 5;
+                userSub.points = userSub.balance_points;
+                logTransaction(userSub, chatIdStr, 'generate_report', -5, 'خصم لإنشاء تقرير', 'system', report.id);
             }
         }
 
@@ -1078,6 +1153,7 @@ app.post('/api/generate', async (req, res) => {
 
         userSub.updatedAt = new Date().toISOString();
         await saveLocalSubscriptions(data);
+
         res.json({ success: true, report, generatedAt: new Date().toISOString() });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });

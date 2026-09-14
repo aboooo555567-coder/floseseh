@@ -97,22 +97,38 @@
             
             <main style="padding: 15px; padding-bottom: 80px;">
                 <!-- Stats Section -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                    <div style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <div style="font-size: 24px; font-weight: bold; color: var(--primary-dark);" id="stat-total">0</div>
-                        <div style="font-size: 12px; color: #666;">إجمالي المشتركين</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+                    <div style="background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 20px; font-weight: bold; color: var(--primary-dark);" id="stat-total">0</div>
+                        <div style="font-size: 11px; color: #666;">👥 إجمالي المشتركين</div>
                     </div>
-                    <div style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="stat-active">0</div>
-                        <div style="font-size: 12px; color: #666;">مشترك فعال</div>
+                    <div style="background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 20px; font-weight: bold; color: #4CAF50;" id="stat-active">0</div>
+                        <div style="font-size: 11px; color: #666;">🟢 الفعالون</div>
                     </div>
-                    <div style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <div style="font-size: 24px; font-weight: bold; color: #FF9800;" id="stat-points">0</div>
-                        <div style="font-size: 12px; color: #666;">إجمالي النقاط</div>
+                    <div style="background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 20px; font-weight: bold; color: #F44336;" id="stat-suspended">0</div>
+                        <div style="font-size: 11px; color: #666;">🔴 الموقوفون</div>
                     </div>
-                    <div style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <div style="font-size: 24px; font-weight: bold; color: #2196F3;" id="stat-reports">0</div>
-                        <div style="font-size: 12px; color: #666;">إجمالي التقارير</div>
+                    <div style="background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 20px; font-weight: bold; color: #FF9800;" id="stat-expired">0</div>
+                        <div style="font-size: 11px; color: #666;">⚠️ المنتهية</div>
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 20px; font-weight: bold; color: #2196F3;" id="stat-reports">0</div>
+                        <div style="font-size: 11px; color: #666;">📄 إجمالي التقارير</div>
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 20px; font-weight: bold; color: #FFC107;" id="stat-points">0</div>
+                        <div style="font-size: 11px; color: #666;">⭐ إجمالي النقاط</div>
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 20px; font-weight: bold; color: #9C27B0;" id="stat-points-subs">0</div>
+                        <div style="font-size: 11px; color: #666;">⭐ مشتركو النقاط</div>
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 20px; font-weight: bold; color: #3F51B5;" id="stat-unlimited-subs">0</div>
+                        <div style="font-size: 11px; color: #666;">♾️ المشتركون غير المحدودين</div>
                     </div>
                 </div>
 
@@ -171,13 +187,24 @@
                         <input type="number" id="modal-points" value="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:5px;">
                     </div>
                     
-                    <div id="modal-edit-actions" style="display:none; flex-direction:column; gap:10px; margin-top:20px; padding-top:15px; border-top:1px solid #eee;">
+                    <!-- Extra Display for Edit Mode -->
+                    <div id="modal-user-info" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:8px; font-size:13px; line-height:1.6; text-align:right;">
+                    </div>
+
+                    <div id="modal-edit-actions" style="display:none; flex-direction:column; gap:10px; margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
                         <div style="display:flex; gap:10px;">
-                            <button class="btn-primary" onclick="app.adminModifyPoints('add')" style="flex:1; background:#4CAF50;">إضافة نقاط ➕</button>
-                            <button class="btn-primary" onclick="app.adminModifyPoints('remove')" style="flex:1; background:#F44336;">خصم نقاط ➖</button>
+                            <button class="btn-primary" onclick="app.adminModifyPoints('add')" style="flex:1; background:#4CAF50;">➕ إضافة نقاط</button>
+                            <button class="btn-primary" onclick="app.adminModifyPoints('remove')" style="flex:1; background:#F44336;">➖ خصم نقاط</button>
                         </div>
-                        <button class="btn-primary" id="btn-toggle-status" onclick="app.adminToggleStatus()" style="background:#FF9800;">إيقاف الاشتراك ⛔</button>
-                        <button class="btn-secondary" onclick="app.adminViewLogs()" style="background:#f0f0f0; color:#333; padding:12px; border-radius:8px; font-family:inherit; font-weight:bold; border:none;">📋 عرض سجل العمليات</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-primary" onclick="app.adminUpdateSubscriptionType('points')" style="flex:1; background:#FFC107; color:#333;">⭐ اشتراك نقاط</button>
+                            <button class="btn-primary" onclick="app.adminUpdateSubscriptionType('unlimited')" style="flex:1; background:#3F51B5;">♾️ اشتراك غير محدود</button>
+                        </div>
+                        <button class="btn-primary" onclick="app.adminSaveUser()" style="background:#2196F3;">✏️ تعديل الاشتراك</button>
+                        <button class="btn-primary" onclick="app.adminRenewSub()" style="background:#8BC34A;">♻️ تجديد الاشتراك</button>
+                        <button class="btn-secondary" onclick="app.adminViewLogs()" style="background:#f0f0f0; color:#333; padding:12px; border-radius:8px; font-family:inherit; font-weight:bold; border:none;">📋 سجل العمليات</button>
+                        <button class="btn-primary" id="btn-toggle-status" onclick="app.adminToggleStatus()" style="background:#FF9800;">⏸️ إيقاف الاشتراك</button>
+                        <button class="btn-primary" onclick="app.adminCancelSub()" style="background:#E91E63;">❌ إلغاء الاشتراك</button>
                     </div>
 
                     <button class="btn-primary" id="btn-save-user" onclick="app.adminSaveUser()" style="width:100%; margin-top:20px; font-size:16px;">حفظ المشترك 💾</button>
