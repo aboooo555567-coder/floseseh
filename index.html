@@ -91,17 +91,111 @@
         <!-- Admin Screen -->
         <section id="admin-screen" class="screen">
             <header class="app-header">
-                <h2>لوحة تحكم المشرف</h2>
+                <h2>لوحة تحكم المشرف الذكية</h2>
                 <button class="btn-back" onclick="app.navigate('dashboard')">🔙</button>
             </header>
-            <main class="form-container" style="padding:20px; text-align:center;">
-                <div style="background: #eef2fa; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                    <span style="font-size: 40px; display: block; margin-bottom: 10px;">🔐</span>
-                    <h3 style="color: var(--primary-dark); margin-bottom: 10px;">تم نقل لوحة المشرف</h3>
-                    <p style="font-size: 15px; color: #555; line-height: 1.5;">بناءً على طلبك، تم نقل لوحة التحكم وإدارة المشتركين بالكامل إلى محادثة تيليجرام لضمان أعلى مستويات الأمان والسرية.</p>
+            
+            <main style="padding: 15px; padding-bottom: 80px;">
+                <!-- Stats Section -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <div style="font-size: 24px; font-weight: bold; color: var(--primary-dark);" id="stat-total">0</div>
+                        <div style="font-size: 12px; color: #666;">إجمالي المشتركين</div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="stat-active">0</div>
+                        <div style="font-size: 12px; color: #666;">مشترك فعال</div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <div style="font-size: 24px; font-weight: bold; color: #FF9800;" id="stat-points">0</div>
+                        <div style="font-size: 12px; color: #666;">إجمالي النقاط</div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <div style="font-size: 24px; font-weight: bold; color: #2196F3;" id="stat-reports">0</div>
+                        <div style="font-size: 12px; color: #666;">إجمالي التقارير</div>
+                    </div>
                 </div>
-                <a href="https://t.me/seha_sickleave_bot?start=admin" target="_blank" class="btn-primary" style="display:inline-block; width:100%; padding:15px; text-decoration:none; font-size:16px; border-radius:8px;">فتح لوحة التحكم في تيليجرام 🚀</a>
+
+                <!-- Actions -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="admin-search-input" placeholder="🔍 بحث عن مشترك (Chat ID)" onkeyup="app.filterAdminUsers()" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: inherit;">
+                    <button class="btn-primary" onclick="app.openAdminUserModal()" style="padding: 0 20px; font-size: 20px;">➕</button>
+                </div>
+
+                <!-- Users List -->
+                <div id="admin-users-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- User cards injected by JS -->
+                    <div style="text-align:center; padding: 20px; color:#888;">جاري تحميل المشتركين...</div>
+                </div>
             </main>
+
+            <!-- User Management Modal -->
+            <div id="admin-user-modal" class="overlay" style="display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; background: rgba(0,0,0,0.6);">
+                <div style="background: white; width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="color: var(--primary-dark); margin:0;" id="modal-user-title">إضافة مشترك جديد</h3>
+                        <button onclick="document.getElementById('admin-user-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer;">❌</button>
+                    </div>
+                    
+                    <input type="hidden" id="modal-is-edit" value="false">
+                    
+                    <div class="form-group">
+                        <label>ايدي المشترك (Chat ID)</label>
+                        <input type="text" id="modal-chat-id" placeholder="مثال: 123456789" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:5px;">
+                    </div>
+                    
+                    <div class="form-group" id="modal-username-group">
+                        <label>معرف تيليجرام (اختياري)</label>
+                        <input type="text" id="modal-username" placeholder="@username" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:5px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>نوع الاشتراك</label>
+                        <div style="display:flex; gap:10px; margin-top:5px; margin-bottom:15px;">
+                            <label style="flex:1; border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center; cursor:pointer;">
+                                <input type="radio" name="modal_sub_type" value="unlimited" checked onchange="app.toggleAdminModalType()"> غير محدود
+                            </label>
+                            <label style="flex:1; border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center; cursor:pointer;">
+                                <input type="radio" name="modal_sub_type" value="points" onchange="app.toggleAdminModalType()"> نقاط
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="modal-days-container">
+                        <label>المدة (بالأيام)</label>
+                        <input type="number" id="modal-days" value="30" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:5px;">
+                    </div>
+
+                    <div class="form-group" id="modal-points-container" style="display:none;">
+                        <label>النقاط (للتقارير)</label>
+                        <input type="number" id="modal-points" value="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-top:5px;">
+                    </div>
+                    
+                    <div id="modal-edit-actions" style="display:none; flex-direction:column; gap:10px; margin-top:20px; padding-top:15px; border-top:1px solid #eee;">
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-primary" onclick="app.adminModifyPoints('add')" style="flex:1; background:#4CAF50;">إضافة نقاط ➕</button>
+                            <button class="btn-primary" onclick="app.adminModifyPoints('remove')" style="flex:1; background:#F44336;">خصم نقاط ➖</button>
+                        </div>
+                        <button class="btn-primary" id="btn-toggle-status" onclick="app.adminToggleStatus()" style="background:#FF9800;">إيقاف الاشتراك ⛔</button>
+                        <button class="btn-secondary" onclick="app.adminViewLogs()" style="background:#f0f0f0; color:#333; padding:12px; border-radius:8px; font-family:inherit; font-weight:bold; border:none;">📋 عرض سجل العمليات</button>
+                    </div>
+
+                    <button class="btn-primary" id="btn-save-user" onclick="app.adminSaveUser()" style="width:100%; margin-top:20px; font-size:16px;">حفظ المشترك 💾</button>
+                </div>
+            </div>
+
+            <!-- Logs Modal -->
+            <div id="admin-logs-modal" class="overlay" style="display: none; align-items: center; justify-content: center; z-index: 1100; padding: 20px; background: rgba(0,0,0,0.6);">
+                <div style="background: white; width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 90vh; display:flex; flex-direction:column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="color: var(--primary-dark); margin:0;">سجل العمليات</h3>
+                        <button onclick="document.getElementById('admin-logs-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer;">❌</button>
+                    </div>
+                    <div id="admin-logs-content" style="overflow-y: auto; flex:1; display:flex; flex-direction:column; gap:10px;">
+                        <!-- Logs injected by JS -->
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Packages Screen -->
