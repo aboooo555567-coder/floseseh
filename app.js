@@ -664,7 +664,10 @@ const app = {
     async adminUpdateApi(action, data) {
         try {
             const chatId = this.adminState.currentEditId || document.getElementById('modal-chat-id').value.trim();
-            if (!chatId) return alert('يجب إدخال Chat ID');
+            if (!chatId) {
+                this.showAlert('رجاء إدخال Chat ID');
+                return;
+            }
 
             const res = await fetch('/api/admin/web/user/update', {
                 method: 'POST',
@@ -692,9 +695,9 @@ const app = {
                 this.renderAdminUsers(document.getElementById('admin-search-input').value.trim());
                 if (action === 'create') {
                     document.getElementById('admin-user-modal').style.display = 'none';
-                    alert('تم إضافة المشترك بنجاح!');
+                    this.showAlert('تم إضافة المشترك بنجاح!');
                 } else if (action === 'cancel') {
-                    alert('تم إلغاء الاشتراك بنجاح.');
+                    this.showAlert('تم إلغاء الاشتراك.');
                     this.openAdminUserModal(chatId);
                 } else {
                     this.openAdminUserModal(chatId);
@@ -702,10 +705,10 @@ const app = {
                 
                 this.loadAdminDashboard();
             } else {
-                alert('خطأ: ' + result.error);
+                this.showAlert('خطأ: ' + result.error);
             }
         } catch(e) {
-            alert('حدث خطأ: ' + e.message);
+            this.showAlert('حدث خطأ: ' + e.message);
         }
     },
 
@@ -722,50 +725,60 @@ const app = {
     },
 
     adminModifyPoints(action) {
-        const amt = prompt(`أدخل عدد النقاط المراد ${action === 'add' ? 'إضافتها' : 'خصمها'}:`);
-        if (!amt || isNaN(amt)) return;
-        const reason = prompt("السبب (اختياري):") || 'عبر لوحة تحكم الويب';
+        const amt = document.getElementById('modal-points').value;
+        if (!amt || isNaN(amt) || amt <= 0) {
+            this.showAlert("الرجاء إدخال عدد نقاط صحيح في الحقل");
+            return;
+        }
+        const reason = action === 'add' ? 'إضافة نقاط' : 'خصم نقاط';
         this.adminUpdateApi(action + '_points', { amount: amt, reason });
     },
 
     adminUpdateSubscriptionType(type) {
-        if(confirm(`هل أنت متأكد من تغيير نوع الاشتراك إلى ${type === 'points' ? 'نقاط' : 'غير محدود' }؟`)) {
-            const days = prompt("أدخل المدة بالأيام:", "30");
-            if (!days || isNaN(days)) return;
-            let points = "0";
-            if (type === 'points') {
-                points = prompt("أدخل رصيد النقاط:", "10");
-                if (!points || isNaN(points)) return;
+        this.showConfirm(`هل أنت متأكد من تحويل هذا المشترك إلى ${type === 'points' ? 'نقاط' : 'غير محدود'}؟`, (ok) => {
+            if (ok) {
+                const days = document.getElementById('modal-days').value || "30";
+                const points = document.getElementById('modal-points').value || "0";
+                this.adminUpdateApi('update_type', { type, days, points });
             }
-            this.adminUpdateApi('update_type', { type, days, points });
-        }
+        });
     },
 
     adminRenewSub() {
-        const days = prompt("أدخل عدد أيام التجديد:", "30");
-        if (!days || isNaN(days)) return;
-        
-        let points = "0";
-        const currentUser = this.adminState.users.find(u => u.chatId === this.adminState.currentEditId);
-        if (currentUser && currentUser.type === 'points') {
-            points = prompt("أدخل النقاط الجديدة التي تريد إضافتها مع التجديد:", "10");
-            if (!points || isNaN(points)) return;
-        }
-
-        if(confirm("تأكيد تجديد الاشتراك؟")) {
-            this.adminUpdateApi('renew', { days, points });
-        }
+        this.showConfirm("تأكيد تجديد الاشتراك؟", (ok) => {
+            if (ok) {
+                const days = document.getElementById('modal-days').value || "30";
+                const points = document.getElementById('modal-points').value || "0";
+                this.adminUpdateApi('renew', { days, points });
+            }
+        });
     },
 
     adminCancelSub() {
-        if(confirm("⚠️ هل أنت متأكد من إلغاء اشتراك هذا المشترك نهائياً؟")) {
-            this.adminUpdateApi('cancel', {});
-        }
+        this.showConfirm("هل أنت متأكد من إلغاء الاشتراك؟", (ok) => {
+            if (ok) this.adminUpdateApi('cancel', {});
+        });
     },
 
     adminToggleStatus() {
-        if(confirm("هل أنت متأكد من تغيير حالة المشترك؟")) {
-            this.adminUpdateApi('toggle_status', {});
+        this.showConfirm("هل أنت متأكد من تغيير حالة الاشتراك؟", (ok) => {
+            if (ok) this.adminUpdateApi('toggle_status', {});
+        });
+    },
+
+    showConfirm(msg, cb) {
+        if (this.tg && this.tg.showConfirm) {
+            this.tg.showConfirm(msg, cb);
+        } else {
+            cb(window.confirm(msg));
+        }
+    },
+    
+    showAlert(msg) {
+        if (this.tg && this.tg.showAlert) {
+            this.tg.showAlert(msg);
+        } else {
+            window.alert(msg);
         }
     },
 
