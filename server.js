@@ -59,7 +59,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 
 // Local database path
-const subscriptionsPath = path.join(__dirname, 'subscriptions.json');
+const defaultSubscriptionsPath = path.join(__dirname, 'subscriptions.json');
+const subscriptionsPath = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'subscriptions.json') : defaultSubscriptionsPath;
 
 // Helper to compute remaining subscription days
 const getDaysRemaining = (expiresAt) => {
@@ -121,6 +122,16 @@ const loadLocalSubscriptions = async () => {
         if (!parsed.transactions) parsed.transactions = [];
         return parsed;
     } catch (e) {
+        if (process.env.DATA_DIR && subscriptionsPath !== defaultSubscriptionsPath) {
+            try {
+                const data = await fs.readFile(defaultSubscriptionsPath, 'utf-8');
+                const parsed = JSON.parse(data);
+                if (!parsed.subscriptions) parsed.subscriptions = {};
+                if (!parsed.transactions) parsed.transactions = [];
+                await fs.writeFile(subscriptionsPath, JSON.stringify(parsed, null, 2), 'utf-8');
+                return parsed;
+            } catch (err2) {}
+        }
         return { subscriptions: {}, transactions: [] };
     }
 };
