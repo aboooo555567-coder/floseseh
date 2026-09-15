@@ -505,7 +505,10 @@ const app = {
     // Admin Dashboard Logic
     adminState: {
         users: [],
-        currentEditId: null
+        currentEditId: null,
+        currentFilter: 'all',
+        currentPage: 1,
+        pageSize: 10
     },
 
     async loadAdminDashboard() {
@@ -534,16 +537,34 @@ const app = {
         }
     },
 
-    renderAdminUsers(filterText = '') {
+    renderAdminUsers() {
+        const filterText = (document.getElementById('admin-search-input')?.value || '').trim();
         const container = document.getElementById('admin-users-list');
+        if (!container) return;
         container.innerHTML = '';
         
-        let count = 0;
-        this.adminState.users.forEach(u => {
-            if (filterText && !u.chatId.includes(filterText) && !u.username.includes(filterText)) return;
-            count++;
+        let filtered = this.adminState.users.filter(u => {
+            if (filterText && !u.chatId.includes(filterText) && !u.username.includes(filterText)) return false;
+            if (this.adminState.currentFilter === 'active' && u.status !== 'active') return false;
+            if (this.adminState.currentFilter === 'suspended' && u.status !== 'suspended') return false;
+            if (this.adminState.currentFilter === 'expired' && u.status !== 'expired') return false;
+            if (this.adminState.currentFilter === 'unlimited' && u.type !== 'unlimited') return false;
+            if (this.adminState.currentFilter === 'points' && u.type !== 'points') return false;
+            return true;
+        });
+
+        const totalItems = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / this.adminState.pageSize));
+        if (this.adminState.currentPage > totalPages) this.adminState.currentPage = totalPages;
+        if (this.adminState.currentPage < 1) this.adminState.currentPage = 1;
+
+        const startIdx = (this.adminState.currentPage - 1) * this.adminState.pageSize;
+        const pageUsers = filtered.slice(startIdx, startIdx + this.adminState.pageSize);
+
+        pageUsers.forEach(u => {
             const isUnlimited = u.type === 'unlimited';
             const icon = u.status === 'active' ? '✅' : (u.status === 'suspended' ? '⏸️' : '❌');
+            const statusLabel = u.status === 'active' ? 'فعال' : (u.status === 'suspended' ? 'معلق' : 'منتهي');
             const typeStr = isUnlimited ? `غير محدود (${u.daysLeft} يوم)` : `نقاط (${u.points} تقرير)`;
             
             const card = document.createElement('div');
@@ -551,21 +572,55 @@ const app = {
             card.innerHTML = `
                 <div style="text-align: right;">
                     <div style="font-weight:bold; margin-bottom:5px; color: var(--primary-dark);">${u.chatId} <span style="font-size:12px; color:#888;">${u.username ? '@'+u.username : ''}</span></div>
-                    <div style="font-size:13px; color:#555;">${icon} ${u.status === 'active' ? 'فعال' : 'موقوف'} | ${typeStr}</div>
+                    <div style="font-size:13px; color:#555;">${icon} ${statusLabel} | ${typeStr}</div>
                 </div>
                 <button onclick="app.openAdminUserModal('${u.chatId}')" style="background:#eef2fa; color:var(--primary-dark); border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">إدارة ⚙️</button>
             `;
             container.appendChild(card);
         });
 
-        if (count === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">لا يوجد مشتركين مطابقين للبحث</div>';
+        if (totalItems === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">لا يوجد مشتركين مطابقين للبحث أو الفلتر</div>';
+        }
+
+        // Update pagination UI
+        const indicator = document.getElementById('admin-page-indicator');
+        if (indicator) {
+            indicator.innerText = `صفحة ${this.adminState.currentPage} من ${totalPages} (إجمالي ${totalItems})`;
+        }
+        const prevBtn = document.getElementById('admin-prev-page');
+        if (prevBtn) {
+            prevBtn.disabled = this.adminState.currentPage <= 1;
+            prevBtn.style.opacity = this.adminState.currentPage <= 1 ? '0.5' : '1';
+            prevBtn.style.cursor = this.adminState.currentPage <= 1 ? 'not-allowed' : 'pointer';
+        }
+        const nextBtn = document.getElementById('admin-next-page');
+        if (nextBtn) {
+            nextBtn.disabled = this.adminState.currentPage >= totalPages;
+            nextBtn.style.opacity = this.adminState.currentPage >= totalPages ? '0.5' : '1';
+            nextBtn.style.cursor = this.adminState.currentPage >= totalPages ? 'not-allowed' : 'pointer';
         }
     },
 
+    setAdminFilter(filter) {
+        this.adminState.currentFilter = filter;
+        this.adminState.currentPage = 1;
+        document.querySelectorAll('.admin-filter-btn').forEach(btn => {
+            const isMatch = btn.getAttribute('data-filter') === filter;
+            btn.style.background = isMatch ? 'var(--primary-dark)' : 'white';
+            btn.style.color = isMatch ? 'white' : '#333';
+        });
+        this.renderAdminUsers();
+    },
+
+    changeAdminPage(delta) {
+        this.adminState.currentPage += delta;
+        this.renderAdminUsers();
+    },
+
     filterAdminUsers() {
-        const text = document.getElementById('admin-search-input').value.trim();
-        this.renderAdminUsers(text);
+        this.adminState.currentPage = 1;
+        this.renderAdminUsers();
     },
 
     openAdminUserModal(chatId = null) {
@@ -782,6 +837,55 @@ const app = {
         }
     },
 
+    adminQuickRenew(days) {
+        this.showConfirm(`تأكيد تجديد الاشتراك لمدة ${days} يوم؟`, (ok) => {
+            if (ok) {
+                const currentUser = this.adminState.users.find(u => u.chatId === this.adminState.currentEditId);
+                const points = currentUser && currentUser.type === 'points' ? (document.getElementById('modal-points')?.value || '0') : '0';
+                this.adminUpdateApi('renew', { days, points });
+            }
+        });
+    },
+
+    async adminViewReports() {
+        const chatId = this.adminState.currentEditId;
+        if (!chatId) return;
+        try {
+            const res = await fetch(`/api/admin/web/user/${chatId}/reports`, { headers: { 'x-admin-token': this.state.adminToken } });
+            const data = await res.json();
+            if (data.success) {
+                const content = document.getElementById('admin-reports-content');
+                content.innerHTML = '';
+                document.getElementById('admin-reports-modal').style.display = 'flex';
+                
+                if (!data.reports || data.reports.length === 0) {
+                    content.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">لا توجد تقارير مسجلة لهذا المشترك</div>';
+                } else {
+                    data.reports.slice().reverse().forEach((rep, idx) => {
+                        const dateStr = rep.createdAt ? new Date(rep.createdAt).toLocaleString('ar-SA') : (rep.date || 'غير محدد');
+                        const patientName = rep.patient_name || rep.patientName || (rep.data && (rep.data.patient_name || rep.data.name)) || 'بدون اسم';
+                        const reportId = rep.id || rep.service_code || rep.report_id || `تقرير #${data.reports.length - idx}`;
+                        const daysCount = rep.days_count || (rep.data && rep.data.days_count) || '-';
+                        content.innerHTML += `
+                            <div style="background:#f9f9f9; padding:12px; border-radius:10px; border-right: 4px solid #0284c7; font-size:13px; text-align:right;">
+                                <div style="font-weight:bold; color:var(--primary-dark); margin-bottom:4px;">📄 كود التقرير: ${reportId}</div>
+                                <div style="color:#333; margin-bottom:3px;">👤 المريض: ${patientName} (${daysCount} يوم)</div>
+                                <div style="display:flex; justify-content:space-between; color:#666; font-size:11px;">
+                                    <span>📅 ${dateStr}</span>
+                                    <span style="color:#4CAF50; font-weight:bold;">مكتمل ✅</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } else {
+                this.showAlert('فشل جلب التقارير: ' + (data.error || 'خطأ غير معروف'));
+            }
+        } catch (e) {
+            this.showAlert('خطأ أثناء جلب التقارير: ' + e.message);
+        }
+    },
+
     async adminViewLogs() {
         const chatId = this.adminState.currentEditId;
         if (!chatId) return;
@@ -813,7 +917,7 @@ const app = {
                 document.getElementById('admin-logs-modal').style.display = 'flex';
             }
         } catch(e) {
-            alert('Error fetching logs: ' + e.message);
+            this.showAlert('Error fetching logs: ' + e.message);
         }
     },
 
