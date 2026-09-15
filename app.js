@@ -662,15 +662,24 @@ const app = {
                 }
             }
 
+            const paymentSource = (u.paymentSource || u.report_payment_source || (u.type === 'unlimited' ? 'unlimited' : 'points')).toLowerCase();
+            const paySourceLabel = paymentSource === 'unlimited' ? 'غير محدود ♾️ (لا يخصم نقاط)' : 'بالنقاط 🪙 (5 نقاط/تقرير)';
+
             const infoDiv = document.getElementById('modal-user-info');
             infoDiv.style.display = 'block';
             infoDiv.innerHTML = `
                 <div><strong>📅 تاريخ البداية:</strong> ${u.startDate ? new Date(u.startDate).toLocaleDateString('ar-SA') : '-'}</div>
-                <div><strong>🏁 تاريخ الانتهاء:</strong> ${u.endDate ? new Date(u.endDate).toLocaleDateString('ar-SA') : '-'}</div>
-                <div><strong>⏱️ الأيام المستخدمة:</strong> ${usedDays} يوم</div>
-                <div><strong>⏳ الأيام المتبقية:</strong> ${remDays} يوم</div>
+                <div><strong>🏁 تاريخ النهاية:</strong> ${u.endDate ? new Date(u.endDate).toLocaleDateString('ar-SA') : '-'}</div>
+                <div><strong>⏳ مدة الاشتراك:</strong> ${remDays} يوم متبقي (من ${usedDays + remDays} يوم)</div>
+                <div><strong>🪙 الرصيد الحالي:</strong> ${u.points} نقطة</div>
+                <div><strong>🏷️ نوع الاشتراك:</strong> ${u.type === 'unlimited' ? 'غير محدود ♾️' : 'نقاط ⭐'}</div>
+                <div><strong>💳 مصدر خصم التقارير:</strong> <span style="font-weight:bold; color:${paymentSource === 'unlimited' ? '#3F51B5' : '#009688'};">${paySourceLabel}</span></div>
                 <div><strong>📄 عدد التقارير:</strong> ${u.reportsCount} تقرير</div>
             `;
+
+            const payGroup = document.getElementById('modal-payment-source-group');
+            if (payGroup) payGroup.style.display = 'block';
+            this.updatePaymentSourceButtonsUI(paymentSource);
 
             document.getElementById('modal-edit-actions').style.display = 'flex';
             document.getElementById('btn-save-user').style.display = 'none';
@@ -698,11 +707,55 @@ const app = {
             document.getElementById('modal-points').value = '10';
             
             document.getElementById('modal-user-info').style.display = 'none';
+            const payGroup = document.getElementById('modal-payment-source-group');
+            if (payGroup) payGroup.style.display = 'none';
             document.getElementById('modal-edit-actions').style.display = 'none';
             document.getElementById('btn-save-user').style.display = 'block';
         }
         
         this.toggleAdminModalType();
+    },
+
+    async adminSetPaymentSource(source) {
+        const chatId = this.adminState.currentEditId;
+        if (!chatId) return;
+        this.showConfirm(`تأكيد تغيير مصدر خصم التقارير إلى: ${source === 'unlimited' ? 'غير محدود (بدون خصم نقاط)' : 'النقاط (خصم 5 نقاط لكل تقرير)'}؟`, async (ok) => {
+            if (ok) {
+                await this.adminUpdateApi('update_payment_source', { source });
+                const u = this.adminState.users.find(x => x.chatId === chatId);
+                if (u) u.paymentSource = source;
+                this.updatePaymentSourceButtonsUI(source);
+                this.openAdminUserModal(chatId);
+            }
+        });
+    },
+
+    updatePaymentSourceButtonsUI(source) {
+        const btnPoints = document.getElementById('btn-pay-source-points');
+        const btnUnlim = document.getElementById('btn-pay-source-unlimited');
+        if (!btnPoints || !btnUnlim) return;
+
+        if (source === 'unlimited') {
+            btnUnlim.style.background = '#3F51B5';
+            btnUnlim.style.color = 'white';
+            btnUnlim.style.borderColor = '#3F51B5';
+            btnUnlim.innerHTML = '♾️ غير محدود (مفعل ✅)';
+
+            btnPoints.style.background = 'white';
+            btnPoints.style.color = '#333';
+            btnPoints.style.borderColor = '#ddd';
+            btnPoints.innerHTML = '🪙 النقاط (Points)';
+        } else {
+            btnPoints.style.background = '#009688';
+            btnPoints.style.color = 'white';
+            btnPoints.style.borderColor = '#009688';
+            btnPoints.innerHTML = '🪙 النقاط (مفعل ✅)';
+
+            btnUnlim.style.background = 'white';
+            btnUnlim.style.color = '#333';
+            btnUnlim.style.borderColor = '#ddd';
+            btnUnlim.innerHTML = '♾️ غير محدود (Unlimited)';
+        }
     },
 
     toggleAdminModalType() {
