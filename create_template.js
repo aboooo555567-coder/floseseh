@@ -16,8 +16,8 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
         
         <!-- Right Graphic -->
         <div style="width: 160px; text-align: right;">
-            <svg width="150" height="71" viewBox="0 0 408 192" style="opacity: 0.85; display: inline-block;">
-                <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+            <svg width="130" height="61" viewBox="0 0 408 192" style="opacity: 0.8; display: inline-block;">
+                <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
             </svg>
         </div>
     </div>
