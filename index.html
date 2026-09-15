@@ -9,11 +9,10 @@
     
     
     <!-- Main Stylesheet -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=6000">
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="app.js?v=1702"></script>
     <style>
         /* Logo Auto-Adjust */
         #pdf-hospital-logo {
@@ -90,37 +89,87 @@
         
         <!-- Admin Screen -->
         <section id="admin-screen" class="screen">
-            <header class="app-header">
-                <h2>إدارة المشتركين</h2>
-                <button class="btn-back" onclick="app.navigate('dashboard')">🔙</button>
-            </header>
-            <main class="form-container" style="padding:20px;">
-                <div class="form-group">
-                    <label>ايدي المشترك (Chat ID)</label>
-                    <input type="text" id="admin_chat_id" placeholder="معرف تيلجرام (مثال: @zakaria) أو الأيدي" placeholder="مثال: 123456789" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <header class="app-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="btn-back" onclick="app.navigate('dashboard')" style="margin:0;">🔙</button>
+                    <h2 style="margin:0; font-size:1.3rem;">👑 لوحة تحكم المشرف</h2>
                 </div>
-                <div class="form-group">
-                    <label>نوع الاشتراك</label>
-                    <div class="radio-group" style="display:flex; gap:10px; margin-top:5px; margin-bottom:15px;">
-                        <label style="flex:1; border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center;">
-                            <input type="radio" name="admin_sub_type" value="unlimited" checked onchange="document.getElementById('admin_days_container').style.display='block'; document.getElementById('admin_points_container').style.display='none';"> غير محدود (أيام)
-                        </label>
-                        <label style="flex:1; border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center;">
-                            <input type="radio" name="admin_sub_type" value="points" onchange="document.getElementById('admin_days_container').style.display='none'; document.getElementById('admin_points_container').style.display='block';"> بالنقاط (تقارير)
-                        </label>
+                <button class="btn-refresh" id="btn-admin-refresh" onclick="app.loadAdminData(this)" style="background:#e0f2fe; color:#0369a1; border:none; padding:8px 14px; border-radius:10px; font-weight:bold; cursor:pointer;">🔄 تحديث</button>
+            </header>
+
+            <main style="padding: 15px 0;">
+                <!-- 8 Statistics Cards -->
+                <div class="admin-stats-grid" id="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon">👥</div>
+                        <div class="admin-stat-val" id="stat-total-users">-</div>
+                        <div class="admin-stat-label">إجمالي المشتركين</div>
+                    </div>
+                    <div class="admin-stat-card stat-card-active">
+                        <div class="admin-stat-icon">🟢</div>
+                        <div class="admin-stat-val" id="stat-active-users">-</div>
+                        <div class="admin-stat-label">المشتركون الفعالون</div>
+                    </div>
+                    <div class="admin-stat-card stat-card-suspended">
+                        <div class="admin-stat-icon">⏸️</div>
+                        <div class="admin-stat-val" id="stat-suspended-users">-</div>
+                        <div class="admin-stat-label">الموقوفون</div>
+                    </div>
+                    <div class="admin-stat-card stat-card-cancelled">
+                        <div class="admin-stat-icon">🔴</div>
+                        <div class="admin-stat-val" id="stat-cancelled-users">-</div>
+                        <div class="admin-stat-label">المنتهية والملغاة</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon">📄</div>
+                        <div class="admin-stat-val" id="stat-total-reports">-</div>
+                        <div class="admin-stat-label">إجمالي التقارير</div>
+                    </div>
+                    <div class="admin-stat-card stat-card-points">
+                        <div class="admin-stat-icon">🪙</div>
+                        <div class="admin-stat-val" id="stat-total-points">-</div>
+                        <div class="admin-stat-label">إجمالي النقاط</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon">🔢</div>
+                        <div class="admin-stat-val" id="stat-points-users">-</div>
+                        <div class="admin-stat-label">مشتركو Points</div>
+                    </div>
+                    <div class="admin-stat-card stat-card-unlimited">
+                        <div class="admin-stat-icon">♾️</div>
+                        <div class="admin-stat-val" id="stat-unlimited-users">-</div>
+                        <div class="admin-stat-label">مشتركو Unlimited</div>
                     </div>
                 </div>
-                <div class="form-group" id="admin_days_container">
-                    <label>المدة (بالأيام)</label>
-                    <input type="number" id="admin_days" value="30" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-                    <small style="color:#666;">يسمح بإنشاء تقارير غير محدودة خلال هذه الفترة.</small>
+
+                <!-- Section Header: Subscribers Management -->
+                <div class="admin-section-header-box">
+                    <h3 class="admin-section-title">👥 إدارة المشتركين</h3>
+                    <p class="admin-section-subtitle">إدارة الحسابات، شحن وخصم النقاط، الاشتراكات والتقارير</p>
                 </div>
-                <div class="form-group" id="admin_points_container" style="display:none;">
-                    <label>عدد النقاط (التقارير)</label>
-                    <input type="number" id="admin_points" value="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-                    <small style="color:#666;">كل تقرير يخصم 1 نقطة. الصلاحية لا تنتهي.</small>
+
+                <!-- Primary Action Button: Add Subscriber -->
+                <button type="button" class="btn-admin-add-subscriber" id="btn-admin-open-add" onclick="app.openAddUserModal()">
+                    <span style="font-size: 1.2rem;">➕</span>
+                    <span>إضافة مشترك جديد</span>
+                </button>
+
+                <!-- Search & Filters -->
+                <div class="admin-search-container">
+                    <input type="text" id="admin-user-search-input" placeholder="🔍 بحث برقم Chat ID أو اسم المستخدم..." oninput="app.handleAdminSearch(this.value)">
                 </div>
-                <button class="btn-primary" onclick="app.addSubscriber()" style="width:100%; margin-top:20px; font-size:16px;">إضافة / تفعيل</button>
+
+                <div class="admin-filter-tabs">
+                    <button class="admin-filter-tab active" data-filter="all" onclick="app.setAdminFilter('all', this)">الكل</button>
+                    <button class="admin-filter-tab" data-filter="active" onclick="app.setAdminFilter('active', this)">🟢 فعال</button>
+                    <button class="admin-filter-tab" data-filter="suspended" onclick="app.setAdminFilter('suspended', this)">⏸️ موقوف</button>
+                    <button class="admin-filter-tab" data-filter="cancelled" onclick="app.setAdminFilter('cancelled', this)">❌ ملغي</button>
+                </div>
+
+                <!-- Subscribers List -->
+                <div id="admin-subscribers-list" class="admin-subscribers-container">
+                    <div style="text-align:center; padding:30px; color:#888;">⏳ جاري تحميل بيانات المشتركين...</div>
+                </div>
             </main>
         </section>
 
@@ -447,8 +496,6 @@
     
 
     <script src="arabic-reshaper.js"></script>
-    <!-- Application Logic -->
-    <script src="app.js?v=5418"></script>
     <!-- Version Label for debugging -->
     <script>
         const vLabel = document.createElement('div');
@@ -463,5 +510,218 @@
     </script>
 
 
+
+    <!-- ==================== ADMIN MODALS ==================== -->
+    
+    <!-- 1. Add Subscriber Modal -->
+    <div id="admin-add-modal" class="admin-modal-backdrop" style="display:none;">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <h3>➕ إضافة مشترك جديد</h3>
+                <button class="admin-modal-close" onclick="app.closeAdminModals()">✖</button>
+            </div>
+            <div class="admin-modal-body">
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-weight:700; font-size:0.85rem;">الـ Chat ID (معرف تيلجرام الرقمي) <span style="color:red;">*</span></label>
+                    <input type="number" id="admin_add_chat_id" placeholder="مثال: 6316398194" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;" required>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-weight:700; font-size:0.85rem;">اسم المستخدم (Telegram Username)</label>
+                    <input type="text" id="admin_add_username" placeholder="مثال: @zakaria_2025" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-weight:700; font-size:0.85rem;">الاسم الكامل / المستعار</label>
+                    <input type="text" id="admin_add_name" placeholder="مثال: زكريا محمد" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-weight:700; font-size:0.85rem;">مدة الاشتراك</label>
+                    <div class="duration-preset-grid" style="margin-top:4px;">
+                        <button type="button" class="btn-preset active" data-days="30" onclick="app.selectAddDuration(30, this)">30 يوم</button>
+                        <button type="button" class="btn-preset" data-days="60" onclick="app.selectAddDuration(60, this)">60 يوم</button>
+                        <button type="button" class="btn-preset" data-days="90" onclick="app.selectAddDuration(90, this)">90 يوم</button>
+                        <button type="button" class="btn-preset" data-days="365" onclick="app.selectAddDuration(365, this)">365 يوم</button>
+                        <button type="button" class="btn-preset" data-days="custom" onclick="app.selectAddDuration('custom', this)">مخصص</button>
+                    </div>
+                    <div id="admin_add_custom_days_wrap" style="display:none; margin-top:8px;">
+                        <input type="number" id="admin_add_custom_days" placeholder="أدخل عدد الأيام المخصصة" min="1" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-weight:700; font-size:0.85rem;">نوع الاشتراك (Plan)</label>
+                    <div class="toggle-switch-group" style="margin-top:4px;">
+                        <div class="toggle-option active" id="lbl-plan-unlimited" onclick="app.handleAddPlanClick('unlimited')">
+                            ♾️ غير محدود
+                        </div>
+                        <div class="toggle-option" id="lbl-plan-points" onclick="app.handleAddPlanClick('points')">
+                            🪙 بالنقاط
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-weight:700; font-size:0.85rem;">مصدر دفع التقارير (Payment Source)</label>
+                    <div class="toggle-switch-group" style="margin-top:4px;">
+                        <div class="toggle-option active" id="lbl-pay-unlimited" onclick="app.handleAddPaySourceClick('unlimited')">
+                            ♾️ غير محدود (0 نقاط)
+                        </div>
+                        <div class="toggle-option" id="lbl-pay-points" onclick="app.handleAddPaySourceClick('points')">
+                            🪙 نقاط (5 لكل تقرير)
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-weight:700; font-size:0.85rem;">الرصيد المبدئي من النقاط</label>
+                    <input type="number" id="admin_add_points" value="0" min="0" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-top:4px;">
+                </div>
+            </div>
+            <div class="admin-modal-footer">
+                <button type="button" class="btn-primary" id="btn-admin-submit-add" onclick="app.submitAddUser()" style="flex:2; padding:12px; font-weight:700; border-radius:8px;">💾 حفظ المشترك</button>
+                <button type="button" class="btn-secondary" onclick="app.closeAdminModals()" style="flex:1; padding:12px; font-weight:600; border-radius:8px;">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Manage Subscriber Modal -->
+    <div id="admin-manage-modal" class="admin-modal-backdrop" style="display:none;">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <h3>⚙️ إدارة بيانات المشترك</h3>
+                <button class="admin-modal-close" onclick="app.closeAdminModals()">✖</button>
+            </div>
+            <div class="admin-modal-body">
+                <!-- User Details Summary Card -->
+                <div class="admin-user-summary-card" id="admin-manage-user-card">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Section: Points Management -->
+                <div class="admin-modal-subgroup">
+                    <h4>🪙 إدارة رصيد النقاط</h4>
+                    <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                        <input type="number" id="admin_pts_input" placeholder="عدد النقاط" value="100" min="1" style="flex:1; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="btn-success" id="btn-admin-add-pts" onclick="app.adminModifyPoints('add', this)" style="flex:1;">➕ إضافة نقاط</button>
+                        <button type="button" class="btn-warning" id="btn-admin-remove-pts" onclick="app.adminModifyPoints('remove', this)" style="flex:1;">➖ خصم نقاط</button>
+                    </div>
+                </div>
+
+                <!-- Section: Payment Source Toggle -->
+                <div class="admin-modal-subgroup">
+                    <h4>🪙 مصدر دفع التقارير</h4>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="btn-toggle-option" id="btn-set-paysrc-unlimited" onclick="app.adminSetPaymentSource('unlimited', this)" style="flex:1;">♾️ استخدام غير محدود</button>
+                        <button type="button" class="btn-toggle-option" id="btn-set-paysrc-points" onclick="app.adminSetPaymentSource('points', this)" style="flex:1;">🪙 خصم 5 نقاط</button>
+                    </div>
+                </div>
+
+                <!-- Section: Status Toggle -->
+                <div class="admin-modal-subgroup">
+                    <h4>🚦 حالة الحساب</h4>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="btn-status-act" id="btn-status-active" onclick="app.adminSetStatus('active', this)" style="flex:1;">▶️ تفعيل الحساب</button>
+                        <button type="button" class="btn-status-susp" id="btn-status-suspended" onclick="app.adminSetStatus('suspended', this)" style="flex:1;">⏸️ إيقاف مؤقت</button>
+                    </div>
+                </div>
+
+                <!-- Section: Subscription Renewal -->
+                <div class="admin-modal-subgroup">
+                    <h4>♻️ تجديد مدة الاشتراك</h4>
+                    <div class="duration-preset-grid" style="margin-bottom:8px;">
+                        <button type="button" class="btn-preset" id="btn-renew-30" onclick="app.adminRenew(30, this)">+30 يوم</button>
+                        <button type="button" class="btn-preset" id="btn-renew-60" onclick="app.adminRenew(60, this)">+60 يوم</button>
+                        <button type="button" class="btn-preset" id="btn-renew-90" onclick="app.adminRenew(90, this)">+90 يوم</button>
+                        <button type="button" class="btn-preset" id="btn-renew-365" onclick="app.adminRenew(365, this)">+365 يوم</button>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="admin_renew_custom_days" placeholder="أيام مخصصة" min="1" style="flex:1; padding:8px 10px; border-radius:8px; border:1px solid #cbd5e1;">
+                        <button type="button" class="btn-sub-action-sub" id="btn-renew-custom" onclick="app.adminRenewCustom(this)" style="padding:8px 16px;">تجديد مخصص</button>
+                    </div>
+                </div>
+
+                <!-- Section: View Reports & Logs -->
+                <div class="admin-modal-subgroup">
+                    <h4>📄 التقارير والسجلات</h4>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="btn-info" id="btn-view-reports" onclick="app.openUserReportsModal(this)" style="flex:1;">📄 عرض التقارير</button>
+                        <button type="button" class="btn-info" id="btn-view-logs" onclick="app.openUserLogsModal(this)" style="flex:1;">📋 سجل العمليات</button>
+                    </div>
+                </div>
+
+                <!-- Section: Cancel Subscription -->
+                <div class="admin-modal-subgroup" style="border-color:#fee2e2; background:#fef2f2;">
+                    <h4 style="color:#b91c1c;">⚠️ إلغاء الاشتراك</h4>
+                    <p style="font-size:0.8rem; color:#666; margin-bottom:8px;">إلغاء الاشتراك يمنع استخراج التقارير مع الحفاظ على البيانات بالسجلات.</p>
+                    <button type="button" class="btn-danger" id="btn-admin-cancel" onclick="app.promptCancelSubscription()" style="width:100%;">❌ إلغاء الاشتراك</button>
+                    <div id="admin-cancel-confirm-box" style="display:none; margin-top:10px; padding:10px; background:#fff; border-radius:8px; border:1px solid #f87171;">
+                        <p style="color:#b91c1c; font-size:0.85rem; font-weight:bold; margin-bottom:8px;">هل أنت متأكد من إلغاء اشتراك المشترك نهائياً؟</p>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-danger" id="btn-confirm-cancel-now" onclick="app.executeCancelSubscription(this)" style="flex:1;">تأكيد الإلغاء</button>
+                            <button type="button" class="btn-sub-action-sub" onclick="document.getElementById('admin-cancel-confirm-box').style.display='none'" style="flex:1;">تراجع</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-modal-footer">
+                <button type="button" class="btn-secondary" onclick="app.closeAdminModals()" style="width:100%; padding:12px; border-radius:8px; font-weight:600;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. User Reports Modal -->
+    <div id="admin-reports-modal" class="admin-modal-backdrop" style="display:none;">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <h3>📄 تقارير المشترك</h3>
+                <button class="admin-modal-close" onclick="document.getElementById('admin-reports-modal').style.display='none'">✖</button>
+            </div>
+            <div class="admin-modal-body" id="admin-reports-modal-body">
+                <div style="text-align:center; padding:20px; color:#888;">⏳ جاري التحميل...</div>
+            </div>
+            <div class="admin-modal-footer">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('admin-reports-modal').style.display='none'" style="width:100%; padding:10px; border-radius:8px;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. User Logs Modal -->
+    <div id="admin-logs-modal" class="admin-modal-backdrop" style="display:none;">
+        <div class="admin-modal-box">
+            <div class="admin-modal-header">
+                <h3>📋 سجل العمليات (Audit Log)</h3>
+                <button class="admin-modal-close" onclick="document.getElementById('admin-logs-modal').style.display='none'">✖</button>
+            </div>
+            <div class="admin-modal-body" id="admin-logs-modal-body">
+                <div style="text-align:center; padding:20px; color:#888;">⏳ جاري التحميل...</div>
+            </div>
+            <div class="admin-modal-footer">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('admin-logs-modal').style.display='none'" style="width:100%; padding:10px; border-radius:8px;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Admin Login Modal (Zero window.prompt) -->
+    <div id="admin-login-modal" class="admin-modal-backdrop" style="display:none;">
+        <div class="admin-modal-box" style="max-width:380px;">
+            <div class="admin-modal-header">
+                <h3>🔐 تسجيل دخول المشرف</h3>
+                <button class="admin-modal-close" onclick="document.getElementById('admin-login-modal').style.display='none'">✖</button>
+            </div>
+            <div class="admin-modal-body">
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="font-size:0.9rem; font-weight:700;">الرمز السري للوحة المشرف:</label>
+                    <input type="password" id="admin_login_code" placeholder="أدخل رمز المشرف السري" style="width:100%; padding:12px; font-size:16px; text-align:center; letter-spacing:2px; border-radius:8px; border:1px solid #cbd5e1; margin-top:8px;">
+                </div>
+            </div>
+            <div class="admin-modal-footer">
+                <button type="button" class="btn-primary" id="btn-admin-submit-login" onclick="app.submitAdminLogin(this)" style="width:100%; padding:12px; border-radius:8px; font-weight:700;">دخول</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating In-App Toast Banner (Zero window.alert) -->
+    <div id="admin-toast" class="admin-toast-banner" style="display:none;"></div>
+
+    <!-- Application Logic (Loaded after all DOM elements & modals) -->
+    <script src="app.js?v=6000"></script>
 </body>
 </html>
