@@ -11,7 +11,7 @@ let currentAdminToken = null;
 
 
 // Configuration
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2nTthvJR_ysJNaQk';
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=47';
@@ -21,6 +21,35 @@ const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
 
 const app = express();
+// Health Check for Render
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+class Mutex {
+    constructor() {
+        this.queue = [];
+        this.locked = false;
+    }
+    async lock() {
+        return new Promise(resolve => {
+            this.queue.push(resolve);
+            this.dispatch();
+        });
+    }
+    unlock() {
+        this.locked = false;
+        this.dispatch();
+    }
+    dispatch() {
+        if (this.locked || this.queue.length === 0) return;
+        this.locked = true;
+        const next = this.queue.shift();
+        next();
+    }
+}
+const dbMutex = new Mutex();
+
 
 // Middleware
 app.use(cors());
@@ -28,7 +57,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 
 // Local database path
-const subscriptionsPath = path.join(__dirname, 'subscriptions.json');
+const subscriptionsPath = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'subscriptions.json') : path.join(__dirname, 'subscriptions.json');
 
 // Helper to compute remaining subscription days
 const getDaysRemaining = (expiresAt) => {
@@ -929,6 +958,7 @@ app.get('/api/admin/web/users', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/web/user/update', express.json(), verifyAdmin, async (req, res) => {
+    await dbMutex.lock();
     try {
         const { chatId, action, data } = req.body;
         const db = await loadLocalSubscriptions();
@@ -995,6 +1025,8 @@ app.post('/api/admin/web/user/update', express.json(), verifyAdmin, async (req, 
         res.json({ success: true, user: normalizeSubscription(sub) });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
+    } finally {
+        dbMutex.unlock();
     }
 });
 
@@ -1092,6 +1124,7 @@ app.get('/api/user/:chatId', async (req, res) => {
 
 // 1.5 Generate PDF / Save Report Draft
 app.post('/api/generate', async (req, res) => {
+    await dbMutex.lock();
     try {
         const { chatId, report } = req.body;
         if (!chatId || !report) return res.status(400).json({ success: false, error: 'Invalid data' });
@@ -1157,6 +1190,8 @@ app.post('/api/generate', async (req, res) => {
         res.json({ success: true, report, generatedAt: new Date().toISOString() });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
+    } finally {
+        dbMutex.unlock();
     }
 });
 
@@ -2021,3 +2056,5 @@ startServer();
         }
     } catch(e) {}
 })();
+
+function logTransaction(sub, cid, type, amount, reason, by, reportId = null) { if (!sub.transactions) sub.transactions = []; sub.transactions.push({ id: 'txn_' + Date.now() + Math.floor(Math.random()*1000), chat_id: cid, type, amount, balance_before: sub.balance_points || 0, balance_after: (sub.balance_points || 0) + (type==='points_remove'? -amount : amount), reason, performed_by: by, created_at: new Date().toISOString() }); }
