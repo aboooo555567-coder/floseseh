@@ -472,72 +472,706 @@ const app = {
 
     copyReportId(id) {
         navigator.clipboard.writeText(id).then(() => {
-            if(this.tg) this.tg.showAlert('تم نسخ رقم التقرير!');
-            else alert('تم النسخ');
+            this.showToast('تم نسخ رقم التقرير!');
         });
     },
 
     
+    // Admin Module State
+    adminState: {
+        users: [],
+        stats: {},
+        activeFilter: 'all',
+        searchQuery: '',
+        selectedUser: null,
+        addDurationDays: 30,
+        addPlan: 'unlimited',
+        addPaySource: 'unlimited'
+    },
+
+    // In-App Toast (Zero window.alert)
+    showToast(message, type = 'success') {
+        const toast = document.getElementById('admin-toast');
+        if (!toast) return;
+        toast.className = `admin-toast-banner toast-${type}`;
+        const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
+        toast.innerHTML = `<span style="font-size:1.1rem;">${icon}</span> <span>${message}</span>`;
+        toast.style.display = 'flex';
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3500);
+    },
+
+    // Safe button wrapper with loading state (Guaranteed finally restore)
+    async executeAdminBtn(btn, asyncFn) {
+        if (!btn) return await asyncFn();
+        const origHtml = btn.innerHTML;
+        const origDisabled = btn.disabled;
+        btn.disabled = true;
+        btn.innerHTML = '⏳ جاري التنفيذ...';
+        try {
+            return await asyncFn();
+        } finally {
+            btn.disabled = origDisabled;
+            btn.innerHTML = origHtml;
+        }
+    },
+
+    // Admin headers for Telegram initData or token auth
+    getAdminHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.tg && this.tg.initData) {
+            headers['x-telegram-init-data'] = this.tg.initData;
+        }
+        if (this.state.adminToken) {
+            headers['x-admin-token'] = this.state.adminToken;
+        }
+        const saved = localStorage.getItem('sehaAdminToken');
+        if (saved && !this.state.adminToken) {
+            headers['x-admin-token'] = saved;
+        }
+        return headers;
+    },
+
+    // Admin Login Trigger (Zero window.prompt)
     promptAdminLogin() {
         const savedToken = localStorage.getItem('sehaAdminToken');
-        if (savedToken === "ZAK-99X-ADMIN-2026") {
-            this.state.adminToken = savedToken;
+        const isOwnerChat = (this.state.chatId === '6316398194' || (this.tg && this.tg.initDataUnsafe?.user?.id?.toString() === '6316398194'));
+        
+        if (isOwnerChat || savedToken === "ZAK-99X-ADMIN-2026" || this.state.adminToken) {
+            if (savedToken) this.state.adminToken = savedToken;
             this.navigate('admin');
             return;
         }
 
-        const code = prompt("أدخل الرمز السري للإدارة:");
-        if (code === "ZAK-99X-ADMIN-2026") {
-            this.state.adminToken = code;
-            localStorage.setItem('sehaAdminToken', code);
-            this.navigate('admin');
-        } else if (code !== null) {
-            alert("الرمز السري غير صحيح 🚫");
+        // Open custom HTML modal instead of prompt()
+        const modal = document.getElementById('admin-login-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            const input = document.getElementById('admin_login_code');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
         }
     },
 
+    async submitAdminLogin(btn) {
+        await this.executeAdminBtn(btn, async () => {
+            const codeInput = document.getElementById('admin_login_code');
+            const code = codeInput ? codeInput.value.trim() : '';
+            if (code === "ZAK-99X-ADMIN-2026") {
+                this.state.adminToken = code;
+                localStorage.setItem('sehaAdminToken', code);
+                document.getElementById('admin-login-modal').style.display = 'none';
+                this.showToast('تم تسجيل الدخول بنجاح كمدير للنظام', 'success');
+                this.navigate('admin');
+            } else {
+                this.showToast('الرمز السري غير صحيح 🚫', 'error');
+            }
+        });
+    },
+
+    // Screen Navigation
     navigate(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(`${screenId}-screen`).classList.add('active');
-        if(screenId === 'dashboard') {
-            document.getElementById('fab-menu').style.display = 'block';
-        } else {
-            document.getElementById('fab-menu').style.display = 'none';
+        const targetScreen = document.getElementById(`${screenId}-screen`);
+        if (targetScreen) targetScreen.classList.add('active');
+        
+        const fab = document.getElementById('fab-menu');
+        if (fab) {
+            fab.style.display = (screenId === 'dashboard') ? 'block' : 'none';
+        }
+        
+        if (screenId === 'admin') {
+            this.loadAdminData();
         }
     },
 
-    
-    async addSubscriber() {
-        const id = document.getElementById('admin_chat_id').value.trim();
-        const subType = document.querySelector('input[name="admin_sub_type"]:checked').value;
-        
-        let days = 0;
-        let points = 0;
-        if (subType === 'unlimited') {
-            days = parseInt(document.getElementById('admin_days').value) || 0;
-        } else {
-            points = parseInt(document.getElementById('admin_points').value) || 0;
+    // Fetch and render admin data
+    async loadAdminData(btn) {
+        const listEl = document.getElementById('admin-subscribers-list');
+        if (listEl && (!this.adminState.users || this.adminState.users.length === 0)) {
+            listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">⏳ جاري تحميل بيانات المشتركين...</div>';
         }
-        
-        if (!id) return alert('الرجاء إدخال ايدي المشترك');
-        
-        try {
-            const res = await fetch(`/api/admin/package`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: this.state.adminToken, chatId: id, points: points, subscriptionDays: days })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert(`تم تفعيل المشترك بنجاح!\nالرصيد الحالي: ${data.points} تقرير\nأيام الاشتراك: ${data.subscriptionDays} يوم`);
-                document.getElementById('admin_chat_id').value = '';
-                this.navigate('dashboard');
-            } else {
-                alert('خطأ: ' + data.error);
+
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const headers = this.getAdminHeaders();
+                const [statsRes, usersRes] = await Promise.all([
+                    fetch('/api/admin/web/stats', { headers }),
+                    fetch('/api/admin/web/users', { headers })
+                ]);
+
+                if (statsRes.status === 401 || usersRes.status === 401) {
+                    this.showToast('غير مصرح لك (تحتاج صلاحية المشرف)', 'error');
+                    this.promptAdminLogin();
+                    return;
+                }
+
+                const statsData = await statsRes.json();
+                const usersData = await usersRes.json();
+
+                if (statsData.success && statsData.stats) {
+                    this.adminState.stats = statsData.stats;
+                    this.renderAdminStats();
+                }
+
+                if (usersData.success && Array.isArray(usersData.users)) {
+                    this.adminState.users = usersData.users;
+                    this.renderAdminUsers();
+                }
+            } catch (err) {
+                console.error('Error loading admin data:', err);
+                this.showToast('فشل في تحميل بيانات الإدارة: ' + err.message, 'error');
             }
-        } catch (e) {
-            alert('حدث خطأ في الاتصال: ' + e.message);
+        });
+    },
+
+    renderAdminStats() {
+        const s = this.adminState.stats || {};
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = (val != null) ? val : '0';
+        };
+        setVal('stat-total-users', s.totalSubscribers);
+        setVal('stat-active-users', s.activeSubscribers);
+        setVal('stat-suspended-users', s.suspendedSubscribers);
+        setVal('stat-cancelled-users', s.expiredSubscribers);
+        setVal('stat-total-reports', s.totalReports);
+        setVal('stat-total-points', s.totalPoints);
+        setVal('stat-points-users', s.pointsSubscribers);
+        setVal('stat-unlimited-users', s.unlimitedSubscribers);
+    },
+
+    renderAdminUsers() {
+        const listEl = document.getElementById('admin-subscribers-list');
+        if (!listEl) return;
+
+        let filtered = (this.adminState.users || []).slice();
+        
+        // Filter by Status Tab
+        if (this.adminState.activeFilter === 'active') {
+            filtered = filtered.filter(u => u.status === 'active' && u.daysRemaining > 0);
+        } else if (this.adminState.activeFilter === 'suspended') {
+            filtered = filtered.filter(u => u.status === 'suspended');
+        } else if (this.adminState.activeFilter === 'cancelled') {
+            filtered = filtered.filter(u => u.status === 'cancelled' || u.daysRemaining <= 0);
         }
+
+        // Filter by Search Query
+        if (this.adminState.searchQuery) {
+            const q = this.adminState.searchQuery.toLowerCase().trim();
+            filtered = filtered.filter(u => 
+                String(u.chatId).toLowerCase().includes(q) ||
+                String(u.username || '').toLowerCase().includes(q) ||
+                String(u.name || '').toLowerCase().includes(q)
+            );
+        }
+
+        if (filtered.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding:35px; color:#94a3b8; font-weight:600;">لا توجد نتائج مطابقة</div>';
+            return;
+        }
+
+        let html = '';
+        for (const u of filtered) {
+            const isOwner = (String(u.chatId) === '6316398194' || u.username?.toLowerCase() === 'zakaria_2025');
+            const statusClass = u.status === 'active' && u.daysRemaining > 0 ? 'badge-active' : (u.status === 'suspended' ? 'badge-suspended' : 'badge-cancelled');
+            const statusLabel = u.status === 'active' && u.daysRemaining > 0 ? '🟢 فعال' : (u.status === 'suspended' ? '⏸️ موقوف' : (u.status === 'cancelled' ? '❌ ملغي' : '⏳ منتهي'));
+            
+            const payBadge = u.report_payment_source === 'unlimited' ? '<span class="badge badge-unlimited">♾️ غير محدود</span>' : '<span class="badge badge-points">🪙 نقاط</span>';
+            const ownerBadge = isOwner ? '<span class="badge badge-owner">👑 المالك</span>' : '';
+
+            html += `
+            <div class="admin-subscriber-card ${isOwner ? 'is-owner' : ''}" id="user-card-${u.chatId}">
+                <div class="sub-card-header">
+                    <div>
+                        <div class="sub-card-name">
+                            <span>${u.name || (u.username ? '@' + u.username : 'مشترك')}</span>
+                            ${ownerBadge}
+                        </div>
+                        <div class="sub-card-cid">ID: ${u.chatId} ${u.username ? '(@' + u.username + ')' : ''}</div>
+                    </div>
+                    <span class="badge ${statusClass}">${statusLabel}</span>
+                </div>
+                
+                <div class="sub-card-badges">
+                    ${payBadge}
+                    <span class="badge" style="background:#f1f5f9; color:#475569;">${u.plan === 'unlimited' ? 'باقة غير محدودة' : 'باقة نقاط'}</span>
+                </div>
+
+                <div class="sub-card-meta-grid">
+                    <div class="sub-meta-item">
+                        <div class="val">${u.points || 0}</div>
+                        <div class="lbl">الرصيد (نقاط)</div>
+                    </div>
+                    <div class="sub-meta-item">
+                        <div class="val">${u.daysRemaining || 0}</div>
+                        <div class="lbl">الأيام المتبقية</div>
+                    </div>
+                    <div class="sub-meta-item">
+                        <div class="val">${u.reportsCount || 0}</div>
+                        <div class="lbl">التقارير</div>
+                    </div>
+                </div>
+
+                <div class="sub-card-actions">
+                    <button type="button" class="btn-sub-action-main" onclick="app.openManageUserModal('${u.chatId}')">⚙️ إدارة المشترك</button>
+                    <button type="button" class="btn-sub-action-sub" onclick="app.openDirectUserReports('${u.chatId}', this)">📄 التقارير</button>
+                    <button type="button" class="btn-sub-action-sub" onclick="app.openDirectUserLogs('${u.chatId}', this)">📋 السجل</button>
+                </div>
+            </div>`;
+        }
+
+        listEl.innerHTML = html;
+    },
+
+    handleAdminSearch(val) {
+        this.adminState.searchQuery = val;
+        this.renderAdminUsers();
+    },
+
+    setAdminFilter(filter, btn) {
+        this.adminState.activeFilter = filter;
+        document.querySelectorAll('.admin-filter-tab').forEach(t => t.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        this.renderAdminUsers();
+    },
+
+    // Modal helpers
+    closeAdminModals() {
+        ['admin-add-modal', 'admin-manage-modal', 'admin-reports-modal', 'admin-logs-modal', 'admin-login-modal'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        const confirmBox = document.getElementById('admin-cancel-confirm-box');
+        if (confirmBox) confirmBox.style.display = 'none';
+    },
+
+    openAddUserModal() {
+        this.closeAdminModals();
+        const modal = document.getElementById('admin-add-modal');
+        if (!modal) return;
+        
+        document.getElementById('admin_add_chat_id').value = '';
+        document.getElementById('admin_add_username').value = '';
+        document.getElementById('admin_add_name').value = '';
+        document.getElementById('admin_add_points').value = '0';
+        this.selectAddDuration(30);
+        this.handleAddPlanClick('unlimited');
+        this.handleAddPaySourceClick('unlimited');
+        
+        modal.style.display = 'flex';
+    },
+
+    selectAddDuration(days, btn) {
+        this.adminState.addDurationDays = days;
+        document.querySelectorAll('#admin-add-modal .btn-preset').forEach(b => b.classList.remove('active'));
+        if (btn) {
+            btn.classList.add('active');
+        } else {
+            const presetBtn = document.querySelector(`#admin-add-modal .btn-preset[data-days="${days}"]`);
+            if (presetBtn) presetBtn.classList.add('active');
+        }
+        
+        const customWrap = document.getElementById('admin_add_custom_days_wrap');
+        if (customWrap) {
+            customWrap.style.display = (days === 'custom') ? 'block' : 'none';
+        }
+    },
+
+    handleAddPlanClick(plan) {
+        this.adminState.addPlan = plan;
+        const u = document.getElementById('lbl-plan-unlimited');
+        const p = document.getElementById('lbl-plan-points');
+        if (u && p) {
+            if (plan === 'unlimited') {
+                u.classList.add('active');
+                p.classList.remove('active');
+            } else {
+                p.classList.add('active');
+                u.classList.remove('active');
+            }
+        }
+    },
+
+    handleAddPaySourceClick(source) {
+        this.adminState.addPaySource = source;
+        const u = document.getElementById('lbl-pay-unlimited');
+        const p = document.getElementById('lbl-pay-points');
+        if (u && p) {
+            if (source === 'unlimited') {
+                u.classList.add('active');
+                p.classList.remove('active');
+            } else {
+                p.classList.add('active');
+                u.classList.remove('active');
+            }
+        }
+    },
+
+    async submitAddUser() {
+        const btn = document.getElementById('btn-admin-submit-add');
+        await this.executeAdminBtn(btn, async () => {
+            const chatId = document.getElementById('admin_add_chat_id').value.trim();
+            const username = document.getElementById('admin_add_username').value.trim();
+            const name = document.getElementById('admin_add_name').value.trim();
+            const points = parseInt(document.getElementById('admin_add_points').value) || 0;
+            
+            let days = this.adminState.addDurationDays;
+            if (days === 'custom') {
+                days = parseInt(document.getElementById('admin_add_custom_days').value) || 0;
+            }
+
+            if (!chatId) {
+                this.showToast('الرجاء إدخال الـ Chat ID', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/web/user/add', {
+                    method: 'POST',
+                    headers: this.getAdminHeaders(),
+                    body: JSON.stringify({
+                        chatId,
+                        username,
+                        name,
+                        subscriptionDays: days,
+                        plan: this.adminState.addPlan,
+                        balance_points: points,
+                        report_payment_source: this.adminState.addPaySource
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    this.showToast('تمت إضافة المشترك بنجاح ✅', 'success');
+                    this.closeAdminModals();
+                    // Add to local state and update UI instantly
+                    if (data.user) {
+                        this.adminState.users.unshift(data.user);
+                    }
+                    this.renderAdminUsers();
+                    // Refresh stats
+                    this.loadAdminData();
+                } else {
+                    this.showToast(data.error || 'فشلت إضافة المشترك', 'error');
+                }
+            } catch (err) {
+                this.showToast('خطأ في الاتصال: ' + err.message, 'error');
+            }
+        });
+    },
+
+    openManageUserModal(chatId) {
+        const user = (this.adminState.users || []).find(u => String(u.chatId) === String(chatId));
+        if (!user) {
+            this.showToast('المشترك غير موجود', 'error');
+            return;
+        }
+
+        this.adminState.selectedUser = user;
+        this.renderManageModalContent(user);
+        
+        const modal = document.getElementById('admin-manage-modal');
+        if (modal) modal.style.display = 'flex';
+    },
+
+    renderManageModalContent(u) {
+        const cardEl = document.getElementById('admin-manage-user-card');
+        if (cardEl) {
+            const isOwner = (String(u.chatId) === '6316398194' || u.username?.toLowerCase() === 'zakaria_2025');
+            cardEl.innerHTML = `
+                <div style="font-weight:800; font-size:1.05rem; color:#0f172a; margin-bottom:6px;">
+                    ${u.name || (u.username ? '@' + u.username : 'مشترك')}
+                    ${isOwner ? '<span class="badge badge-owner" style="margin-right:6px;">👑 المالك</span>' : ''}
+                </div>
+                <div class="summary-line"><span>Chat ID:</span> <span style="font-family:monospace; direction:ltr;">${u.chatId}</span></div>
+                <div class="summary-line"><span>اسم المستخدم:</span> <span>${u.username ? '@' + u.username : 'غير محدد'}</span></div>
+                <div class="summary-line"><span>الحالة:</span> <span>${u.status === 'active' && u.daysRemaining > 0 ? '🟢 فعال' : (u.status === 'suspended' ? '⏸️ موقوف' : '❌ ملغي / منتهي')}</span></div>
+                <div class="summary-line"><span>مصدر الدفع:</span> <span>${u.report_payment_source === 'unlimited' ? '♾️ غير محدود' : '🪙 بالنقاط (5/تقرير)'}</span></div>
+                <div class="summary-line"><span>الرصيد الحالي:</span> <span>${u.points || 0} نقطة</span></div>
+                <div class="summary-line"><span>تاريخ البداية:</span> <span>${u.subscription_start_date ? u.subscription_start_date.split('T')[0] : '-'}</span></div>
+                <div class="summary-line"><span>تاريخ النهاية:</span> <span>${u.subscription_end_date ? u.subscription_end_date.split('T')[0] : '-'}</span></div>
+                <div class="summary-line"><span>الأيام المتبقية:</span> <span>${u.daysRemaining || 0} يوم</span></div>
+                <div class="summary-line"><span>عدد التقارير:</span> <span>${u.reportsCount || 0} تقرير</span></div>
+            `;
+        }
+
+        // Highlight active toggle buttons
+        const btnUnl = document.getElementById('btn-set-paysrc-unlimited');
+        const btnPts = document.getElementById('btn-set-paysrc-points');
+        if (btnUnl && btnPts) {
+            if (u.report_payment_source === 'unlimited') {
+                btnUnl.classList.add('active');
+                btnPts.classList.remove('active');
+            } else {
+                btnPts.classList.add('active');
+                btnUnl.classList.remove('active');
+            }
+        }
+        
+        const confirmBox = document.getElementById('admin-cancel-confirm-box');
+        if (confirmBox) confirmBox.style.display = 'none';
+    },
+
+    async adminModifyPoints(action, btn) {
+        if (!this.adminState.selectedUser) return;
+        const input = document.getElementById('admin_pts_input');
+        const amount = parseInt(input ? input.value : 0) || 0;
+        if (amount <= 0) {
+            this.showToast('الرجاء إدخال عدد نقاط صحيح أكبر من صفر', 'error');
+            return;
+        }
+
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const res = await fetch('/api/admin/web/user/update', {
+                    method: 'POST',
+                    headers: this.getAdminHeaders(),
+                    body: JSON.stringify({
+                        chatId: this.adminState.selectedUser.chatId,
+                        action: action === 'add' ? 'add_points' : 'remove_points',
+                        amount: amount
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.user) {
+                    this.showToast(data.message, 'success');
+                    this.updateUserInState(data.user);
+                } else {
+                    this.showToast(data.error || 'فشلت العملية', 'error');
+                }
+            } catch (err) {
+                this.showToast('خطأ في الاتصال: ' + err.message, 'error');
+            }
+        });
+    },
+
+    async adminSetPaymentSource(source, btn) {
+        if (!this.adminState.selectedUser) return;
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const res = await fetch('/api/admin/web/user/update', {
+                    method: 'POST',
+                    headers: this.getAdminHeaders(),
+                    body: JSON.stringify({
+                        chatId: this.adminState.selectedUser.chatId,
+                        action: 'set_payment_source',
+                        paymentSource: source
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.user) {
+                    this.showToast(data.message, 'success');
+                    this.updateUserInState(data.user);
+                } else {
+                    this.showToast(data.error || 'فشلت العملية', 'error');
+                }
+            } catch (err) {
+                this.showToast('خطأ في الاتصال: ' + err.message, 'error');
+            }
+        });
+    },
+
+    async adminSetStatus(status, btn) {
+        if (!this.adminState.selectedUser) return;
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const res = await fetch('/api/admin/web/user/update', {
+                    method: 'POST',
+                    headers: this.getAdminHeaders(),
+                    body: JSON.stringify({
+                        chatId: this.adminState.selectedUser.chatId,
+                        action: 'set_status',
+                        status: status
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.user) {
+                    this.showToast(data.message, 'success');
+                    this.updateUserInState(data.user);
+                } else {
+                    this.showToast(data.error || 'فشلت العملية', 'error');
+                }
+            } catch (err) {
+                this.showToast('خطأ في الاتصال: ' + err.message, 'error');
+            }
+        });
+    },
+
+    async adminRenew(days, btn) {
+        if (!this.adminState.selectedUser) return;
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const res = await fetch('/api/admin/web/user/update', {
+                    method: 'POST',
+                    headers: this.getAdminHeaders(),
+                    body: JSON.stringify({
+                        chatId: this.adminState.selectedUser.chatId,
+                        action: 'renew',
+                        days: days
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.user) {
+                    this.showToast(data.message, 'success');
+                    this.updateUserInState(data.user);
+                } else {
+                    this.showToast(data.error || 'فشلت العملية', 'error');
+                }
+            } catch (err) {
+                this.showToast('خطأ في الاتصال: ' + err.message, 'error');
+            }
+        });
+    },
+
+    async adminRenewCustom(btn) {
+        const input = document.getElementById('admin_renew_custom_days');
+        const days = parseInt(input ? input.value : 0) || 0;
+        if (days <= 0) {
+            this.showToast('الرجاء إدخال عدد أيام صحيح', 'error');
+            return;
+        }
+        await this.adminRenew(days, btn);
+    },
+
+    promptCancelSubscription() {
+        const box = document.getElementById('admin-cancel-confirm-box');
+        if (box) box.style.display = 'block';
+    },
+
+    async executeCancelSubscription(btn) {
+        if (!this.adminState.selectedUser) return;
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const res = await fetch('/api/admin/web/user/update', {
+                    method: 'POST',
+                    headers: this.getAdminHeaders(),
+                    body: JSON.stringify({
+                        chatId: this.adminState.selectedUser.chatId,
+                        action: 'cancel'
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.user) {
+                    this.showToast(data.message, 'success');
+                    this.updateUserInState(data.user);
+                } else {
+                    this.showToast(data.error || 'فشلت العملية', 'error');
+                }
+            } catch (err) {
+                this.showToast('خطأ في الاتصال: ' + err.message, 'error');
+            }
+        });
+    },
+
+    updateUserInState(updatedUser) {
+        this.adminState.selectedUser = updatedUser;
+        const idx = (this.adminState.users || []).findIndex(u => String(u.chatId) === String(updatedUser.chatId));
+        if (idx >= 0) {
+            this.adminState.users[idx] = updatedUser;
+        }
+        this.renderManageModalContent(updatedUser);
+        this.renderAdminUsers();
+        this.loadAdminData();
+    },
+
+    async openUserReportsModal(btn) {
+        if (!this.adminState.selectedUser) return;
+        await this.openDirectUserReports(this.adminState.selectedUser.chatId, btn);
+    },
+
+    async openDirectUserReports(chatId, btn) {
+        const modal = document.getElementById('admin-reports-modal');
+        const body = document.getElementById('admin-reports-modal-body');
+        if (modal) modal.style.display = 'flex';
+        if (body) body.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">⏳ جاري تحميل التقارير...</div>';
+
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const res = await fetch(`/api/admin/web/user/${chatId}/reports`, {
+                    headers: this.getAdminHeaders()
+                });
+                const data = await res.json();
+                if (data.success && Array.isArray(data.reports)) {
+                    if (data.reports.length === 0) {
+                        body.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">لا توجد تقارير مسجلة لهذا المشترك</div>';
+                        return;
+                    }
+                    let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+                    for (const r of data.reports) {
+                        html += `
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px;">
+                            <div style="display:flex; justify-content:space-between; font-weight:700; font-size:0.9rem;">
+                                <span>${r.patientName || 'مريض'}</span>
+                                <span style="font-family:monospace; color:#0d9488;">${r.id || '-'}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; margin-top:4px;">
+                                <span>نوع: ${r.type === 'companion' ? 'مرافقة' : 'إجازة مرضية'}</span>
+                                <span>التاريخ: ${r.issueDate || '-'}</span>
+                            </div>
+                        </div>`;
+                    }
+                    html += '</div>';
+                    body.innerHTML = html;
+                } else {
+                    body.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">${data.error || 'فشل جلب التقارير'}</div>`;
+                }
+            } catch (err) {
+                body.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">خطأ: ${err.message}</div>`;
+            }
+        });
+    },
+
+    async openUserLogsModal(btn) {
+        if (!this.adminState.selectedUser) return;
+        await this.openDirectUserLogs(this.adminState.selectedUser.chatId, btn);
+    },
+
+    async openDirectUserLogs(chatId, btn) {
+        const modal = document.getElementById('admin-logs-modal');
+        const body = document.getElementById('admin-logs-modal-body');
+        if (modal) modal.style.display = 'flex';
+        if (body) body.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">⏳ جاري تحميل سجل العمليات...</div>';
+
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const res = await fetch(`/api/admin/web/user/${chatId}/logs`, {
+                    headers: this.getAdminHeaders()
+                });
+                const data = await res.json();
+                if (data.success && Array.isArray(data.logs)) {
+                    if (data.logs.length === 0) {
+                        body.innerHTML = '<div style="text-align:center; padding:25px; color:#94a3b8;">لا توجد حركات مسجلة لهذا المشترك</div>';
+                        return;
+                    }
+                    let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+                    for (const l of data.logs) {
+                        const dateStr = l.timestamp ? l.timestamp.replace('T', ' ').split('.')[0] : '-';
+                        html += `
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px;">
+                            <div style="display:flex; justify-content:space-between; font-weight:700; font-size:0.85rem; color:#0f172a;">
+                                <span>${l.details || l.operation}</span>
+                                <span style="font-size:0.75rem; color:#64748b;">${dateStr}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; margin-top:4px;">
+                                <span>العملية: <code>${l.operation}</code></span>
+                                ${l.amount != null ? `<span>الكمية: <b>${l.amount}</b></span>` : ''}
+                            </div>
+                        </div>`;
+                    }
+                    html += '</div>';
+                    body.innerHTML = html;
+                } else {
+                    body.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">${data.error || 'فشل جلب السجلات'}</div>`;
+                }
+            } catch (err) {
+                body.innerHTML = `<div style="text-align:center; color:#ef4444; padding:20px;">خطأ: ${err.message}</div>`;
+            }
+        });
     },
 
     toggleFab() {
@@ -667,7 +1301,7 @@ const app = {
     editReport(id) {
         const report = this.state.reports.find(r => r.id === id);
         if(!report || !report.data) {
-            alert('عذراً، بيانات هذا التقرير القديم غير متوفرة للتعديل.');
+            this.showToast('عذراً، بيانات هذا التقرير القديم غير متوفرة للتعديل.', 'error');
             return;
         }
         
@@ -714,8 +1348,7 @@ const app = {
         });
         
         if(!valid) {
-            if(this.tg) this.tg.showAlert('يرجى تعبئة الحقول المطلوبة.');
-            else alert('يرجى تعبئة الحقول المطلوبة.');
+            this.showToast('يرجى تعبئة الحقول المطلوبة.', 'error');
             return;
         }
 
@@ -824,8 +1457,7 @@ const app = {
     async submitForm() {
         // Final Validation
         if(!this.state.currentReportId && this.state.points < 5 && this.state.subscriptionDays <= 0) {
-            if(this.tg) this.tg.showAlert("ليس لديك رصيد. تحتاج 5 نقاط لإصدار تقرير جديد.");
-            else alert("ليس لديك رصيد. تحتاج 5 نقاط لإصدار تقرير جديد.");
+            this.showToast("ليس لديك رصيد. تحتاج 5 نقاط لإصدار تقرير جديد.", "error");
             return;
         }
 
@@ -836,7 +1468,7 @@ const app = {
             await this.populatePdfAndGenerate();
         } catch(e) {
             console.error(e);
-            alert("حدث خطأ أثناء إعداد التقرير: " + (e.message || e));
+            this.showToast("حدث خطأ أثناء إعداد التقرير: " + (e.message || e), "error");
             document.getElementById('loading-overlay').style.display = 'none';
         }
     },
@@ -992,7 +1624,7 @@ const app = {
         } catch(e) {
             console.error("PDF Generation error: ", e);
             fetch('/api/logs?msg=' + encodeURIComponent('Client_Error: ' + e.message));
-            alert("حدث خطأ أثناء إصدار التقرير: " + e.message);
+            this.showToast("حدث خطأ أثناء إصدار التقرير: " + e.message, "error");
             document.getElementById('loading-overlay').style.display = 'none';
         }
     },

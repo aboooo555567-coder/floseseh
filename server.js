@@ -9,15 +9,47 @@ const fs = require('fs').promises;
 const crypto = require('crypto');
 let currentAdminToken = null;
 
-
 // Configuration
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2nTthvJR_ysJNaQk';
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
-const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=47';
+const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=51';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
+const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '6316398194';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
+
+// Database Mutex Lock for safe concurrent reads & writes
+let dbMutex = Promise.resolve();
+const withDbLock = (fn) => {
+    const next = dbMutex.then(() => fn()).catch(err => {
+        console.error('dbMutex error:', err);
+        throw err;
+    });
+    dbMutex = next.catch(() => {});
+    return next;
+};
+
+// Transaction logging helper
+const logTransaction = (data, { admin_chat_id = ADMIN_CHAT_ID, target_chat_id, operation, amount = null, previous_value = null, new_value = null, details = '' }) => {
+    if (!data.transactions) data.transactions = [];
+    const entry = {
+        id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        timestamp: new Date().toISOString(),
+        admin_chat_id: String(admin_chat_id || ADMIN_CHAT_ID),
+        target_chat_id: String(target_chat_id || ''),
+        operation: String(operation),
+        amount: amount !== null ? Number(amount) : null,
+        previous_value: previous_value !== null ? String(previous_value) : null,
+        new_value: new_value !== null ? String(new_value) : null,
+        details: String(details || '')
+    };
+    data.transactions.unshift(entry);
+    if (data.transactions.length > 1000) {
+        data.transactions = data.transactions.slice(0, 1000);
+    }
+    return entry;
+};
 
 const app = express();
 
@@ -44,13 +76,39 @@ const normalizeSubscription = (user) => {
     if (!user) return null;
     const now = new Date();
     
-    // Migration helper: if they have subscriptionDays > 0 but no expires date
-    if (user.subscriptionDays > 0 && !user.subscriptionExpires) {
-        const expires = new Date(now.getTime() + user.subscriptionDays * 24 * 60 * 60 * 1000);
-        user.subscriptionExpires = expires.toISOString();
+    // Normalize points
+    user.points = Number(user.points != null ? user.points : (user.balance_points != null ? user.balance_points : 0));
+    user.balance_points = user.points;
+    
+    // Status normalization
+    if (!user.status) {
+        user.status = 'active';
     }
     
-    user.subscriptionDays = getDaysRemaining(user.subscriptionExpires);
+    // Migration helper: if they have subscriptionDays > 0 but no expires date
+    if (user.subscriptionDays > 0 && !user.subscriptionExpires && !user.subscription_end_date) {
+        const expires = new Date(now.getTime() + user.subscriptionDays * 24 * 60 * 60 * 1000);
+        user.subscriptionExpires = expires.toISOString();
+        user.subscription_end_date = expires.toISOString();
+    }
+    if (user.subscriptionExpires && !user.subscription_end_date) {
+        user.subscription_end_date = user.subscriptionExpires;
+    }
+    if (!user.subscription_start_date) {
+        user.subscription_start_date = user.updatedAt || new Date().toISOString();
+    }
+    
+    const endStr = user.subscription_end_date || user.subscriptionExpires;
+    user.daysRemaining = getDaysRemaining(endStr);
+    user.subscriptionDays = user.daysRemaining;
+    
+    const startObj = new Date(user.subscription_start_date);
+    user.daysUsed = isNaN(startObj.getTime()) ? 0 : Math.max(0, Math.floor((now.getTime() - startObj.getTime()) / (86400000)));
+    
+    user.plan = user.plan || (user.subscriptionDays > 0 ? 'unlimited' : 'points');
+    user.report_payment_source = user.report_payment_source || (user.plan === 'unlimited' ? 'unlimited' : 'points');
+    user.reportsCount = Array.isArray(user.reports) ? user.reports.length : 0;
+    
     return user;
 };
 
@@ -58,19 +116,116 @@ const normalizeSubscription = (user) => {
 const loadLocalSubscriptions = async () => {
     try {
         const data = await fs.readFile(subscriptionsPath, 'utf-8');
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        if (!parsed.subscriptions) parsed.subscriptions = {};
+        if (!parsed.transactions) parsed.transactions = [];
+        return parsed;
     } catch (e) {
-        return { subscriptions: {} };
+        return { subscriptions: {}, transactions: [] };
     }
 };
 
 // Write local subscriptions.json
 const saveLocalSubscriptions = async (data) => {
     try {
+        if (!data.subscriptions) data.subscriptions = {};
+        if (!data.transactions) data.transactions = [];
         await fs.writeFile(subscriptionsPath, JSON.stringify(data, null, 2), 'utf-8');
     } catch (e) {
         console.error('Error writing local subscriptions.json:', e.message);
     }
+};
+
+// Auto-bootstrap Owner Account (6316398194) with 10,000 points and 365-day active unlimited
+const bootstrapOwnerAccount = async () => {
+    return withDbLock(async () => {
+        const data = await loadLocalSubscriptions();
+        const ownerId = '6316398194';
+        const now = new Date();
+        const start = new Date('2026-09-15T00:00:00.000Z');
+        const end = new Date('2027-09-15T23:59:59.999Z');
+        
+        let owner = data.subscriptions[ownerId];
+        let needsSave = false;
+        
+        if (!owner) {
+            owner = {
+                username: 'zakaria_2025',
+                name: 'Zakaria Mohammed',
+                status: 'active',
+                plan: 'unlimited',
+                report_payment_source: 'unlimited',
+                points: 10000,
+                balance_points: 10000,
+                subscriptionDays: 365,
+                subscription_start_date: start.toISOString(),
+                subscription_end_date: end.toISOString(),
+                subscriptionExpires: end.toISOString(),
+                reports: [],
+                referredBy: null,
+                referralsCount: 0,
+                referralPoints: 0,
+                updatedAt: now.toISOString()
+            };
+            data.subscriptions[ownerId] = owner;
+            needsSave = true;
+            logTransaction(data, {
+                admin_chat_id: ownerId,
+                target_chat_id: ownerId,
+                operation: 'owner_bootstrap_create',
+                amount: 10000,
+                new_value: '10000 points, 365 days, active, unlimited',
+                details: 'Owner account created with 10,000 points and 365 days active unlimited'
+            });
+        } else {
+            if ((owner.points || 0) < 10000 || (owner.balance_points || 0) < 10000) {
+                const prev = owner.points || 0;
+                owner.points = 10000;
+                owner.balance_points = 10000;
+                needsSave = true;
+                logTransaction(data, {
+                    admin_chat_id: ownerId,
+                    target_chat_id: ownerId,
+                    operation: 'add_points',
+                    amount: 10000 - prev,
+                    previous_value: prev,
+                    new_value: 10000,
+                    details: 'Owner points restored/updated to 10,000 points'
+                });
+            }
+            if (owner.status !== 'active') {
+                owner.status = 'active';
+                needsSave = true;
+            }
+            if (owner.report_payment_source !== 'unlimited') {
+                owner.report_payment_source = 'unlimited';
+                needsSave = true;
+            }
+            if (!owner.subscription_end_date || new Date(owner.subscription_end_date) < new Date('2027-09-15T00:00:00.000Z')) {
+                owner.subscription_start_date = start.toISOString();
+                owner.subscription_end_date = end.toISOString();
+                owner.subscriptionExpires = end.toISOString();
+                owner.subscriptionDays = 365;
+                needsSave = true;
+            }
+            owner.username = 'zakaria_2025';
+            owner.name = owner.name || 'Zakaria Mohammed';
+            owner.updatedAt = now.toISOString();
+        }
+        
+        if (data.subscriptions['pending_zakaria_2025']) {
+            if (data.subscriptions['pending_zakaria_2025'].reports && data.subscriptions['pending_zakaria_2025'].reports.length > 0) {
+                owner.reports = [...(owner.reports || []), ...data.subscriptions['pending_zakaria_2025'].reports];
+            }
+            delete data.subscriptions['pending_zakaria_2025'];
+            needsSave = true;
+        }
+        
+        if (needsSave) {
+            await saveLocalSubscriptions(data);
+            console.log('✅ Owner account 6316398194 bootstrapped: 10,000 points, 365 days, active, unlimited');
+        }
+    });
 };
 
 // Find user subscription by Chat ID or Telegram Username
@@ -372,12 +527,20 @@ bot.onText(/\/buy/, async (msg) => {
     await sendPackagesMessage(chatId);
 });
 
+// Command /myid to display numeric Chat ID
+bot.onText(/\/myid/, async (msg) => {
+    const chatId = msg.chat.id.toString();
+    const isOwner = (chatId === ADMIN_CHAT_ID || chatId === '6316398194');
+    const ownerNote = isOwner ? '\n\n👑 أنت المالك/المشرف المعتمد للنظام.' : '';
+    await bot.sendMessage(chatId, `🆔 الـ Numeric Chat ID الخاص بك هو:\n<code>${chatId}</code>${ownerNote}`, { parse_mode: 'HTML' });
+});
+
 // /admin command
 bot.onText(/\/admin/, async (msg) => {
     const chatId = msg.chat.id.toString();
     const username = msg.from?.username;
-    const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
-    if (!username || !allowedAdmins.includes(username.toLowerCase())) {
+    const isAuthorized = (chatId === ADMIN_CHAT_ID || chatId === '6316398194' || (username && ['zakaria_2025', 'zakmmm_1211'].includes(username.toLowerCase())));
+    if (!isAuthorized) {
         await bot.sendMessage(chatId, 'عذراً، هذه القائمة للمسؤول فقط.');
         return;
     }
@@ -953,7 +1116,496 @@ app.post('/api/generate', async (req, res) => {
     }
 });
 
-// Secure Admin Endpoint to Add Packages
+// Admin Authentication Middleware / Helper
+const verifyAdmin = (req) => {
+    // 1. Check initData header, query, or body
+    const initData = req.headers['x-telegram-init-data'] || req.query.initData || req.body?.initData;
+    if (initData) {
+        try {
+            const urlParams = new URLSearchParams(initData);
+            const hash = urlParams.get('hash');
+            urlParams.delete('hash');
+            
+            const params = [];
+            for (const [key, val] of urlParams.entries()) {
+                params.push(`${key}=${val}`);
+            }
+            params.sort();
+            const dataCheckString = params.join('\n');
+            
+            const secretKey = crypto.createHmac('sha256', 'WebAppData').update(TOKEN).digest();
+            const calculatedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+            
+            if (calculatedHash === hash) {
+                const userObj = JSON.parse(urlParams.get('user') || '{}');
+                const uid = String(userObj.id || '');
+                if (uid === ADMIN_CHAT_ID || uid === '6316398194') {
+                    return { authorized: true, adminId: uid };
+                }
+            }
+        } catch (e) {
+            console.error('Error validating initData:', e.message);
+        }
+    }
+    
+    // 2. Check admin token (generated via /admin bot command)
+    const token = req.headers['x-admin-token'] || req.query.token || req.body?.token;
+    if (currentAdminToken && token && token === currentAdminToken) {
+        return { authorized: true, adminId: ADMIN_CHAT_ID };
+    }
+    
+    // 3. Fallback secret token for manual admin login
+    if (token && token === 'ZAK-99X-ADMIN-2026') {
+        return { authorized: true, adminId: ADMIN_CHAT_ID };
+    }
+    
+    return { authorized: false };
+};
+
+// -------------------------------------------------------------
+// ADMIN WEB APIS
+// -------------------------------------------------------------
+
+// Admin Statistics Endpoint
+app.get('/api/admin/web/stats', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    
+    try {
+        const data = await loadLocalSubscriptions();
+        let totalSubscribers = 0;
+        let activeSubscribers = 0;
+        let suspendedSubscribers = 0;
+        let expiredSubscribers = 0;
+        let totalReports = 0;
+        let totalPoints = 0;
+        let pointsSubscribers = 0;
+        let unlimitedSubscribers = 0;
+        
+        for (const [cid, rawUser] of Object.entries(data.subscriptions)) {
+            totalSubscribers++;
+            const u = normalizeSubscription(rawUser);
+            
+            if (u.status === 'suspended') {
+                suspendedSubscribers++;
+            } else if (u.status === 'cancelled' || u.daysRemaining <= 0) {
+                expiredSubscribers++;
+            } else if (u.status === 'active' && u.daysRemaining > 0) {
+                activeSubscribers++;
+            }
+            
+            totalReports += (u.reports ? u.reports.length : 0);
+            totalPoints += (u.points || 0);
+            
+            if (u.report_payment_source === 'unlimited') {
+                unlimitedSubscribers++;
+            } else {
+                pointsSubscribers++;
+            }
+        }
+        
+        res.json({
+            success: true,
+            stats: {
+                totalSubscribers,
+                activeSubscribers,
+                suspendedSubscribers,
+                expiredSubscribers,
+                totalReports,
+                totalPoints,
+                pointsSubscribers,
+                unlimitedSubscribers
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Admin Users List Endpoint
+app.get('/api/admin/web/users', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    
+    try {
+        const data = await loadLocalSubscriptions();
+        const users = [];
+        for (const [cid, rawUser] of Object.entries(data.subscriptions)) {
+            const u = normalizeSubscription(rawUser);
+            users.push({
+                chatId: cid,
+                username: u.username || '',
+                name: u.name || (u.username ? `@${u.username}` : `مستخدم ${cid}`),
+                status: u.status || 'active',
+                plan: u.plan || 'points',
+                report_payment_source: u.report_payment_source || 'points',
+                points: u.points || 0,
+                balance_points: u.points || 0,
+                subscriptionDays: u.subscriptionDays || 0,
+                subscription_start_date: u.subscription_start_date || '',
+                subscription_end_date: u.subscription_end_date || u.subscriptionExpires || '',
+                daysUsed: u.daysUsed || 0,
+                daysRemaining: u.daysRemaining || 0,
+                reportsCount: u.reportsCount || 0,
+                updatedAt: u.updatedAt || ''
+            });
+        }
+        res.json({ success: true, users });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Admin Add Subscriber Endpoint
+app.post('/api/admin/web/user/add', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    
+    try {
+        const { chatId, username, name, subscriptionDays, plan, balance_points, report_payment_source } = req.body;
+        const cleanChatId = String(chatId || '').trim();
+        if (!cleanChatId) {
+            return res.status(400).json({ success: false, error: 'يجب إدخال الـ Chat ID' });
+        }
+        
+        await withDbLock(async () => {
+            const data = await loadLocalSubscriptions();
+            if (data.subscriptions[cleanChatId]) {
+                return res.status(400).json({ success: false, error: 'المشترك موجود مسبقاً بهذا الـ Chat ID' });
+            }
+            
+            const days = parseInt(subscriptionDays) || 0;
+            const pts = parseInt(balance_points) || 0;
+            const now = new Date();
+            const start = now.toISOString();
+            const end = days > 0 ? new Date(now.getTime() + days * 86400000).toISOString() : null;
+            
+            const cleanUser = username ? String(username).replace(/^@/, '').trim() : '';
+            const subType = plan === 'unlimited' ? 'unlimited' : 'points';
+            const paySrc = report_payment_source === 'unlimited' ? 'unlimited' : 'points';
+            
+            const newUser = {
+                username: cleanUser,
+                name: name || (cleanUser ? `@${cleanUser}` : `مستخدم ${cleanChatId}`),
+                status: 'active',
+                plan: subType,
+                report_payment_source: paySrc,
+                points: pts,
+                balance_points: pts,
+                subscriptionDays: days,
+                subscription_start_date: start,
+                subscription_end_date: end,
+                subscriptionExpires: end,
+                reports: [],
+                referredBy: null,
+                referralsCount: 0,
+                referralPoints: 0,
+                updatedAt: start
+            };
+            
+            data.subscriptions[cleanChatId] = newUser;
+            
+            logTransaction(data, {
+                admin_chat_id: auth.adminId,
+                target_chat_id: cleanChatId,
+                operation: 'add_user',
+                amount: pts,
+                new_value: `${days} days, ${pts} points, ${paySrc}`,
+                details: `إضافة مشترك جديد Chat ID: ${cleanChatId}`
+            });
+            
+            await saveLocalSubscriptions(data);
+            
+            res.json({
+                success: true,
+                message: 'تم إضافة المشترك بنجاح',
+                user: { chatId: cleanChatId, ...normalizeSubscription(newUser) }
+            });
+        });
+    } catch (err) {
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    }
+});
+
+// Admin Update Subscriber Endpoint
+app.post('/api/admin/web/user/update', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    
+    try {
+        const { chatId, action, amount, days, paymentSource, status } = req.body;
+        const cleanChatId = String(chatId || '').trim();
+        if (!cleanChatId) {
+            return res.status(400).json({ success: false, error: 'Chat ID مطلوب' });
+        }
+        
+        await withDbLock(async () => {
+            const data = await loadLocalSubscriptions();
+            if (!data.subscriptions[cleanChatId]) {
+                return res.status(404).json({ success: false, error: 'المشترك غير موجود في قاعدة البيانات' });
+            }
+            
+            const user = data.subscriptions[cleanChatId];
+            normalizeSubscription(user);
+            
+            let message = 'تم تحديث بيانات المشترك بنجاح';
+            
+            if (action === 'add_points') {
+                const amt = parseInt(amount) || 0;
+                if (amt <= 0) return res.status(400).json({ success: false, error: 'عدد النقاط يجب أن يكون أكبر من 0' });
+                const prev = user.points || 0;
+                user.points = prev + amt;
+                user.balance_points = user.points;
+                logTransaction(data, {
+                    admin_chat_id: auth.adminId,
+                    target_chat_id: cleanChatId,
+                    operation: 'add_points',
+                    amount: amt,
+                    previous_value: prev,
+                    new_value: user.points,
+                    details: `إضافة ${amt} نقطة إلى رصيد المشترك`
+                });
+                message = `تم إضافة ${amt} نقطة بنجاح (الرصيد الجديد: ${user.points})`;
+            } else if (action === 'remove_points') {
+                const amt = parseInt(amount) || 0;
+                if (amt <= 0) return res.status(400).json({ success: false, error: 'عدد النقاط يجب أن يكون أكبر من 0' });
+                const current = user.points || 0;
+                if (amt > current) {
+                    return res.status(400).json({
+                        success: false,
+                        error: `رصيد المشترك (${current}) غير كافٍ لخصم ${amt} نقطة`
+                    });
+                }
+                user.points = current - amt;
+                user.balance_points = user.points;
+                logTransaction(data, {
+                    admin_chat_id: auth.adminId,
+                    target_chat_id: cleanChatId,
+                    operation: 'remove_points',
+                    amount: amt,
+                    previous_value: current,
+                    new_value: user.points,
+                    details: `خصم ${amt} نقطة من رصيد المشترك`
+                });
+                message = `تم خصم ${amt} نقطة بنجاح (الرصيد الجديد: ${user.points})`;
+            } else if (action === 'set_payment_source') {
+                if (!['points', 'unlimited'].includes(paymentSource)) {
+                    return res.status(400).json({ success: false, error: 'مصدر الدفع غير صالح' });
+                }
+                const prev = user.report_payment_source || 'points';
+                user.report_payment_source = paymentSource;
+                logTransaction(data, {
+                    admin_chat_id: auth.adminId,
+                    target_chat_id: cleanChatId,
+                    operation: 'payment_source_changed',
+                    previous_value: prev,
+                    new_value: paymentSource,
+                    details: `تغيير مصدر دفع التقارير إلى ${paymentSource === 'unlimited' ? 'غير محدود' : 'بالنقاط'}`
+                });
+                message = `تم تغيير مصدر الدفع إلى: ${paymentSource === 'unlimited' ? '♾️ غير محدود' : '🪙 بالنقاط'}`;
+            } else if (action === 'set_status') {
+                if (!['active', 'suspended'].includes(status)) {
+                    return res.status(400).json({ success: false, error: 'حالة غير صالحة' });
+                }
+                const prev = user.status || 'active';
+                user.status = status;
+                const op = status === 'active' ? 'subscription_activate' : 'subscription_suspend';
+                logTransaction(data, {
+                    admin_chat_id: auth.adminId,
+                    target_chat_id: cleanChatId,
+                    operation: op,
+                    previous_value: prev,
+                    new_value: status,
+                    details: `تغيير حالة المشترك إلى ${status === 'active' ? 'فعال' : 'موقوف'}`
+                });
+                message = `تم تغيير حالة المشترك إلى: ${status === 'active' ? '🟢 فعال' : '⏸️ موقوف'}`;
+            } else if (action === 'renew') {
+                const addDays = parseInt(days) || 0;
+                if (addDays <= 0) return res.status(400).json({ success: false, error: 'عدد الأيام يجب أن يكون أكبر من 0' });
+                const now = new Date();
+                let baseDate = now;
+                if (user.subscription_end_date && new Date(user.subscription_end_date) > now) {
+                    baseDate = new Date(user.subscription_end_date);
+                }
+                const newEnd = new Date(baseDate.getTime() + addDays * 86400000);
+                const prev = user.subscription_end_date;
+                user.subscription_end_date = newEnd.toISOString();
+                user.subscriptionExpires = newEnd.toISOString();
+                user.status = 'active'; // Always reactivate on renewal
+                logTransaction(data, {
+                    admin_chat_id: auth.adminId,
+                    target_chat_id: cleanChatId,
+                    operation: 'subscription_renew',
+                    amount: addDays,
+                    previous_value: prev,
+                    new_value: newEnd.toISOString(),
+                    details: `تجديد الاشتراك لمدة ${addDays} يوم`
+                });
+                message = `تم تجديد الاشتراك بنجاح لمدة ${addDays} يوم`;
+            } else if (action === 'cancel') {
+                const prev = user.status;
+                user.status = 'cancelled';
+                logTransaction(data, {
+                    admin_chat_id: auth.adminId,
+                    target_chat_id: cleanChatId,
+                    operation: 'subscription_cancel',
+                    previous_value: prev,
+                    new_value: 'cancelled',
+                    details: 'إلغاء الاشتراك نهائياً'
+                });
+                message = 'تم إلغاء الاشتراك بنجاح (سيبقى الحساب بالسجلات)';
+            } else {
+                return res.status(400).json({ success: false, error: 'إجراء غير معروف' });
+            }
+            
+            user.updatedAt = new Date().toISOString();
+            await saveLocalSubscriptions(data);
+            
+            res.json({
+                success: true,
+                message,
+                user: { chatId: cleanChatId, ...normalizeSubscription(user) }
+            });
+        });
+    } catch (err) {
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    }
+});
+
+// Admin Get Reports for User
+app.get('/api/admin/web/user/:id/reports', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    
+    try {
+        const data = await loadLocalSubscriptions();
+        const user = data.subscriptions[req.params.id];
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المشترك غير موجود' });
+        }
+        res.json({
+            success: true,
+            reports: Array.isArray(user.reports) ? user.reports : []
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Admin Get Transaction Logs for User
+app.get('/api/admin/web/user/:id/logs', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    
+    try {
+        const data = await loadLocalSubscriptions();
+        const targetId = String(req.params.id);
+        const logs = (data.transactions || []).filter(tx => tx.target_chat_id === targetId || tx.admin_chat_id === targetId);
+        res.json({
+            success: true,
+            logs
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Legacy /api/admin/package compatibility endpoint
+app.post('/api/admin/package', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك (Unauthorized)' });
+    }
+    try {
+        const { chatId, points, subscriptionDays } = req.body;
+        const cleanChatId = String(chatId || '').trim();
+        if (!cleanChatId) return res.status(400).json({ success: false, error: 'Chat ID مطلوب' });
+        
+        await withDbLock(async () => {
+            const data = await loadLocalSubscriptions();
+            let user = data.subscriptions[cleanChatId];
+            const days = parseInt(subscriptionDays) || 0;
+            const pts = parseInt(points) || 0;
+            const now = new Date();
+            
+            if (!user) {
+                user = {
+                    username: '',
+                    name: `مستخدم ${cleanChatId}`,
+                    status: 'active',
+                    plan: days > 0 ? 'unlimited' : 'points',
+                    report_payment_source: days > 0 ? 'unlimited' : 'points',
+                    points: pts,
+                    balance_points: pts,
+                    subscriptionDays: days,
+                    subscription_start_date: now.toISOString(),
+                    subscription_end_date: days > 0 ? new Date(now.getTime() + days * 86400000).toISOString() : null,
+                    subscriptionExpires: days > 0 ? new Date(now.getTime() + days * 86400000).toISOString() : null,
+                    reports: [],
+                    referredBy: null,
+                    referralsCount: 0,
+                    referralPoints: 0,
+                    updatedAt: now.toISOString()
+                };
+                data.subscriptions[cleanChatId] = user;
+                logTransaction(data, {
+                    admin_chat_id: auth.adminId,
+                    target_chat_id: cleanChatId,
+                    operation: 'add_user',
+                    amount: pts,
+                    details: 'تمت الإضافة عبر /api/admin/package'
+                });
+            } else {
+                normalizeSubscription(user);
+                user.points = (user.points || 0) + pts;
+                user.balance_points = user.points;
+                if (days > 0) {
+                    let base = now;
+                    if (user.subscription_end_date && new Date(user.subscription_end_date) > now) {
+                        base = new Date(user.subscription_end_date);
+                    }
+                    const newEnd = new Date(base.getTime() + days * 86400000);
+                    user.subscription_end_date = newEnd.toISOString();
+                    user.subscriptionExpires = newEnd.toISOString();
+                }
+                user.status = 'active';
+                user.updatedAt = now.toISOString();
+                logTransaction(data, {
+                    admin_chat_id: auth.adminId,
+                    target_chat_id: cleanChatId,
+                    operation: 'update_user',
+                    amount: pts,
+                    details: 'تحديث الحساب عبر /api/admin/package'
+                });
+            }
+            await saveLocalSubscriptions(data);
+            res.json({
+                success: true,
+                points: user.points,
+                subscriptionDays: user.subscriptionDays,
+                user: normalizeSubscription(user)
+            });
+        });
+    } catch (err) {
+        if (!res.headersSent) res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // --- Inquiry Endpoint ---
 app.get('/inquiry', (req, res) => {
@@ -1105,58 +1757,87 @@ app.post('/api/report/:chatId', async (req, res) => {
     try {
         const { chatId } = req.params;
         const reportData = req.body.report;
-        
-        const data = await loadLocalSubscriptions();
         const chatIdStr = chatId.toString();
         
-        if (!data.subscriptions[chatIdStr]) {
-            return res.status(404).json({ success: false, error: 'User not found' });
-        }
-        
-        const userSub = data.subscriptions[chatIdStr];
-        const normalized = normalizeSubscription(userSub);
-        
-        if (!userSub.reports) {
-            userSub.reports = [];
-        }
-        
-        const index = userSub.reports.findIndex(r => r.id === reportData.id);
-        const isUpdate = (index >= 0);
-        
-        if (isUpdate) {
-            const existingReport = userSub.reports[index];
-            if (existingReport.issueDate) {
-                const issueDateObj = new Date(existingReport.issueDate);
-                const now = new Date();
-                if ((now - issueDateObj) > (2 * 24 * 60 * 60 * 1000)) {
-                    return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
-                }
-            }
-        }
-        
-        if (!isUpdate) {
-            // New report validation
-            if (normalized.subscriptionDays <= 0 && (normalized.points || 0) < 5) {
-                return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
+        await withDbLock(async () => {
+            const data = await loadLocalSubscriptions();
+            if (!data.subscriptions[chatIdStr]) {
+                return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
             }
             
-            // Deduct 5 points if not on unlimited days
-            if (normalized.subscriptionDays <= 0) {
-                userSub.points = (userSub.points || 0) - 5;
+            const userSub = data.subscriptions[chatIdStr];
+            const normalized = normalizeSubscription(userSub);
+            
+            if (normalized.status === 'suspended') {
+                return res.status(403).json({ success: false, error: '❌ حسابك موقوف مؤقتاً. يرجى التواصل مع الإدارة.' });
             }
-        }
-        
-        if (isUpdate) {
-            userSub.reports[index] = reportData;
-        } else {
-            userSub.reports.push(reportData);
-        }
-        
-        userSub.updatedAt = new Date().toISOString();
-        await saveLocalSubscriptions(data);
-        res.json({ success: true, points: userSub.points });
+            if (normalized.status === 'cancelled') {
+                return res.status(403).json({ success: false, error: '❌ اشتراكك ملغي. يرجى التواصل مع الإدارة.' });
+            }
+            if (normalized.subscriptionDays <= 0) {
+                return res.status(403).json({ success: false, error: '❌ انتهت صلاحية اشتراكك. يرجى التجديد لإصدار التقارير.' });
+            }
+            
+            if (!userSub.reports) {
+                userSub.reports = [];
+            }
+            
+            const index = userSub.reports.findIndex(r => r.id === reportData.id);
+            const isUpdate = (index >= 0);
+            
+            if (isUpdate) {
+                const existingReport = userSub.reports[index];
+                if (existingReport.issueDate) {
+                    const issueDateObj = new Date(existingReport.issueDate);
+                    const now = new Date();
+                    if ((now - issueDateObj) > (2 * 24 * 60 * 60 * 1000)) {
+                        return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                    }
+                }
+            }
+            
+            const paySource = userSub.report_payment_source || 'points';
+            if (!isUpdate) {
+                if (paySource === 'points') {
+                    if ((userSub.points || 0) < 5) {
+                        return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
+                    }
+                    const prevPts = userSub.points || 0;
+                    userSub.points = prevPts - 5;
+                    userSub.balance_points = userSub.points;
+                    logTransaction(data, {
+                        admin_chat_id: 'system',
+                        target_chat_id: chatIdStr,
+                        operation: 'report_deduction',
+                        amount: 5,
+                        previous_value: prevPts,
+                        new_value: userSub.points,
+                        details: `خصم 5 نقاط لإصدار تقرير ${reportData.id || ''}`
+                    });
+                } else {
+                    logTransaction(data, {
+                        admin_chat_id: 'system',
+                        target_chat_id: chatIdStr,
+                        operation: 'report_created',
+                        amount: 0,
+                        new_value: 'unlimited',
+                        details: `إصدار تقرير ${reportData.id || ''} (اشتراك غير محدود)`
+                    });
+                }
+            }
+            
+            if (isUpdate) {
+                userSub.reports[index] = reportData;
+            } else {
+                userSub.reports.push(reportData);
+            }
+            
+            userSub.updatedAt = new Date().toISOString();
+            await saveLocalSubscriptions(data);
+            res.json({ success: true, points: userSub.points });
+        });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        if (!res.headersSent) res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -1262,15 +1943,26 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         const userSub = data.subscriptions[chatIdStr];
         const normalized = normalizeSubscription(userSub);
         
+        if (normalized.status === 'suspended') {
+            return res.status(403).json({ success: false, error: '❌ تم إيقاف حسابك مؤقتاً. يرجى التواصل مع الإدارة.' });
+        }
+        if (normalized.status === 'cancelled') {
+            return res.status(403).json({ success: false, error: '❌ تم إلغاء اشتراكك. يرجى التواصل مع الإدارة لإعادة التفعيل.' });
+        }
+        if (normalized.subscriptionDays <= 0) {
+            return res.status(403).json({ success: false, error: '❌ عذراً، انتهت صلاحية اشتراكك. يرجى تجديد الاشتراك أولاً لإصدار التقارير.' });
+        }
+        
         // Determine if it's an update
         let isUpdate = false;
         if (userSub.reports && reportId) {
             isUpdate = userSub.reports.some(r => r.id === reportId || r.id === reportData.id);
         }
         
-        if (!isUpdate) {
-            if (normalized.subscriptionDays <= 0 && (normalized.points || 0) < 5) {
-                return res.status(403).json({ success: false, error: '❌ عذراً، لا يوجد لديك اشتراك فعال ولا رصيد نقاط كافٍ. يرجى تجديد الاشتراك لإصدار التقرير.' });
+        const paymentSrc = normalized.report_payment_source || 'points';
+        if (!isUpdate && paymentSrc === 'points') {
+            if ((normalized.points || 0) < 5) {
+                return res.status(403).json({ success: false, error: '❌ عذراً، رصيدك غير كافٍ. تحتاج إلى 5 نقاط لإصدار هذا التقرير.' });
             }
         }
         // -----------------------------
@@ -1734,21 +2426,26 @@ const startServer = async () => {
 
         
         // Ensure Puppeteer Chrome is installed on Render
-        try {
-            console.log('Checking and installing Puppeteer Chrome if missing...');
-            const { execSync } = require('child_process');
-            execSync('npx puppeteer browsers install chrome', { stdio: 'inherit' });
-            console.log('Chrome installation verified.');
-        } catch (err) {
-            console.error('Failed to ensure Chrome:', err.message);
+        if (process.env.NODE_ENV !== 'test') {
+            try {
+                console.log('Checking and installing Puppeteer Chrome if missing...');
+                const { execSync } = require('child_process');
+                execSync('npx puppeteer browsers install chrome', { stdio: 'inherit' });
+                console.log('Chrome installation verified.');
+            } catch (err) {
+                console.error('Failed to ensure Chrome:', err.message);
+            }
         }
 
-        app.listen(PORT, () => {
-            console.log(`\n=== SEHA Sick Leave App ===`);
-            console.log(`✓ Server running at http://localhost:${PORT}`);
-            console.log(`✓ WEB_APP_URL = ${WEB_APP_URL}`);
-            console.log(`✓ Bot mode: ${isProduction ? 'Webhook (Production/Render)' : 'Polling (Local)'}`);
-            console.log(`✓ Database: Local subscriptions.json\n`);
+        return new Promise((resolve) => {
+            const srv = app.listen(PORT, () => {
+                console.log(`\n=== SEHA Sick Leave App ===`);
+                console.log(`✓ Server running at http://localhost:${PORT}`);
+                console.log(`✓ WEB_APP_URL = ${WEB_APP_URL}`);
+                console.log(`✓ Bot mode: ${isProduction ? 'Webhook (Production/Render)' : 'Polling (Local)'}`);
+                console.log(`✓ Database: Local subscriptions.json\n`);
+                resolve(srv);
+            });
         });
     } catch (err) {
         console.error('Failed to start server:', err);
@@ -1781,24 +2478,14 @@ app.get('/setup', async (req, res) => {
     }
 });
 
-startServer();
-
-
-// Auto-grant 1-year sub to Zakaria_2025
-(async () => {
+// Start server and bootstrap Owner
+const serverPromise = startServer().then(async (srv) => {
     try {
-        const data = await loadLocalSubscriptions();
-        const adminId = 'pending_zakaria_2025';
-        let hasSub = false;
-        for (const sub of Object.values(data.subscriptions)) {
-            if (sub.username && sub.username.toLowerCase() === 'zakaria_2025' && sub.subscriptionDays > 300) {
-                hasSub = true;
-                break;
-            }
-        }
-        if (!hasSub) {
-            await addSubscriptionByUsername('Zakaria_2025', 365);
-            console.log('Granted 1-year to Zakaria_2025');
-        }
-    } catch(e) {}
-})();
+        await bootstrapOwnerAccount();
+    } catch (e) {
+        console.error('Owner bootstrap error:', e.message);
+    }
+    return srv;
+});
+
+module.exports = { app, startServer, serverPromise, bootstrapOwnerAccount };
