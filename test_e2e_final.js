@@ -4,7 +4,7 @@ const path = require('path');
 
 const BASE_URL = 'http://localhost:' + (process.env.PORT || 3000);
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1211116248'; 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8141096775:AAH0y68mtJ8-rDi_GVI0XR9oP0WHTxQIEM4';
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || 'REMOVED_TOKEN';
 
 const TEST_USER = 'test_' + Date.now();
 const UNLIMITED_USER = 'test_unlim_' + Date.now();
@@ -182,6 +182,7 @@ async function runTests() {
 }
 
 runTests();
+
 
 
 

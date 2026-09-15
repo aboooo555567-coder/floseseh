@@ -1,9 +1,10 @@
-$lines = Get-Content server.js
-$before = $lines[0..740]
-$after = $lines[764..($lines.Length - 1)]
+const fs = require('fs');
 
-$newFunction = @"
-app.post('/api/inquiry', async (req, res) => {
+let serverJs = fs.readFileSync('server.js', 'utf8');
+
+const regex = /app\.post\('\/api\/inquiry', async \(req, res\) => \{[\s\S]*?\}\);/m;
+
+const newRoute = `app.post('/api/inquiry', async (req, res) => {
     try {
         const rawLeaveId = req.body.leaveId || req.body.service_code || '';
         const rawNationalId = req.body.nationalId || req.body.national_id || '';
@@ -52,8 +53,8 @@ app.post('/api/inquiry', async (req, res) => {
             details: err.message 
         });
     }
-});
-"@
+});`;
 
-$newLines = $before + $newFunction.Split("`n") + $after
-Set-Content server.js -Value $newLines -Encoding UTF8
+serverJs = serverJs.replace(regex, newRoute);
+fs.writeFileSync('server.js', serverJs, 'utf8');
+console.log("Regex replaced successfully.");

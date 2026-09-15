@@ -1,9 +1,35 @@
-$lines = Get-Content server.js
-$before = $lines[0..740]
-$after = $lines[764..($lines.Length - 1)]
+const fs = require('fs');
+const path = require('path');
+let serverJs = fs.readFileSync('server.js', 'utf8');
 
-$newFunction = @"
-app.post('/api/inquiry', async (req, res) => {
+const search = `app.post('/api/inquiry', async (req, res) => {
+    try {
+        const { leaveId, nationalId } = req.body;
+        const data = await loadLocalSubscriptions();
+        
+        let foundReport = null;
+        for (const chatId in data.subscriptions) {
+            const sub = data.subscriptions[chatId];
+            if (sub.reports) {
+                const report = sub.reports.find(r => r.id === leaveId && r.data.national_id === nationalId);
+                if (report) {
+                    foundReport = report;
+                    break;
+                }
+            }
+        }
+
+        if (foundReport) {
+            res.json({ success: true, report: foundReport });
+        } else {
+            res.json({ success: false, error: '??????? ??? ????? ? ???????? ??? ??????' });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});`;
+
+const replace = `app.post('/api/inquiry', async (req, res) => {
     try {
         const rawLeaveId = req.body.leaveId || req.body.service_code || '';
         const rawNationalId = req.body.nationalId || req.body.national_id || '';
@@ -26,6 +52,7 @@ app.post('/api/inquiry', async (req, res) => {
                 for (const r of sub.reports) {
                     if (r.id === leaveId) {
                         foundLeaveIdMatch = true;
+                        // Match ID (handling possible numbers/strings mismatches safely)
                         const storedNationalId = r.data && r.data.national_id ? String(r.data.national_id).trim() : '';
                         if (storedNationalId === nationalId) {
                             foundReport = r;
@@ -52,8 +79,12 @@ app.post('/api/inquiry', async (req, res) => {
             details: err.message 
         });
     }
-});
-"@
+});`;
 
-$newLines = $before + $newFunction.Split("`n") + $after
-Set-Content server.js -Value $newLines -Encoding UTF8
+if (serverJs.includes(search)) {
+    serverJs = serverJs.replace(search, replace);
+    fs.writeFileSync('server.js', serverJs, 'utf8');
+    console.log("Updated /api/inquiry in server.js");
+} else {
+    console.log("String not found in server.js");
+}

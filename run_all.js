@@ -2,7 +2,7 @@ const { fork } = require('child_process');
 const net = require('net');
 
 const env = Object.assign({}, process.env, {
-    TELEGRAM_BOT_TOKEN: "8141096775:AAH0y68mtJ8-rDi_GVI0XR9oP0WHTxQIEM4",
+    TELEGRAM_BOT_TOKEN: "REMOVED_TOKEN",
     ADMIN_CHAT_ID: "1211116248",
     PORT: 3000
 });
@@ -30,3 +30,4 @@ waitForServer(3000, () => {
         process.exit(code);
     });
 });
+
