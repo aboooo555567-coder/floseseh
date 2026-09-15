@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=47';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
-const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '1211116248';
+const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '6316398194';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
 
@@ -76,6 +76,7 @@ const normalizeSubscription = (user) => {
     
     // Normalize Type/Plan
     user.subscription_type = user.subscription_type || 'points';
+    user.report_payment_source = (user.report_payment_source || (user.subscription_type === 'unlimited' ? 'unlimited' : 'points')).toLowerCase();
     
     // Normalize Points Balance
     user.balance_points = user.balance_points ?? user.points ?? 0;
@@ -339,20 +340,24 @@ bot.on('webhook_error', (error) => {
 
 // Helper: Send User Status Message
 const sendMyStatusMessage = async (chatId, username) => {
-    const user = await findSubscription(chatId, username);
+    let user = await findSubscription(chatId, username);
+    user = normalizeSubscription(user);
     const daysLeft = user.subscriptionDays || 0;
-    const statusText = daysLeft > 0 ? `فعال (${daysLeft} يوم متبقي)` : 'غير فعال (0 يوم)';
-    const subStatusIcon = daysLeft > 0 ? '✅' : '❌';
+    const isAct = user.status === 'active' && daysLeft > 0;
+    const statusText = isAct ? `فعال (${daysLeft} يوم متبقي)` : 'غير فعال (0 يوم)';
+    const subStatusIcon = isAct ? '✅' : '❌';
+    const paySourceText = user.report_payment_source === 'unlimited' ? '♾️ اشتراك غير محدود (بدون خصم نقاط)' : '🪙 بالنقاط (5 نقاط لكل تقرير)';
 
     const statusMsg = `📊 حالة حسابك في منصة صحة:
 
 ${subStatusIcon} حالة الاشتراك: ${statusText}
 ⏳ الأيام المتبقية: ${daysLeft} يوم
+💳 مصدر خصم التقارير: ${paySourceText}
 
-🌑 رصيد النقاط: ${user.points || 0} نقطة
-• تكلفة إنشاء التقرير: 5 نقاط
+🌑 رصيد النقاط: ${user.balance_points ?? user.points ?? 0} نقطة
+• تكلفة إنشاء التقرير بنظام النقاط: 5 نقاط
 
-💡 يمكنك استخدام النقاط لإنشاء التقارير دون الحاجة لاشتراك شهري، أو الاشتراك بالباقة اللامحدودة!`;
+💡 يتم استخراج التقارير وفقاً لمصدر الخصم المحدد لحسابك.`;
 
     await bot.sendMessage(chatId, statusMsg);
 };
@@ -370,7 +375,8 @@ const handleStartCommand = async (msg) => {
         referrerId = refMatch[1];
     }
 
-    const user = await findSubscription(chatId, username || displayName, referrerId);
+    let user = await findSubscription(chatId, username || displayName, referrerId);
+    user = normalizeSubscription(user);
 
     // Force update Chat Menu Button (Open button) to Render URL on every /start
     configureChatMenuButton(chatId).catch(err => console.warn('Menu button configure notice:', err.message));
@@ -388,8 +394,10 @@ const handleStartCommand = async (msg) => {
 
     // Message 2: Dynamic status welcome message with full inline keyboard & direct links
     const daysLeft = user.subscriptionDays || 0;
-    const statusIcon = daysLeft > 0 ? '✅' : '❌';
-    const statusText = daysLeft > 0 ? `فعال - متبقي ${daysLeft} يوم` : `غير فعال - متبقي 0 يوم`;
+    const isAct = user.status === 'active' && daysLeft > 0;
+    const statusIcon = isAct ? '✅' : '❌';
+    const statusText = isAct ? `فعال - متبقي ${daysLeft} يوم` : `غير فعال - متبقي 0 يوم`;
+    const paySourceText = user.report_payment_source === 'unlimited' ? '♾️ غير محدود' : '🪙 نقاط';
     
     let adminNotice = '';
     if (user.isNewlyMigrated) {
@@ -407,10 +415,9 @@ const handleStartCommand = async (msg) => {
     const welcomeText = `${adminNotice}👋 أهلاً بعودتك ${displayName}!
 
 ${statusIcon} اشتراكك ${statusText}
-🌑 رصيدك الحالي من النقاط: ${user.points || 0} نقطة
-• تكلفة التقرير الواحد: 5 نقاط.
-
-💡 يمكنك الاشتراك بالباقة الشهرية لإنشاء غير محدود، أو شحن النقاط للشراء بالتقرير!
+💳 مصدر خصم التقارير: ${paySourceText}
+🌑 رصيدك الحالي من النقاط: ${user.balance_points ?? user.points ?? 0} نقطة
+• تكلفة التقرير الواحد (عند الدفع بالنقاط): 5 نقاط.
 
 اضغط على الأزرار أدناه لفتح التطبيق أو التصفح ⚡`;
 
@@ -919,7 +926,14 @@ function verifyAdmin(req, res, next) {
     const initData = req.headers['x-admin-token'] || req.body.token || req.query.token;
     const user = verifyTelegramWebData(initData);
     
-    if (!user || user.id.toString() !== ADMIN_CHAT_ID.toString()) {
+    const isOwnerOrAdmin = user && (
+        user.id.toString() === ADMIN_CHAT_ID.toString() ||
+        user.id.toString() === '6316398194' ||
+        user.id.toString() === '1211116248' ||
+        (process.env.ADMIN_CHAT_ID && user.id.toString() === process.env.ADMIN_CHAT_ID.toString())
+    );
+
+    if (!user || !isOwnerOrAdmin) {
         return res.status(403).json({ success: false, error: '⛔ ليس لديك صلاحية للوصول إلى لوحة المشرف.' });
     }
     
@@ -983,6 +997,7 @@ app.get('/api/admin/web/users', verifyAdmin, async (req, res) => {
                 username: sub.username || '',
                 status: sub.status,
                 type: sub.subscription_type,
+                paymentSource: sub.report_payment_source || (sub.subscription_type === 'unlimited' ? 'unlimited' : 'points'),
                 points: sub.balance_points || 0,
                 daysLeft: sub.subscriptionDays,
                 reportsCount: sub.reports ? sub.reports.length : 0,
@@ -1032,10 +1047,21 @@ app.post('/api/admin/web/user/update', express.json(), verifyAdmin, async (req, 
             sub.status = 'cancelled';
             logTransaction(sub, chatId, 'cancel', 0, 'إلغاء الاشتراك', 'web_admin');
         }
+        else if (action === 'update_payment_source') {
+            const source = (data.source || 'points').toLowerCase();
+            if (source !== 'points' && source !== 'unlimited') {
+                return res.status(400).json({ success: false, error: 'مصدر دفع غير صالح. الخيارات: points أو unlimited' });
+            }
+            sub.report_payment_source = source;
+            logTransaction(sub, chatId, 'payment_source_update', 0, 'تغيير مصدر خصم التقارير إلى: ' + source.toUpperCase(), 'web_admin', source.toUpperCase());
+        }
         else if (action === 'renew' || action === 'create' || action === 'update_type') {
             const type = data.type || sub.subscription_type || 'points'; 
             const days = parseInt(data.days) || 30;
             const points = parseInt(data.points) || 0;
+            if (data.payment_source || data.report_payment_source) {
+                sub.report_payment_source = (data.payment_source || data.report_payment_source).toLowerCase();
+            }
             
             let startDate = now;
             if (action === 'renew' && sub.subscription_end_date && new Date(sub.subscription_end_date) > now) {
@@ -1558,12 +1584,18 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         let userSub = data.subscriptions[chatIdStr];
         userSub = normalizeSubscription(userSub);
         
-        if (userSub.status !== 'active') {
-            let msg = '⛔ اشتراكك غير فعال.';
-            if (userSub.status === 'expired') msg = '⛔ اشتراكك منتهي.';
+        const now = new Date();
+        const isExpired = (userSub.subscription_end_date && new Date(userSub.subscription_end_date) < now) || 
+                          (userSub.subscriptionExpires && new Date(userSub.subscriptionExpires) < now) || 
+                          userSub.subscriptionDays <= 0;
+
+        if (userSub.status !== 'active' || isExpired) {
+            let msg = '⛔ اشتراكك غير فعال أو منتهي الصلاحية. يرجى تجديد الاشتراك أولاً.';
             if (userSub.status === 'suspended') msg = '⛔ اشتراكك موقوف من قبل الإدارة.';
             return res.status(403).json({ success: false, error: msg });
         }
+
+        const paymentSource = (userSub.report_payment_source || (userSub.subscription_type === 'unlimited' ? 'unlimited' : 'points')).toLowerCase();
 
         let isUpdate = false;
         if (userSub.reports && reportId) {
@@ -1571,13 +1603,9 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         }
         
         if (!isUpdate) {
-            if (userSub.subscription_type === 'points') {
-                if (userSub.balance_points < 5) {
-                    return res.status(403).json({ success: false, error: '⛔ رصيد نقاطك غير كافٍ. تحتاج إلى 5 نقاط.' });
-                }
-            } else if (userSub.subscription_type === 'unlimited') {
-                if (userSub.subscriptionDays <= 0) {
-                    return res.status(403).json({ success: false, error: '⛔ اشتراكك غير المحدود انتهت مدته.' });
+            if (paymentSource === 'points') {
+                if ((userSub.balance_points || 0) < 5) {
+                    return res.status(403).json({ success: false, error: '⛔ لا يوجد لديك رصيد نقاط كافٍ. تحتاج إلى 5 نقاط لإصدار التقرير.' });
                 }
             }
         }
@@ -1838,13 +1866,18 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
         // --- ATOMIC POINT DEDUCTION & REPORT SAVE ---
         if (!isUpdate) {
-            if (userSub.subscription_type === 'points') {
-                userSub.balance_points -= 5;
+            if (paymentSource === 'points') {
+                const before = userSub.balance_points || 0;
+                userSub.balance_points = Math.max(0, before - 5);
                 userSub.points = userSub.balance_points;
-                logTransaction(userSub, chatIdStr, 'report_deduction', 5, 'خصم لإصدار تقرير جديد', 'system');
+                logTransaction(userSub, chatIdStr, 'report_deduction', 5, 'خصم نقاط لإصدار تقرير (مصدر الدفع: POINTS)', 'system', 'POINTS');
+            } else {
+                // UNLIMITED: No points deducted
+                logTransaction(userSub, chatIdStr, 'report_unlimited', 0, 'إصدار تقرير باشتراك غير محدود (مصدر الدفع: UNLIMITED)', 'system', 'UNLIMITED');
             }
             if (!userSub.reports) userSub.reports = [];
             reportData.generatedAt = new Date().toISOString();
+            reportData.payment_source = paymentSource.toUpperCase();
             userSub.reports.push(req.body.fullReportRecord || reportData);
             
             // data is the variable loaded at the top of the endpoint!
@@ -2129,4 +2162,21 @@ startServer();
     } catch(e) {}
 })();
 
-function logTransaction(sub, cid, type, amount, reason, by, reportId = null) { if (!sub.transactions) sub.transactions = []; sub.transactions.push({ id: 'txn_' + Date.now() + Math.floor(Math.random()*1000), chat_id: cid, type, amount, balance_before: sub.balance_points || 0, balance_after: (sub.balance_points || 0) + (type==='points_remove'? -amount : amount), reason, performed_by: by, created_at: new Date().toISOString() }); }
+function logTransaction(sub, cid, type, amount, reason, by, paymentSource = null, reportId = null) {
+    if (!sub.transactions) sub.transactions = [];
+    const before = sub.balance_points || 0;
+    const after = (type === 'points_remove' || type === 'report_deduction') ? (before - amount) : (type === 'points_add' ? (before + amount) : before);
+    sub.transactions.push({
+        id: 'txn_' + Date.now() + Math.floor(Math.random() * 1000),
+        chat_id: cid,
+        type,
+        amount,
+        balance_before: before,
+        balance_after: after,
+        payment_source: paymentSource || (sub.report_payment_source ? sub.report_payment_source.toUpperCase() : (type.includes('unlimited') ? 'UNLIMITED' : 'POINTS')),
+        reason,
+        performed_by: by,
+        report_id: reportId,
+        created_at: new Date().toISOString()
+    });
+}

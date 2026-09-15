@@ -209,6 +209,18 @@
                     <div id="modal-user-info" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:8px; font-size:13px; line-height:1.6; text-align:right;">
                     </div>
 
+                    <!-- Report Payment Source Control -->
+                    <div id="modal-payment-source-group" style="display:none; background: #eef7ff; padding: 12px; border-radius: 10px; border: 1px solid #b9ddff; margin-top: 10px;">
+                        <label style="font-weight: bold; color: #0284c7; display: block; margin-bottom: 6px; text-align: right;">💳 مصدر خصم التقارير (Payment Source):</label>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" id="btn-pay-source-points" onclick="app.adminSetPaymentSource('points')" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #009688; font-family: inherit; font-weight: bold; cursor: pointer; background: white; color: #333;">🪙 النقاط (Points)</button>
+                            <button type="button" id="btn-pay-source-unlimited" onclick="app.adminSetPaymentSource('unlimited')" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #3F51B5; font-family: inherit; font-weight: bold; cursor: pointer; background: white; color: #333;">♾️ غير محدود (Unlimited)</button>
+                        </div>
+                        <div style="font-size: 11px; color: #556677; margin-top: 6px; text-align: right;" id="payment-source-hint">
+                            يحدد ما إذا كان استخراج التقرير يخصم 5 نقاط أو يتم بلا خصم طالما الاشتراك فعال.
+                        </div>
+                    </div>
+
                     <div id="modal-edit-actions" style="display:none; flex-direction:column; gap:10px; margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
                         <div style="display:flex; gap:10px;">
                             <button class="btn-primary" onclick="app.adminModifyPoints('add')" style="flex:1; background:#4CAF50;">➕ إضافة نقاط</button>
