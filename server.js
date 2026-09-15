@@ -1082,6 +1082,18 @@ app.get('/api/admin/web/user/:id/logs', verifyAdmin, async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+app.get('/api/admin/web/user/:id/reports', verifyAdmin, async (req, res) => {
+    try {
+        const db = await loadLocalSubscriptions();
+        const sub = db.subscriptions[req.params.id];
+        if (!sub) return res.status(404).json({ success: false, error: 'User not found' });
+        
+        res.json({ success: true, reports: sub.reports || [] });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 // --- END NEW WEB ADMIN APIs ---
 
 

@@ -133,15 +133,33 @@
                 </div>
 
                 <!-- Actions -->
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <input type="text" id="admin-search-input" placeholder="🔍 بحث عن مشترك (Chat ID)" onkeyup="app.filterAdminUsers()" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: inherit;">
-                    <button class="btn-primary" onclick="app.openAdminUserModal()" style="padding: 0 20px; font-size: 20px;">➕</button>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="admin-search-input" placeholder="🔍 بحث عن مشترك (Chat ID أو معرف)" onkeyup="app.filterAdminUsers()" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; font-family: inherit;">
+                    <button class="btn-primary" onclick="app.loadAdminDashboard()" style="padding: 0 16px; font-size: 16px; background: #607D8B;" title="تحديث القائمة">🔄</button>
+                    <button class="btn-primary" onclick="app.openAdminUserModal()" style="padding: 0 20px; font-size: 20px;" title="إضافة مشترك جديد">➕</button>
+                </div>
+
+                <!-- Filters -->
+                <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px;" id="admin-filter-bar">
+                    <button class="admin-filter-btn" data-filter="all" onclick="app.setAdminFilter('all')" style="padding: 6px 12px; border-radius: 20px; border: 1px solid #ddd; background: var(--primary-dark); color: white; font-size: 12px; cursor: pointer; white-space: nowrap;">الكل</button>
+                    <button class="admin-filter-btn" data-filter="active" onclick="app.setAdminFilter('active')" style="padding: 6px 12px; border-radius: 20px; border: 1px solid #ddd; background: white; color: #333; font-size: 12px; cursor: pointer; white-space: nowrap;">نشط ✅</button>
+                    <button class="admin-filter-btn" data-filter="suspended" onclick="app.setAdminFilter('suspended')" style="padding: 6px 12px; border-radius: 20px; border: 1px solid #ddd; background: white; color: #333; font-size: 12px; cursor: pointer; white-space: nowrap;">معلق ⏸️</button>
+                    <button class="admin-filter-btn" data-filter="expired" onclick="app.setAdminFilter('expired')" style="padding: 6px 12px; border-radius: 20px; border: 1px solid #ddd; background: white; color: #333; font-size: 12px; cursor: pointer; white-space: nowrap;">منتهي ⌛</button>
+                    <button class="admin-filter-btn" data-filter="unlimited" onclick="app.setAdminFilter('unlimited')" style="padding: 6px 12px; border-radius: 20px; border: 1px solid #ddd; background: white; color: #333; font-size: 12px; cursor: pointer; white-space: nowrap;">غير محدود ♾️</button>
+                    <button class="admin-filter-btn" data-filter="points" onclick="app.setAdminFilter('points')" style="padding: 6px 12px; border-radius: 20px; border: 1px solid #ddd; background: white; color: #333; font-size: 12px; cursor: pointer; white-space: nowrap;">نقاط 🔢</button>
                 </div>
 
                 <!-- Users List -->
                 <div id="admin-users-list" style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- User cards injected by JS -->
                     <div style="text-align:center; padding: 20px; color:#888;">جاري تحميل المشتركين...</div>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div id="admin-pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding: 10px; background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+                    <button id="admin-prev-page" onclick="app.changeAdminPage(-1)" style="padding: 6px 14px; border-radius: 8px; border: 1px solid #ddd; background: #f8f9fa; cursor: pointer; font-family: inherit;">السابق ⬅️</button>
+                    <span id="admin-page-indicator" style="font-size: 13px; color: #666; font-weight: bold;">صفحة 1 من 1</span>
+                    <button id="admin-next-page" onclick="app.changeAdminPage(1)" style="padding: 6px 14px; border-radius: 8px; border: 1px solid #ddd; background: #f8f9fa; cursor: pointer; font-family: inherit;">➡️ التالي</button>
                 </div>
             </main>
 
@@ -197,12 +215,26 @@
                             <button class="btn-primary" onclick="app.adminModifyPoints('remove')" style="flex:1; background:#F44336;">➖ خصم نقاط</button>
                         </div>
                         <div style="display:flex; gap:10px;">
-                            <button class="btn-primary" onclick="app.adminUpdateSubscriptionType('points')" style="flex:1; background:#FFC107; color:#333;">⭐ اشتراك نقاط</button>
-                            <button class="btn-primary" onclick="app.adminUpdateSubscriptionType('unlimited')" style="flex:1; background:#3F51B5;">♾️ اشتراك غير محدود</button>
+                            <button class="btn-primary" onclick="app.adminUpdateSubscriptionType('points')" style="flex:1; background:#FFC107; color:#333;">⭐ تحويل لنقاط</button>
+                            <button class="btn-primary" onclick="app.adminUpdateSubscriptionType('unlimited')" style="flex:1; background:#3F51B5;">♾️ تحويل لا محدود</button>
                         </div>
-                        <button class="btn-primary" onclick="app.adminSaveUser()" style="background:#2196F3;">✏️ تعديل الاشتراك</button>
-                        <button class="btn-primary" onclick="app.adminRenewSub()" style="background:#8BC34A;">♻️ تجديد الاشتراك</button>
-                        <button class="btn-secondary" onclick="app.adminViewLogs()" style="background:#f0f0f0; color:#333; padding:12px; border-radius:8px; font-family:inherit; font-weight:bold; border:none;">📋 سجل العمليات</button>
+                        <button class="btn-primary" onclick="app.adminSaveUser()" style="background:#2196F3;">💾 حفظ التعديلات</button>
+                        
+                        <!-- Quick Renewal Options -->
+                        <div style="display: flex; flex-direction: column; gap: 6px; background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px dashed #c8e6c9;">
+                            <div style="font-size: 13px; font-weight: bold; color: #2e7d32; text-align: right;">🔄 تجديد الاشتراك:</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <button class="btn-primary" onclick="app.adminQuickRenew(30)" style="background:#8BC34A; padding: 8px 2px; font-size: 12px;">30 يوم</button>
+                                <button class="btn-primary" onclick="app.adminQuickRenew(60)" style="background:#689F38; padding: 8px 2px; font-size: 12px;">60 يوم</button>
+                                <button class="btn-primary" onclick="app.adminQuickRenew(90)" style="background:#33691E; padding: 8px 2px; font-size: 12px;">90 يوم</button>
+                            </div>
+                            <button class="btn-primary" onclick="app.adminRenewSub()" style="background:#009688; padding: 8px; font-size: 12px; margin-top: 2px;">مدة مخصصة (حسب الأيام أعلاه)</button>
+                        </div>
+
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-secondary" onclick="app.adminViewReports()" style="flex:1; background:#e0f2fe; color:#0284c7; padding:12px; border-radius:8px; font-family:inherit; font-weight:bold; border:1px solid #bae6fd;">📄 عرض التقارير</button>
+                            <button class="btn-secondary" onclick="app.adminViewLogs()" style="flex:1; background:#f0f0f0; color:#333; padding:12px; border-radius:8px; font-family:inherit; font-weight:bold; border:none;">📋 سجل العمليات</button>
+                        </div>
                         <button class="btn-primary" id="btn-toggle-status" onclick="app.adminToggleStatus()" style="background:#FF9800;">⏸️ إيقاف الاشتراك</button>
                         <button class="btn-primary" onclick="app.adminCancelSub()" style="background:#E91E63;">❌ إلغاء الاشتراك</button>
                     </div>
@@ -220,6 +252,19 @@
                     </div>
                     <div id="admin-logs-content" style="overflow-y: auto; flex:1; display:flex; flex-direction:column; gap:10px;">
                         <!-- Logs injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Modal -->
+            <div id="admin-reports-modal" class="overlay" style="display: none; align-items: center; justify-content: center; z-index: 1100; padding: 20px; background: rgba(0,0,0,0.6);">
+                <div style="background: white; width: 100%; max-width: 420px; border-radius: 16px; padding: 20px; max-height: 90vh; display:flex; flex-direction:column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="color: var(--primary-dark); margin:0;">تقارير المشترك</h3>
+                        <button onclick="document.getElementById('admin-reports-modal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer;">❌</button>
+                    </div>
+                    <div id="admin-reports-content" style="overflow-y: auto; flex:1; display:flex; flex-direction:column; gap:10px;">
+                        <!-- Reports injected by JS -->
                     </div>
                 </div>
             </div>
