@@ -1528,6 +1528,7 @@ app.post('/api/send-pdf', async (req, res) => {
 // 6. Generate Native PDF via Puppeteer
 app.post('/api/generate-native-pdf', async (req, res) => {
     let browser = null;
+    await dbMutex.lock(); // LOCK ENTIRE PROCESS ATOMICALLY
     try {
         const { chatId, reportData, filename, reportId } = req.body;
         addLog(`generate-native-pdf called for chatId: ${chatId}`);
@@ -1815,40 +1816,6 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // We MUST convert it back to a standard Node Buffer.
         const pdfBuffer = Buffer.isBuffer(pdfResult) ? pdfResult : Buffer.from(pdfResult);
 
-        // --- ATOMIC POINT DEDUCTION & REPORT SAVE ---
-        if (!isUpdate) {
-            await dbMutex.lock();
-            try {
-                const latestData = await loadLocalSubscriptions();
-                let latestSub = latestData.subscriptions[chatIdStr];
-                if (!latestSub) throw new Error('المشترك لم يعد موجوداً');
-                latestSub = normalizeSubscription(latestSub);
-                
-                if (latestSub.status !== 'active') throw new Error('اشتراكك غير فعال أو ملغى.');
-                
-                if (latestSub.subscription_type === 'points') {
-                    if (latestSub.balance_points < 5) {
-                        throw new Error('⛔ رصيد نقاطك غير كافٍ لإصدار التقرير (تحتاج 5 نقاط).');
-                    }
-                    latestSub.balance_points -= 5;
-                    latestSub.points = latestSub.balance_points;
-                    logTransaction(latestSub, chatIdStr, 'report_deduction', 5, 'خصم لإصدار تقرير جديد', 'system');
-                } else if (latestSub.subscription_type === 'unlimited') {
-                    if (latestSub.subscriptionDays <= 0) throw new Error('⛔ اشتراكك غير المحدود انتهت مدته.');
-                }
-                
-                if (!latestSub.reports) latestSub.reports = [];
-                reportData.generatedAt = new Date().toISOString();
-                latestSub.reports.push(req.body.fullReportRecord || reportData);
-                latestData.subscriptions[chatIdStr] = latestSub;
-                await saveLocalSubscriptions(latestData);
-            } catch (deductErr) {
-                dbMutex.unlock();
-                return res.status(403).json({ success: false, error: deductErr.message });
-            }
-            dbMutex.unlock();
-        }
-
         addLog('Sending PDF to Telegram...');
         const message = await bot.sendDocument(chatId, pdfBuffer, {
             caption: '📄 تقرير الإجازة المرضية الخاص بك'
@@ -1856,12 +1823,30 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             filename: filename || 'sickLeaves.pdf',
             contentType: 'application/pdf'
         });
+
+        // --- ATOMIC POINT DEDUCTION & REPORT SAVE ---
+        if (!isUpdate) {
+            if (userSub.subscription_type === 'points') {
+                userSub.balance_points -= 5;
+                userSub.points = userSub.balance_points;
+                logTransaction(userSub, chatIdStr, 'report_deduction', 5, 'خصم لإصدار تقرير جديد', 'system');
+            }
+            if (!userSub.reports) userSub.reports = [];
+            reportData.generatedAt = new Date().toISOString();
+            userSub.reports.push(req.body.fullReportRecord || reportData);
+            
+            // data is the variable loaded at the top of the endpoint!
+            data.subscriptions[chatIdStr] = userSub;
+            await saveLocalSubscriptions(data);
+        }
         
         res.json({ success: true, fileId: message.document.file_id, reportId: reportId });
 
     } catch (err) {
         addLog(`Error generating HTML for PDF: ${err.message}`);
         res.status(500).json({ success: false, error: err.message });
+    } finally {
+        dbMutex.unlock(); // UNLOCK ATOMIC PROCESS
     }
 });
 
