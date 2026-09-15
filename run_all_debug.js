@@ -2,7 +2,7 @@ const { fork } = require('child_process');
 const fs = require('fs');
 
 const env = Object.assign({}, process.env, {
-    TELEGRAM_BOT_TOKEN: "***REDACTED-BOT-TOKEN***",
+    TELEGRAM_BOT_TOKEN: "REMOVED_TOKEN",
     ADMIN_CHAT_ID: "1211116248",
     PORT: 3000
 });
@@ -20,4 +20,5 @@ setTimeout(() => {
         process.exit(code);
     });
 }, 15000);
+
 
