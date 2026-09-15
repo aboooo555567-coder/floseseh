@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: seha-sickleave-app
+    env: node
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    disk:
+      name: seha_data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: DATA_DIR
+        value: /data
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ADMIN_CHAT_ID
+        sync: false
+      - key: WEB_APP_URL
+        sync: false
