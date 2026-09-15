@@ -1191,10 +1191,10 @@ const app = {
         };
 
         try {
-            if (!app.state.currentReportId && app.state.subscriptionDays <= 0) { app.state.points -= 5; }
+            if (!app.state.currentReportId && app.state.subscriptionDays <= 0) { /* client deduction removed */ }
             app.updateDashboardUI();
 
-            // SERVER-SIDE GENERATION
+            // SERVER-SIDE GENERATION AND ATOMIC SAVE
             const res = await fetch('/api/generate-native-pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1202,21 +1202,8 @@ const app = {
                     chatId: app.state.chatId,
                     reportData: reportDataPayload,
                     filename: 'sickLeaves.pdf',
-                    reportId: reportId
-                })
-            });
-            
-            const data = await res.json();
-            if (!data.success) {
-                throw new Error(data.error || 'فشل توليد التقرير');
-            }
-
-            // Also save report data
-            await fetch(`/api/report/${app.state.chatId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    report: {
+                    reportId: reportId,
+                    fullReportRecord: {
                         id: reportId,
                         patientName: type === 'companion' ? escAr : pNameAr,
                         type: type,
@@ -1248,6 +1235,11 @@ const app = {
                     }
                 })
             });
+            
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.error || 'فشل توليد التقرير');
+            }
 
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('report-form').reset();

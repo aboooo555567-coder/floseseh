@@ -74,13 +74,52 @@ const normalizeSubscription = (user) => {
     if (!user) return null;
     const now = new Date();
     
+    // Normalize Type/Plan
+    user.subscription_type = user.subscription_type || 'points';
+    
+    // Normalize Points Balance
+    user.balance_points = user.balance_points ?? user.points ?? 0;
+    user.points = user.balance_points; // keep in sync
+    
+    // Normalize Dates
+    user.subscriptionStart = user.subscriptionStart || user.subscription_start_date || now.toISOString();
+    user.subscription_start_date = user.subscriptionStart;
+    
+    user.subscriptionExpires = user.subscriptionExpires || user.subscriptionEnd || user.subscription_end_date;
+    
     // Migration helper: if they have subscriptionDays > 0 but no expires date
     if (user.subscriptionDays > 0 && !user.subscriptionExpires) {
         const expires = new Date(now.getTime() + user.subscriptionDays * 24 * 60 * 60 * 1000);
         user.subscriptionExpires = expires.toISOString();
     }
+    user.subscription_end_date = user.subscriptionExpires;
+    user.subscriptionEnd = user.subscriptionExpires;
     
-    user.subscriptionDays = getDaysRemaining(user.subscriptionExpires);
+    // Calculate Days
+    let daysRem = 0;
+    if (user.subscriptionExpires) {
+        daysRem = Math.ceil((new Date(user.subscriptionExpires) - now) / (1000 * 60 * 60 * 24));
+    }
+    user.subscriptionDays = Math.max(0, daysRem);
+    user.daysRemaining = user.subscriptionDays;
+    
+    user.daysUsed = Math.max(0, Math.floor((now - new Date(user.subscriptionStart)) / (1000 * 60 * 60 * 24)));
+    
+    // Normalize Status
+    user.status = user.status || 'active';
+    
+    if (user.subscriptionExpires && new Date(user.subscriptionExpires) < now) {
+        if (user.status === 'active') {
+            user.status = 'expired';
+        }
+    }
+    
+    // Derived Booleans
+    user.isActive = user.status === 'active';
+    user.isExpired = user.status === 'expired';
+    user.isSuspended = user.status === 'suspended';
+    user.isCancelled = user.status === 'cancelled';
+    
     return user;
 };
 
@@ -1022,7 +1061,9 @@ app.post('/api/admin/web/user/update', express.json(), verifyAdmin, async (req, 
         }
 
         await saveLocalSubscriptions(db);
-        res.json({ success: true, user: normalizeSubscription(sub) });
+        const retUser = normalizeSubscription(sub);
+        retUser.chatId = chatId;
+        res.json({ success: true, user: retUser });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     } finally {
@@ -1773,6 +1814,40 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // treating it as a standard object, causing 'Maximum call stack size exceeded' and crashing Node!
         // We MUST convert it back to a standard Node Buffer.
         const pdfBuffer = Buffer.isBuffer(pdfResult) ? pdfResult : Buffer.from(pdfResult);
+
+        // --- ATOMIC POINT DEDUCTION & REPORT SAVE ---
+        if (!isUpdate) {
+            await dbMutex.lock();
+            try {
+                const latestData = await loadLocalSubscriptions();
+                let latestSub = latestData.subscriptions[chatIdStr];
+                if (!latestSub) throw new Error('المشترك لم يعد موجوداً');
+                latestSub = normalizeSubscription(latestSub);
+                
+                if (latestSub.status !== 'active') throw new Error('اشتراكك غير فعال أو ملغى.');
+                
+                if (latestSub.subscription_type === 'points') {
+                    if (latestSub.balance_points < 5) {
+                        throw new Error('⛔ رصيد نقاطك غير كافٍ لإصدار التقرير (تحتاج 5 نقاط).');
+                    }
+                    latestSub.balance_points -= 5;
+                    latestSub.points = latestSub.balance_points;
+                    logTransaction(latestSub, chatIdStr, 'report_deduction', 5, 'خصم لإصدار تقرير جديد', 'system');
+                } else if (latestSub.subscription_type === 'unlimited') {
+                    if (latestSub.subscriptionDays <= 0) throw new Error('⛔ اشتراكك غير المحدود انتهت مدته.');
+                }
+                
+                if (!latestSub.reports) latestSub.reports = [];
+                reportData.generatedAt = new Date().toISOString();
+                latestSub.reports.push(req.body.fullReportRecord || reportData);
+                latestData.subscriptions[chatIdStr] = latestSub;
+                await saveLocalSubscriptions(latestData);
+            } catch (deductErr) {
+                dbMutex.unlock();
+                return res.status(403).json({ success: false, error: deductErr.message });
+            }
+            dbMutex.unlock();
+        }
 
         addLog('Sending PDF to Telegram...');
         const message = await bot.sendDocument(chatId, pdfBuffer, {
