@@ -1543,7 +1543,7 @@ const app = {
             titleEn: titleEn,
             leaveId: reportId,
             durationEn: `${duration} day ( ${gregoAdm} to ${gregoDis} )`,
-            durationAr: `${duration} يوم ( ${hijriAdm} إلى ${hijriDis} )`,
+            durationAr: `${duration} يوم ( ${hijriAdm} الى ${hijriDis} )`,
             admissionG: gregoAdm,
             admissionH: hijriAdm,
             dischargeG: gregoDis,
@@ -1561,7 +1561,7 @@ const app = {
             employerEn: "",
             employerAr: employer || 'غير محدد',
             docLabelEn: isCompanionType ? 'Physician Name' : 'Practitioner Name',
-            docLabelAr: isCompanionType ? 'اسم الطبيب' : 'اسم الممارس',
+            docLabelAr: isCompanionType ? 'اسم الطبيب المعالج' : 'اسم الممارس',
             doctorEn: docNameEn.toUpperCase(),
             doctorAr: docNameAr,
             positionEn: jobEn,
@@ -1571,7 +1571,14 @@ const app = {
             hospitalLogoBase64: this.state.hospitalLogoUrl || null,
             licenseNumber: isPrivate ? license : '',
             time: this.formatAMPM(issueTime),
-            dayDate: this.formatDateLabel(issueDate)
+            dayDate: this.formatDateLabel(issueDate),
+            type: type,
+            patient_name_ar: pNameAr,
+            patient_name_en: pNameEn,
+            escort_name_ar: escAr,
+            escort_name_en: escEn,
+            relation_ar: relAr,
+            relation_en: relEn
         };
 
         try {
