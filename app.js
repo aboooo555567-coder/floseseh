@@ -1543,7 +1543,7 @@ const app = {
             titleEn: titleEn,
             leaveId: reportId,
             durationEn: `${duration} day ( ${gregoAdm} to ${gregoDis} )`,
-            durationAr: `${duration} يوم ( ${hijriAdm} الى ${hijriDis} )`,
+            durationAr: `${duration} يوم ( <span dir="ltr">${hijriAdm}</span> الى <span dir="ltr">${hijriDis}</span> )`,
             admissionG: gregoAdm,
             admissionH: hijriAdm,
             dischargeG: gregoDis,
