@@ -2019,7 +2019,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         };
 
         // Pre-load images as base64
-        const sehaLogo = await imgToBase64('الشعارات/Seha.png');
+        const sehaLogo = await imgToBase64('الشعارات/seha_logo_clean.png') || await imgToBase64('الشعارات/Seha.png');
         const ksaCalligraphy = await imgToBase64('الشعارات/ksa_emblem_clean.png') || await imgToBase64('الشعارات/ksa_calligraphy.png');
         const mohLogo = await imgToBase64('الشعارات/Saudi_Ministry_of_Health.JPG');
         const nhicLogo = await imgToBase64('الشعارات/dfhZfyJM_400x400 (1).jpg');
@@ -2044,35 +2044,36 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; }
+  tr { height: 41px; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 12px; width: 155px; text-align: center !important; vertical-align: middle !important; }
-  .label-ar { border: 1px solid #dee2e6; padding: 10px 8px; font-weight: bold; color: #216ba5; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; }
-  .val { border: 1px solid #dee2e6; padding: 10px 8px; color: #1A365D; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 1px solid #dee2e6; padding: 10px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
+  .label-en { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 12px; width: 155px; text-align: center !important; vertical-align: middle !important; }
+  .label-ar { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; }
+  .val { border: 1px solid #dee2e6; padding: 11px 8px; color: #1A365D; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 1px solid #dee2e6; padding: 11px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
   .dur-label { font-weight: bold; }
   tr:nth-child(even) td { background-color: #f8f9fa; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
   <!-- Header: Seha Logo (left) -->
-  <img src="${sehaLogo}" style="position:absolute;top:10px;left:30px;width:165px;">
+  <img src="${sehaLogo}" style="position:absolute;top:32px;left:38px;width:155px;height:auto;">
 
   <!-- Header: Geometric graphic (right) -->
-  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:15px;right:30px;opacity:0.8;">
+  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:22px;right:30px;opacity:0.8;">
     <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
   </svg>
   
   <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:25px;left:50%;transform:translateX(-50%);width:205px;height:auto;">
+  <img src="${ksaCalligraphy}" style="position:absolute;top:38px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
   
   <!-- Header: Arabic & English Titles -->
-  <div style="position:absolute;top:98px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#216ba5;font-size:20.5px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#216ba5;font-size:13.5px;font-weight:bold;font-family:'Tajawal','Arial',sans-serif;margin:0;">${d.titleEn || 'Sick Leave Report'}</h2>
+  <div style="position:absolute;top:150px;left:0;width:794px;text-align:center;">
+    <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+    <h2 style="color:#1a5b8c;font-size:13.5px;font-weight:bold;font-family:'Tajawal','Arial',sans-serif;margin:0;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
-  <!-- Data Table -->
-  <div style="position:absolute;top:185px;left:40px;width:714px;">
+  <!-- Data Table & Footer Container -->
+  <div style="position:absolute;top:228px;left:40px;width:714px;">
   <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:155px;">Leave ID</td>
@@ -2146,26 +2147,26 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </table>
 
   <!-- ===== FOOTER ===== -->
-  <div style="margin-top:10px;">
+  <div style="margin-top:16px;">
     
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; height:195px; margin-top: 0px;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; height:185px;">
       
       <!-- Left: QR Code + Text -->
-      <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px; padding-top: 0px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=68x68&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:68px;height:68px;margin-top:20px;margin-bottom:45px;">
+      <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=68x68&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:68px;height:68px;margin-top:14px;margin-bottom:38px;">
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
-      <div style="width:1px; background-color:#cccccc; height:185px; margin-top: 5px;"></div>
+      <div style="width:1px; background-color:#cccccc; height:180px; margin-top: 5px;"></div>
 
       <!-- Right: MOH Logo + Hospital Name -->
-      <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px; padding-top: 0px;">
-        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:115px;object-fit:contain;margin-bottom:10px;">
-        <h3 style="font-size:10.5px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
+      <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
+        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:90px;object-fit:contain;margin-bottom:8px;">
+        <h3 style="font-size:11px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
         <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
@@ -2173,16 +2174,16 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </div>
 
     <!-- Bottom Footer Row: Time/Date & NHIC Logo -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:10px; margin-bottom:-25px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:15px; margin-bottom:-20px;">
       
       <!-- Left: Time / Date -->
-      <div style="font-weight:bold;font-size:11px;color:#000; padding-bottom: 0px; margin-bottom: 0px; margin-left: 0px;">
+      <div style="font-weight:bold;font-size:11px;color:#000;">
         <p style="margin:0 0 10px 0;">${d.time || ''}</p>
         <p style="margin:0;">${d.dayDate || ''}</p>
       </div>
 
       <!-- Right: NHIC Logo -->
-      <div style="display:flex; flex-direction:column; align-items:center; padding-bottom:0px; margin-bottom:0px; margin-right:0px;">
+      <div style="display:flex; flex-direction:column; align-items:center;">
         <div style="width: 75px; height: 55px; overflow: hidden; position: relative; margin-bottom: 2px;">
           <img src="${nhicLogo}" style="width: 75px; height: 75px; position: absolute; top: 0; left: 0; object-fit: cover; object-position: top;">
         </div>
