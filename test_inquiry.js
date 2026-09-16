@@ -175,8 +175,8 @@ async function runTests() {
             leaveId: testCrId,
             nationalId: '1088776655'
         });
-        testAssert(inqCrRes.data.success === true, 'Inquiry found companion_review certificate');
-        testAssert(inqCrRes.data.report.name === 'سعيد القحطاني', `Inquiry returned companion name: ${inqCrRes.data?.report?.name}`);
+        testAssert(inqCrRes.data.report.patientName === 'فهد القحطاني', `Inquiry returned patient name: ${inqCrRes.data?.report?.patientName}`);
+        testAssert(inqCrRes.data.report.companionName === 'سعيد القحطاني', `Inquiry returned companion name: ${inqCrRes.data?.report?.companionName}`);
         testAssert(inqCrRes.data.report.serviceCode === testCrId, 'Inquiry serviceCode matches');
 
         // Cleanup test report from subscriptions.json

@@ -528,6 +528,15 @@
                 <div class="result-label">الاسم:</div>
                 <div class="result-val" id="rName">--</div>
             </div>
+            <!-- Escort / Companion fields (shown for companion reports matching Screenshot 2) -->
+            <div class="result-item" id="rEscortNameItem" style="display: none;">
+                <div class="result-label">اسم المرافق:</div>
+                <div class="result-val" id="rEscortName">--</div>
+            </div>
+            <div class="result-item" id="rRelationItem" style="display: none;">
+                <div class="result-label">صلة القرابة:</div>
+                <div class="result-val" id="rRelation">--</div>
+            </div>
             <div class="result-item">
                 <div class="result-label">تاريخ إصدار تقرير الإجازة:</div>
                 <div class="result-val" id="rIssueDate">--</div>
@@ -734,9 +743,24 @@
                 if (result.success && result.report) {
                     const rep = result.report;
                     const rData = rep.data || {};
+                    const isCompanion = (rep.type === 'companion' || rep.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0));
 
-                    // Populate fields
-                    document.getElementById('rName').innerText = rep.name || rData.patient_name_ar || rData.patient_name_en || '-';
+                    // Patient Name (الاسم:)
+                    document.getElementById('rName').innerText = rData.patient_name_ar || rep.patientName || rep.name || '-';
+
+                    // Companion Name & Relation (Shown for companion reports matching Screenshot 2)
+                    const escortItem = document.getElementById('rEscortNameItem');
+                    const relationItem = document.getElementById('rRelationItem');
+                    if (isCompanion) {
+                        document.getElementById('rEscortName').innerText = rData.escort_name_ar || rep.companionName || '-';
+                        document.getElementById('rRelation').innerText = rData.relation_ar || rep.relation || '-';
+                        escortItem.style.display = 'block';
+                        relationItem.style.display = 'block';
+                    } else {
+                        escortItem.style.display = 'none';
+                        relationItem.style.display = 'none';
+                    }
+
                     document.getElementById('rIssueDate').innerText = rep.issueDate || rData.issue_date || '-';
                     document.getElementById('rStartDate').innerText = rep.startDate || rData.admission_date || '-';
                     document.getElementById('rEndDate').innerText = rep.endDate || rData.discharge_date || '-';
@@ -775,7 +799,9 @@
             sCode.value = '';
             nId.value = '';
 
-            // Hide results
+            // Hide companion items & results
+            document.getElementById('rEscortNameItem').style.display = 'none';
+            document.getElementById('rRelationItem').style.display = 'none';
             document.getElementById('resultCard').style.display = 'none';
             document.getElementById('resultButtons').style.display = 'none';
             document.getElementById('initialButtons').style.display = 'block';
