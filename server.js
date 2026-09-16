@@ -2025,6 +2025,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         const nhicLogo = await imgToBase64('الشعارات/dfhZfyJM_400x400 (1).jpg');
 
         const d = reportData;
+        let formattedDurationAr = d.durationAr || '';
+        if (formattedDurationAr && !formattedDurationAr.includes('<span dir="ltr">')) {
+            formattedDurationAr = formattedDurationAr.replace(/(\d{2,4}-\d{2}-\d{2,4})/g, '<span dir="ltr">$1</span>');
+        }
 
         // Build self-contained HTML matching Sehaty platform exactly
         const html = `<!DOCTYPE html>
@@ -2051,24 +2055,24 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
   <!-- Header: Seha Logo (left) -->
-  <img src="${sehaLogo}" style="position:absolute;top:25px;left:30px;width:160px;">
+  <img src="${sehaLogo}" style="position:absolute;top:10px;left:30px;width:165px;">
 
   <!-- Header: Geometric graphic (right) -->
-  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:20px;right:30px;opacity:0.8;">
+  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:15px;right:30px;opacity:0.8;">
     <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
   </svg>
   
   <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:32px;left:50%;transform:translateX(-50%);width:200px;height:auto;">
+  <img src="${ksaCalligraphy}" style="position:absolute;top:25px;left:50%;transform:translateX(-50%);width:205px;height:auto;">
   
   <!-- Header: Arabic & English Titles -->
-  <div style="position:absolute;top:95px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#216ba5;font-size:20px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+  <div style="position:absolute;top:98px;left:0;width:794px;text-align:center;">
+    <h1 style="color:#216ba5;font-size:20.5px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
     <h2 style="color:#216ba5;font-size:13.5px;font-weight:bold;font-family:'Tajawal','Arial',sans-serif;margin:0;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
   <!-- Data Table -->
-  <div style="position:absolute;top:160px;left:40px;width:714px;">
+  <div style="position:absolute;top:185px;left:40px;width:714px;">
   <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:155px;">Leave ID</td>
@@ -2078,7 +2082,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <tr class="dur-row">
       <td class="dur-label" style="width:155px;">Leave Duration</td>
       <td style="width:202px;">${d.durationEn || ''}</td>
-      <td dir="rtl" style="width:202px;">${d.durationAr || ''}</td>
+      <td dir="rtl" style="width:202px;">${formattedDurationAr}</td>
       <td class="dur-label" style="width:155px;">مدة الإجازة</td>
     </tr>
     <tr>
@@ -2221,10 +2225,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         const pdfBuffer = Buffer.isBuffer(pdfResult) ? pdfResult : Buffer.from(pdfResult);
 
         addLog('Sending PDF to Telegram...');
+        const docCaption = d.titleAr ? `📄 ${d.titleAr} الخاص بك` : '📄 تقرير الإجازة المرضية الخاص بك';
+        const docFileName = filename || (d.type === 'companion' ? 'Patient_Companion_Report.pdf' : (d.type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : 'sickLeaves.pdf'));
         const message = await bot.sendDocument(chatId, pdfBuffer, {
-            caption: '📄 تقرير الإجازة المرضية الخاص بك'
+            caption: docCaption
         }, {
-            filename: filename || 'sickLeaves.pdf',
+            filename: docFileName,
             contentType: 'application/pdf'
         });
         
