@@ -2030,7 +2030,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             formattedDurationAr = formattedDurationAr.replace(/(\d{2,4}-\d{2}-\d{2,4})/g, '<span dir="ltr">$1</span>');
         }
         const isCompanion = !!(d.relationAr || d.relationEn || d.type === 'companion' || d.type === 'companion_review');
-        const footerMarginTop = isCompanion ? '20px' : '48px';
+        const footerMarginTop = '18px';
 
         // Build self-contained HTML matching Sehaty platform exactly
         const html = `<!DOCTYPE html>
@@ -2152,18 +2152,18 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="margin-top:${footerMarginTop};">
     
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:175px;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:135px;">
       
-      <!-- Left: QR Code + Text (QR starts 28px down, compact 12px gap to text) -->
+      <!-- Left: QR Code + Text (QR raised to margin-top: 10px, compact 8px gap to text) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:28px;margin-bottom:12px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:10px;margin-bottom:8px;">
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
-      <div style="width:1px; background-color:#cccccc; height:170px; margin-top: 5px;"></div>
+      <div style="width:1px; background-color:#cccccc; height:135px; margin-top: 5px;"></div>
 
       <!-- Right: MOH Logo + Hospital Name -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
@@ -2176,7 +2176,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </div>
 
     <!-- Bottom Footer Row: Time/Date & NHIC Logo (margin-right: -10px aligns NHIC to exact 30px page edge) -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:20px; margin-right:-10px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:6px; margin-right:-10px;">
       
       <!-- Left: Time / Date -->
       <div style="font-weight:bold;font-size:11px;color:#000;">
