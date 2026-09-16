@@ -2064,12 +2064,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </svg>
   
   <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:38px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
+  <img src="${ksaCalligraphy}" style="position:absolute;top:68px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
   
   <!-- Header: Arabic & English Titles -->
-  <div style="position:absolute;top:150px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#1a5b8c;font-size:13.5px;font-weight:bold;font-family:'Tajawal','Arial',sans-serif;margin:0;">${d.titleEn || 'Sick Leave Report'}</h2>
+  <div style="position:absolute;top:168px;left:0;width:794px;text-align:center;">
+    <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+    <h2 style="color:#1a5b8c;font-size:16.5px;font-weight:bold;font-family:'Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
   <!-- Data Table & Footer Container -->
