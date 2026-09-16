@@ -57,6 +57,8 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
+app.use('/assets', express.static(path.join(__dirname, 'الشعارات')));
+app.use('/logos', express.static(path.join(__dirname, 'الشعارات')));
 
 // Local database path
 const defaultSubscriptionsPath = path.join(__dirname, 'subscriptions.json');
@@ -1618,21 +1620,24 @@ app.post('/api/admin/package', async (req, res) => {
     }
 });
 
-// --- Inquiry Endpoint ---
-app.get('/inquiry', (req, res) => {
+// --- Inquiry Endpoints ---
+app.get(['/inquiry', '/verify', '/inquiries/slenquiry', '/slenquiry'], (req, res) => {
     res.sendFile(path.join(__dirname, 'inquiry.html'));
 });
 
 app.post('/api/inquiry', async (req, res) => {
     try {
-        const rawLeaveId = req.body.leaveId || req.body.service_code || '';
-        const rawNationalId = req.body.nationalId || req.body.national_id || '';
+        const rawLeaveId = req.body.leaveId || req.body.service_code || req.body.id || req.body.serviceCode || '';
+        const rawNationalId = req.body.nationalId || req.body.national_id || req.body.nin || req.body.nid || '';
         
-        const leaveId = String(rawLeaveId).trim();
-        const nationalId = String(rawNationalId).trim();
+        const cleanDigits = (s) => String(s || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).trim();
+        const cleanCode = (s) => cleanDigits(s).toUpperCase().replace(/\s+/g, '');
+
+        const leaveId = cleanCode(rawLeaveId);
+        const nationalId = cleanDigits(rawNationalId);
 
         if (!leaveId || !nationalId) {
-            return res.json({ success: false, error: 'الرجاء إدخال الرمز ورقم الهوية.' });
+            return res.json({ success: false, error: 'الرجاء إدخال رمز الخدمة ورقم الهوية.' });
         }
 
         const data = await loadLocalSubscriptions();
@@ -1644,10 +1649,11 @@ app.post('/api/inquiry', async (req, res) => {
             const sub = data.subscriptions[chatId];
             if (sub.reports && Array.isArray(sub.reports)) {
                 for (const r of sub.reports) {
-                    if (r.id === leaveId) {
+                    const rId = cleanCode(r.id || r.leaveId || (r.data && (r.data.id || r.data.leaveId || r.data.service_code)));
+                    if (rId === leaveId) {
                         foundLeaveIdMatch = true;
-                        const storedNationalId = r.data && r.data.national_id ? String(r.data.national_id).trim() : '';
-                        if (storedNationalId === nationalId) {
+                        const rNid = cleanDigits((r.data && (r.data.national_id || r.data.nationalId)) || r.nationalId || r.national_id);
+                        if (rNid === nationalId) {
                             foundReport = r;
                             break;
                         }
@@ -1658,11 +1664,26 @@ app.post('/api/inquiry', async (req, res) => {
         }
 
         if (foundReport) {
-            res.json({ success: true, report: foundReport });
+            const rData = foundReport.data || {};
+            const formatted = {
+                id: foundReport.id || leaveId,
+                serviceCode: foundReport.id || leaveId,
+                nationalId: rData.national_id || nationalId,
+                name: rData.patient_name_ar || foundReport.patientName || rData.patient_name_en || '',
+                issueDate: rData.issue_date || foundReport.issueDate || '',
+                startDate: rData.admission_date || rData.start_date || '',
+                endDate: rData.discharge_date || rData.end_date || '',
+                duration: String(rData.duration || '1'),
+                doctorName: rData.doctor_name_ar || rData.doctor_name || '',
+                jobTitle: rData.job_title_ar || rData.position || '',
+                hospital: rData.hospital_ar || '',
+                data: rData
+            };
+            res.json({ success: true, report: formatted });
         } else if (foundLeaveIdMatch) {
-            res.json({ success: false, error: 'بيانات الاستعلام غير متطابقة.' });
+            res.json({ success: false, error: 'بيانات الاستعلام غير متطابقة (رقم الهوية غير مطابق لرمز الخدمة).' });
         } else {
-            res.json({ success: false, error: 'لم يتم العثور على إجازة بهذا الرمز.' });
+            res.json({ success: false, error: 'لم يتم العثور على تقرير إجازة بهذا الرمز.' });
         }
     } catch (err) {
         console.error("Inquiry Error:", err);
@@ -2135,10 +2156,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       
       <!-- Left: QR Code + Text -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px; padding-top: 0px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=68x68&data=${encodeURIComponent(`https://www.seha.sa/#/inquiries/slenquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:68px;height:68px;margin-top:20px;margin-bottom:45px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=68x68&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:68px;height:68px;margin-top:20px;margin-bottom:45px;">
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
-        <p style="font-size:9px;text-align:center;margin:0;"><a href="https://www.seha.sa/#/inquiries/slenquiry" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
+        <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
@@ -2214,6 +2235,52 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             contentType: 'application/pdf'
         });
         
+        // Persist report into subscriptions.json so inquiry works immediately
+        try {
+            await withDbLock(async () => {
+                const dbData = await loadLocalSubscriptions();
+                const uSub = dbData.subscriptions[chatIdStr];
+                if (uSub) {
+                    if (!uSub.reports) uSub.reports = [];
+                    const currentRepId = reportId || d.leaveId;
+                    const rIdx = uSub.reports.findIndex(r => r.id === currentRepId);
+                    const repObj = {
+                        id: currentRepId,
+                        patientName: d.nameAr || d.patient_name_ar || (d.type === 'companion' ? d.escort_name_ar : ''),
+                        type: d.type || 'sick',
+                        issueDate: d.issueDate || d.issue_date || new Date().toISOString().slice(0, 10),
+                        data: {
+                            admission_date: d.startDate || d.admission_date,
+                            discharge_date: d.endDate || d.discharge_date,
+                            duration: d.duration || '1',
+                            issue_date: d.issueDate || d.issue_date,
+                            issue_time: d.issueTime || d.issue_time,
+                            national_id: d.nationalId || d.national_id,
+                            patient_name_ar: d.nameAr || d.patient_name_ar,
+                            patient_name_en: d.nameEn || d.patient_name_en,
+                            doctor_name_ar: d.docNameAr || d.doctor_name_ar,
+                            doctor_name_en: d.docNameEn || d.doctor_name_en,
+                            job_title_ar: d.positionAr || d.job_title_ar,
+                            job_title_en: d.positionEn || d.job_title_en,
+                            hospital_ar: d.hospitalAr || d.hospital_ar,
+                            hospital_en: d.hospitalEn || d.hospital_en,
+                            hospital_type: d.hospitalType || d.hospital_type,
+                            license_number: d.licenseNumber || d.license_number
+                        }
+                    };
+                    if (rIdx >= 0) {
+                        uSub.reports[rIdx] = repObj;
+                    } else {
+                        uSub.reports.push(repObj);
+                    }
+                    uSub.updatedAt = new Date().toISOString();
+                    await saveLocalSubscriptions(dbData);
+                }
+            });
+        } catch (saveErr) {
+            console.error('Error auto-saving report in generate-native-pdf:', saveErr.message);
+        }
+
         res.json({ success: true, fileId: message.document.file_id, reportId: reportId });
 
     } catch (err) {

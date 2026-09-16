@@ -11,8 +11,31 @@
       "subscriptionDays": 366,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-15T23:59:59.999Z",
-      "subscriptionExpires": "2027-09-15T23:59:59.999Z",
-      "reports": [],
+      "reports": [
+        {
+          "id": "GSL26091549804",
+          "patientName": "ريان أحمد الغامدي",
+          "type": "sick",
+          "issueDate": "2026-09-15",
+          "data": {
+            "admission_date": "2026-09-15",
+            "discharge_date": "2026-09-15",
+            "duration": "1",
+            "issue_date": "2026-09-15",
+            "issue_time": "10:30 ص",
+            "national_id": "1104101516",
+            "patient_name_ar": "ريان أحمد الغامدي",
+            "patient_name_en": "Ryan Ahmed Al-Ghamdi",
+            "doctor_name_ar": "أحمد عبدالله الحازمي",
+            "doctor_name_en": "Ahmed Abdullah Al-Hazmi",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General Physician",
+            "hospital_ar": "مستشفى الملك فهد العام",
+            "hospital_en": "King Fahad General Hospital",
+            "hospital_type": "gov"
+          }
+        }
+      ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
