@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -74,13 +74,15 @@
             <div class="fab-container" id="fab-menu">
                 <button type="button" class="fab" id="fab-main" onclick="app.toggleFab()">+</button>
                 <div class="fab-menu-items" id="fab-menu-items">
-                    <div class="fab-menu-item" onclick="app.startForm('companion')">
-                        مرافقة مريض 👥
-                    </div>
                     <div class="fab-menu-item" onclick="app.startForm('sickleave')">
-                        إجازة مرضية 🤒
+                        <span>إجازة مرضية</span> <span>🤒</span>
                     </div>
-                    
+                    <div class="fab-menu-item" onclick="app.startForm('companion')">
+                        <span>مرافقة مريض</span> <span>👥</span>
+                    </div>
+                    <div class="fab-menu-item" onclick="app.startForm('companion_review')">
+                        <span>مشهد مراجعة لمرافق</span> <span>📋</span>
+                    </div>
                 </div>
             </div>
             <div class="overlay" id="fab-overlay" onclick="app.toggleFab()"></div>

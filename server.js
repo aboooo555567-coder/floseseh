@@ -1669,7 +1669,7 @@ app.post('/api/inquiry', async (req, res) => {
                 id: foundReport.id || leaveId,
                 serviceCode: foundReport.id || leaveId,
                 nationalId: rData.national_id || nationalId,
-                name: rData.patient_name_ar || foundReport.patientName || rData.patient_name_en || '',
+                name: (foundReport.type === 'companion' || foundReport.type === 'companion_review') ? (rData.escort_name_ar || foundReport.patientName || rData.patient_name_ar || '') : (rData.patient_name_ar || foundReport.patientName || rData.patient_name_en || ''),
                 issueDate: rData.issue_date || foundReport.issueDate || '',
                 startDate: rData.admission_date || rData.start_date || '',
                 endDate: rData.discharge_date || rData.end_date || '',
@@ -2246,7 +2246,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                     const rIdx = uSub.reports.findIndex(r => r.id === currentRepId);
                     const repObj = {
                         id: currentRepId,
-                        patientName: d.nameAr || d.patient_name_ar || (d.type === 'companion' ? d.escort_name_ar : ''),
+                        patientName: d.nameAr || d.patient_name_ar || ((d.type === 'companion' || d.type === 'companion_review') ? d.escort_name_ar : ''),
                         type: d.type || 'sick',
                         issueDate: d.issueDate || d.issue_date || new Date().toISOString().slice(0, 10),
                         data: {

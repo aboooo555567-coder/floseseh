@@ -134,6 +134,59 @@ async function runTests() {
         testAssert(resNotFound.data.success === false, 'Non-existent service code returns not found');
         testAssert(resNotFound.data.error.includes('لم يتم العثور'), 'Not found error message is accurate');
 
+        // Test Group 4: Companion Review Report Creation & Inquiry
+        console.log('\n--- TEST GROUP 4: COMPANION REVIEW REPORT & INQUIRY ---');
+        const testCrId = 'CR' + Date.now();
+        const saveCrRes = await request('POST', '/api/report/6316398194', {
+            report: {
+                id: testCrId,
+                patientName: 'سعيد القحطاني',
+                type: 'companion_review',
+                issueDate: '2026-09-16',
+                data: {
+                    admission_date: '2026-09-16',
+                    discharge_date: '2026-09-16',
+                    duration: '1',
+                    issue_date: '2026-09-16',
+                    issue_time: '10:30',
+                    national_id: '1088776655',
+                    patient_name_ar: 'فهد القحطاني',
+                    patient_name_en: 'FAHAD ALQAHTANI',
+                    nationality: 'saudi',
+                    employer: 'الشركة السعودية للكهرباء',
+                    escort_name_ar: 'سعيد القحطاني',
+                    escort_name_en: 'SAEED ALQAHTANI',
+                    relation_ar: 'أخ',
+                    relation_en: 'Brother',
+                    doctor_name_ar: 'د. خالد العمري',
+                    doctor_name_en: 'DR. KHALID ALOMARI',
+                    job_title_ar: 'استشاري باطنية',
+                    job_title_en: 'Internal Medicine Consultant',
+                    hospital_ar: 'مستشفى الشميسي',
+                    hospital_en: 'Shumaisi Hospital',
+                    hospital_type: 'gov',
+                    license_number: ''
+                }
+            }
+        });
+        testAssert(saveCrRes.data.success === true, 'Successfully saved companion_review report');
+
+        const inqCrRes = await request('POST', '/api/inquiry', {
+            leaveId: testCrId,
+            nationalId: '1088776655'
+        });
+        testAssert(inqCrRes.data.success === true, 'Inquiry found companion_review certificate');
+        testAssert(inqCrRes.data.report.name === 'سعيد القحطاني', `Inquiry returned companion name: ${inqCrRes.data?.report?.name}`);
+        testAssert(inqCrRes.data.report.serviceCode === testCrId, 'Inquiry serviceCode matches');
+
+        // Cleanup test report from subscriptions.json
+        const dbRaw = JSON.parse(fs.readFileSync('./subscriptions.json', 'utf8'));
+        if (dbRaw.subscriptions['6316398194']?.reports) {
+            dbRaw.subscriptions['6316398194'].reports = dbRaw.subscriptions['6316398194'].reports.filter(r => r.id !== testCrId);
+            fs.writeFileSync('./subscriptions.json', JSON.stringify(dbRaw, null, 2), 'utf8');
+        }
+        testAssert(true, 'Cleaned up companion_review test report');
+
         console.log('\n====================================================');
         console.log(`📊 INQUIRY TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
         console.log('====================================================');
