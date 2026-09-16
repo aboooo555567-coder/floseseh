@@ -458,7 +458,7 @@ const app = {
                 card.innerHTML = `
                     <div class="report-info">
                         <h4>${r.patientName}</h4>
-                        <p>${r.type === 'companion' ? 'مرافقة مريض' : 'إجازة مرضية'} • ${r.issueDate}</p>
+                        <p>${r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : 'إجازة مرضية')} • ${r.issueDate}</p>
                     </div>
                     <div class="report-actions">
                         <button onclick="app.copyReportId('${r.id}')" title="نسخ رقم التقرير">📋</button>
@@ -1110,7 +1110,7 @@ const app = {
                                 <span style="font-family:monospace; color:#0d9488;">${r.id || '-'}</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; margin-top:4px;">
-                                <span>نوع: ${r.type === 'companion' ? 'مرافقة' : 'إجازة مرضية'}</span>
+                                <span>نوع: ${r.type === 'companion' ? 'مرافقة' : (r.type === 'companion_review' ? 'مشهد مرافق' : 'إجازة مرضية')}</span>
                                 <span>التاريخ: ${r.issueDate || '-'}</span>
                             </div>
                         </div>`;
@@ -1189,17 +1189,22 @@ const app = {
         this.state.leaveType = type;
         this.state.currentStep = 1;
         
-        document.getElementById('form-title').innerText = type === 'companion' ? 'إصدار تقرير مرافقة مريض' : 'إصدار تقرير جديد';
+        let title = 'إصدار تقرير جديد';
+        if (type === 'sickleave') title = 'إصدار تقرير إجازة مرضية';
+        else if (type === 'companion') title = 'إصدار تقرير مرافقة مريض';
+        else if (type === 'companion_review') title = 'إصدار مشهد مراجعة لمرافق';
+        document.getElementById('form-title').innerText = title;
         
         const typeSelect = document.getElementById('leave_type');
         typeSelect.innerHTML = '<option value="GSL">GSL</option><option value="PSL">PSL</option>';
         
-        document.getElementById('escort-fields').style.display = type === 'companion' ? 'block' : 'none';
+        const isCompanionType = (type === 'companion' || type === 'companion_review');
+        document.getElementById('escort-fields').style.display = isCompanionType ? 'block' : 'none';
         
         // Dynamically move National ID field based on type
         const idGroup = document.getElementById('national-id-group');
         if (idGroup) {
-            if (type === 'companion') {
+            if (isCompanionType) {
                 const datesRow = document.querySelector('#escort-fields .dates-row');
                 document.getElementById('escort-fields').insertBefore(idGroup, datesRow);
             } else {
@@ -1517,14 +1522,25 @@ const app = {
         const gregoAdm = this.formatGregorian(admission);
         const gregoDis = this.formatGregorian(discharge);
 
-        const escAr = type === 'companion' ? document.getElementById('escort_name_ar').value : '';
-        const escEn = type === 'companion' ? document.getElementById('escort_name_en').value : '';
-        const relAr = type === 'companion' ? document.getElementById('relation_ar').value : '';
-        const relEn = type === 'companion' ? document.getElementById('relation_en').value : '';
+        const isCompanionType = (type === 'companion' || type === 'companion_review');
+        const escAr = isCompanionType ? document.getElementById('escort_name_ar').value : '';
+        const escEn = isCompanionType ? document.getElementById('escort_name_en').value : '';
+        const relAr = isCompanionType ? document.getElementById('relation_ar').value : '';
+        const relEn = isCompanionType ? document.getElementById('relation_en').value : '';
+
+        let titleAr = 'تقرير إجازة مرضية';
+        let titleEn = 'Sick Leave Report';
+        if (type === 'companion') {
+            titleAr = 'تقرير مرافقة مريض';
+            titleEn = 'Patient Companion Report';
+        } else if (type === 'companion_review') {
+            titleAr = 'مشهد مراجعة لمرافق';
+            titleEn = 'Companion Attendance Certificate';
+        }
 
         const reportDataPayload = {
-            titleAr: type === 'companion' ? 'تقرير مرافقة مريض' : 'تقرير إجازة مرضية',
-            titleEn: type === 'companion' ? 'Patient Companion Report' : 'Sick Leave Report',
+            titleAr: titleAr,
+            titleEn: titleEn,
             leaveId: reportId,
             durationEn: `${duration} day ( ${gregoAdm} to ${gregoDis} )`,
             durationAr: `${duration} يوم ( ${hijriAdm} إلى ${hijriDis} )`,
@@ -1533,19 +1549,19 @@ const app = {
             dischargeG: gregoDis,
             dischargeH: hijriDis,
             issueDate: this.formatGregorian(issueDate),
-            nameLabelEn: type === 'companion' ? 'Companion Name' : 'Name',
-            nameLabelAr: type === 'companion' ? 'اسم المرافق' : 'الاسم',
-            nameEn: type === 'companion' ? escEn.toUpperCase() : pNameEn.toUpperCase(),
-            nameAr: type === 'companion' ? escAr : pNameAr,
+            nameLabelEn: isCompanionType ? 'Companion Name' : 'Name',
+            nameLabelAr: isCompanionType ? 'اسم المرافق' : 'الاسم',
+            nameEn: isCompanionType ? escEn.toUpperCase() : pNameEn.toUpperCase(),
+            nameAr: isCompanionType ? escAr : pNameAr,
             nationalId: idNum,
             nationalityEn: nationalityEn,
             nationalityAr: nationalityAr,
-            relationEn: type === 'companion' ? relEn : '',
-            relationAr: type === 'companion' ? relAr : '',
+            relationEn: isCompanionType ? relEn : '',
+            relationAr: isCompanionType ? relAr : '',
             employerEn: "",
             employerAr: employer || 'غير محدد',
-            docLabelEn: type === 'companion' ? 'Physician Name' : 'Practitioner Name',
-            docLabelAr: type === 'companion' ? 'اسم الطبيب' : 'اسم الممارس',
+            docLabelEn: isCompanionType ? 'Physician Name' : 'Practitioner Name',
+            docLabelAr: isCompanionType ? 'اسم الطبيب' : 'اسم الممارس',
             doctorEn: docNameEn.toUpperCase(),
             doctorAr: docNameAr,
             positionEn: jobEn,
@@ -1586,7 +1602,7 @@ const app = {
                 body: JSON.stringify({
                     report: {
                         id: reportId,
-                        patientName: type === 'companion' ? escAr : pNameAr,
+                        patientName: isCompanionType ? escAr : pNameAr,
                         type: type,
                         issueDate: issueDate,
                         data: {

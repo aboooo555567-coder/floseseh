@@ -205,33 +205,49 @@ body {
 
 .fab-menu-items {
     position: absolute;
-    bottom: 10px;
-    left: 70px;
+    bottom: 75px;
+    left: 0;
     display: flex;
+    flex-direction: column;
     gap: 10px;
     opacity: 0;
     pointer-events: none;
-    transition: all 0.3s ease;
-    transform: translateX(-20px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(15px);
     z-index: 1001;
 }
 
 .fab-container.active .fab-menu-items {
     opacity: 1;
     pointer-events: auto;
-    transform: translateX(0);
+    transform: translateY(0);
 }
 
 .fab-menu-item {
     background: white;
-    padding: 10px 20px;
+    padding: 12px 22px;
     border-radius: 25px;
     font-weight: 700;
-    color: #333;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #1e293b;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     white-space: nowrap;
     cursor: pointer;
     font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+    user-select: none;
+}
+
+.fab-menu-item:hover {
+    background: #f8fafc;
+    transform: translateX(4px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.fab-menu-item:active {
+    transform: scale(0.97);
 }
 
 .overlay {
