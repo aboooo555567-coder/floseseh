@@ -2029,6 +2029,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         if (formattedDurationAr && !formattedDurationAr.includes('<span dir="ltr">')) {
             formattedDurationAr = formattedDurationAr.replace(/(\d{2,4}-\d{2}-\d{2,4})/g, '<span dir="ltr">$1</span>');
         }
+        const isCompanion = !!(d.relationAr || d.relationEn || d.type === 'companion' || d.type === 'companion_review');
+        const footerMarginTop = isCompanion ? '20px' : '48px';
 
         // Build self-contained HTML matching Sehaty platform exactly
         const html = `<!DOCTYPE html>
@@ -2147,25 +2149,25 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   </table>
 
   <!-- ===== FOOTER ===== -->
-  <div style="margin-top:16px;">
+  <div style="margin-top:${footerMarginTop};">
     
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; height:185px;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:175px;">
       
-      <!-- Left: QR Code + Text -->
+      <!-- Left: QR Code + Text (QR starts 28px down, compact 12px gap to text) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=68x68&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:68px;height:68px;margin-top:14px;margin-bottom:38px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:28px;margin-bottom:12px;">
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
-      <div style="width:1px; background-color:#cccccc; height:180px; margin-top: 5px;"></div>
+      <div style="width:1px; background-color:#cccccc; height:170px; margin-top: 5px;"></div>
 
       <!-- Right: MOH Logo + Hospital Name -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
-        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:90px;object-fit:contain;margin-bottom:8px;">
+        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:88px;object-fit:contain;margin-bottom:8px;">
         <h3 style="font-size:11px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
         <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
@@ -2173,8 +2175,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
     </div>
 
-    <!-- Bottom Footer Row: Time/Date & NHIC Logo -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:15px; margin-bottom:-20px;">
+    <!-- Bottom Footer Row: Time/Date & NHIC Logo (margin-right: -10px aligns NHIC to exact 30px page edge) -->
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:20px; margin-right:-10px;">
       
       <!-- Left: Time / Date -->
       <div style="font-weight:bold;font-size:11px;color:#000;">
