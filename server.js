@@ -2154,7 +2154,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // Pre-load images as base64
         const sehaLogo = await imgToBase64('الشعارات/seha_logo_clean.png') || await imgToBase64('الشعارات/Seha.png');
         const ksaCalligraphy = await imgToBase64('الشعارات/ksa_emblem_clean.png') || await imgToBase64('الشعارات/ksa_calligraphy.png');
-        const mohLogo = await imgToBase64('الشعارات/Saudi_Ministry_of_Health.JPG');
+        const mohLogo = await imgToBase64('الشعارات/moh_logo_clean.png') || await imgToBase64('الشعارات/Saudi_Ministry_of_Health.JPG');
         const nhicLogo = await imgToBase64('الشعارات/dfhZfyJM_400x400 (1).jpg');
 
         const d = reportData;
@@ -2163,7 +2163,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             formattedDurationAr = formattedDurationAr.replace(/(\d{2,4}-\d{2}-\d{2,4})/g, '<span dir="ltr">$1</span>');
         }
         const isCompanion = !!(d.relationAr || d.relationEn || d.type === 'companion' || d.type === 'companion_review');
-        const footerMarginTop = '18px';
+        const footerMarginTop = '14px';
 
         // Generate the inquiry QR code LOCALLY (no external API dependency).
         // The old api.qrserver.com call was slow/unreliable from Render and sometimes
@@ -2184,7 +2184,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 </head>
 <body>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+  ${EMBEDDED_FONTS_CSS}
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: #fff !important; }
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
@@ -2298,9 +2298,9 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
     <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px;">
       
-      <!-- Left: QR Code + Text (QR with margin-bottom: 18px for clear spacing to text) -->
+      <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 20px -> text starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:10px;margin-bottom:18px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:10px;margin-bottom:18px;">`}
+        ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">`}
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
@@ -2309,9 +2309,9 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <!-- Center Vertical Divider -->
       <div style="width:1px; background-color:#cccccc; height:155px; margin-top: 5px;"></div>
 
-      <!-- Right: MOH Logo (enlarged to 115px) + Hospital Name -->
+      <!-- Right: MOH Logo (clean cropped, height: 92px, margin-bottom: 8px -> hospital name starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
-        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:115px;object-fit:contain;margin-bottom:6px;">
+        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:92px;object-fit:contain;margin-bottom:8px;">
         <h3 style="font-size:11px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
         <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
@@ -2364,10 +2364,14 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                     const page = await b.newPage();
                     try {
                         await page.setContent(html, { waitUntil, timeout });
-                        // CRITICAL for correct fonts: wait until every @font-face is fully
-                        // loaded and applied before printing. Previously the PDF was captured
-                        // before the webfont finished loading => wrong font / broken layout.
-                        await page.evaluateHandle('document.fonts.ready');
+                        // CRITICAL for correct fonts: explicitly load the Arabic weights
+                        // before printing. Waiting only for DOMContentLoaded can capture the
+                        // page while the browser is still using a fallback font.
+                        await page.evaluate(async () => {
+                            await document.fonts.load('400 12px Tajawal');
+                            await document.fonts.load('700 12px Tajawal');
+                            await document.fonts.ready;
+                        });
                         if (waitImages) {
                             // Belt & suspenders: make sure every <img> finished decoding
                             // (all are inline data-URIs, so this resolves almost instantly,
@@ -2392,10 +2396,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                     }
                 };
                 try {
-                    // Pass 1 (primary): DOM ready + fonts.ready + images complete.
-                    // Every resource is an inline data-URI, so this is fast (~10s incl.
-                    // Chrome launch) and can never hang on the network.
-                    return await renderPass('domcontentloaded', 60000, true);
+                    // Pass 1 (primary): wait for the document and embedded fonts.
+                    return await renderPass('load', 60000, true);
                 } catch (e1) {
                     // Pass 2 (fallback): full network idle, in case a future resource
                     // is remote and needs the network to settle.
