@@ -2360,7 +2360,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                 args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
             });
             try {
-                const renderPass = async (waitUntil, timeout) => {
+                const renderPass = async (waitUntil, timeout, waitImages) => {
                     const page = await b.newPage();
                     try {
                         await page.setContent(html, { waitUntil, timeout });
@@ -2368,6 +2368,18 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                         // loaded and applied before printing. Previously the PDF was captured
                         // before the webfont finished loading => wrong font / broken layout.
                         await page.evaluateHandle('document.fonts.ready');
+                        if (waitImages) {
+                            // Belt & suspenders: make sure every <img> finished decoding
+                            // (all are inline data-URIs, so this resolves almost instantly,
+                            // but it also covers any future remote logo gracefully).
+                            await page.evaluate(async () => {
+                                const imgs = Array.from(document.images);
+                                await Promise.all(imgs.map(img => (img.complete)
+                                    ? Promise.resolve()
+                                    : new Promise(res => { img.onload = img.onerror = res; })));
+                            });
+                            await new Promise(r => setTimeout(r, 150));
+                        }
                         addLog(`Generating PDF via Puppeteer (waitUntil=${waitUntil})...`);
                         return await page.pdf({
                             printBackground: true,
@@ -2380,13 +2392,15 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                     }
                 };
                 try {
-                    // Pass 1: wait for full network idle (instant when everything is inline)
-                    return await renderPass('networkidle0', 45000);
+                    // Pass 1 (primary): DOM ready + fonts.ready + images complete.
+                    // Every resource is an inline data-URI, so this is fast (~10s incl.
+                    // Chrome launch) and can never hang on the network.
+                    return await renderPass('domcontentloaded', 60000, true);
                 } catch (e1) {
-                    // Pass 2: never depend on the network — all resources are embedded
-                    // data-URIs, so DOM-ready + fonts.ready is sufficient and unblockable.
-                    addLog(`Render pass 1 failed (${e1.message}); retrying with domcontentloaded`);
-                    return await renderPass('domcontentloaded', 60000);
+                    // Pass 2 (fallback): full network idle, in case a future resource
+                    // is remote and needs the network to settle.
+                    addLog(`Render pass 1 failed (${e1.message}); retrying with networkidle0`);
+                    return await renderPass('networkidle0', 45000, false);
                 }
             } finally {
                 // ALWAYS close the browser, even on errors. A leaked Chrome process eats
