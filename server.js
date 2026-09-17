@@ -2184,14 +2184,14 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 </head>
 <body>
 <style>
-  ${EMBEDDED_FONTS_CSS}
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: #fff !important; }
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; }
   tr { height: 41px; }
-  td { font-family: 'Tajawal', 'Arial', 'Arimo', sans-serif; }
+  td { font-family: 'Tajawal', 'Arial', sans-serif; }
   .label-en { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 12px; width: 155px; text-align: center !important; vertical-align: middle !important; }
   .label-ar { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; }
   .val { border: 1px solid #dee2e6; padding: 11px 8px; color: #1A365D; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
@@ -2215,7 +2215,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <!-- Header: Arabic & English Titles -->
   <div style="position:absolute;top:168px;left:0;width:794px;text-align:center;">
     <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#1a5b8c;font-size:16.5px;font-weight:bold;font-family:'Times New Roman','Tinos',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
+    <h2 style="color:#1a5b8c;font-size:16.5px;font-weight:bold;font-family:'Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
   <!-- Data Table & Footer Container -->
@@ -2296,24 +2296,24 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="margin-top:${footerMarginTop};">
     
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:135px;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px;">
       
-      <!-- Left: QR Code + Text (QR raised to margin-top: 10px, compact 8px gap to text) -->
+      <!-- Left: QR Code + Text (QR with margin-bottom: 18px for clear spacing to text) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:10px;margin-bottom:8px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:10px;margin-bottom:8px;">`}
+        ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:10px;margin-bottom:18px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:10px;margin-bottom:18px;">`}
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
-        <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', 'Arimo', sans-serif;">To check the report please visit Seha's offical website</p>
+        <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
-      <div style="width:1px; background-color:#cccccc; height:135px; margin-top: 5px;"></div>
+      <div style="width:1px; background-color:#cccccc; height:155px; margin-top: 5px;"></div>
 
-      <!-- Right: MOH Logo + Hospital Name -->
+      <!-- Right: MOH Logo (enlarged to 115px) + Hospital Name -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
-        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:88px;object-fit:contain;margin-bottom:8px;">
+        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:115px;object-fit:contain;margin-bottom:6px;">
         <h3 style="font-size:11px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
-        <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial','Arimo',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
+        <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
 
@@ -2334,7 +2334,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
           <img src="${nhicLogo}" style="width: 75px; height: 75px; position: absolute; top: 0; left: 0; object-fit: cover; object-position: top;">
         </div>
         <h4 style="font-size:11.5px; font-weight:bold; font-family:'Tajawal',sans-serif; color:#00A99D; margin:0; line-height:1.2; text-align:center;">المركز الوطني للمعلومات الصحية</h4>
-        <h5 style="font-size:7px; font-weight:bold; font-family:'Arial','Arimo',sans-serif; color:#1A365D; margin:2px 0 0 0; line-height:1.2; text-align:center; letter-spacing:0.8px;">NATIONAL HEALTH INFORMATION CENTER</h5>
+        <h5 style="font-size:7px; font-weight:bold; font-family:'Arial',sans-serif; color:#1A365D; margin:2px 0 0 0; line-height:1.2; text-align:center; letter-spacing:0.8px;">NATIONAL HEALTH INFORMATION CENTER</h5>
       </div>
       
     </div>
