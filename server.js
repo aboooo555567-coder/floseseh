@@ -135,6 +135,10 @@ const logTransaction = (data, { admin_chat_id = ADMIN_CHAT_ID, target_chat_id, o
 
 const app = express();
 
+// استضافة خط Tajawal ذاتياً + حقنه في كل صفحات HTML (إلغاء الاعتماد على Google Fonts CDN)
+const fontInject = require('./font-inject');
+app.use(fontInject());
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
