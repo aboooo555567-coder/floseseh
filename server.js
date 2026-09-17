@@ -559,9 +559,9 @@ bot.onText(/\/admin/, async (msg) => {
     }
     
     currentAdminToken = crypto.randomBytes(16).toString('hex');
-    const adminUrl = `${process.env.APP_URL || 'https://seha-sickleave-app.onrender.com'}/index.html?screen=admin&token=${currentAdminToken}`;
+    const adminUrl = `${WEB_APP_URL}/index.html?screen=admin&token=${currentAdminToken}`;
     
-        const inquiryUrl = `${process.env.APP_URL || 'https://seha-sickleave.onrender.com'}/inquiry`;
+    const inquiryUrl = `${WEB_APP_URL}/inquiry`;
     const inlineKeyboard = [
         [{ text: 'Open', web_app: { url: adminUrl } }],
         [{ text: 'Open', web_app: { url: inquiryUrl } }]
