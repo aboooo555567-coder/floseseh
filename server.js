@@ -1752,8 +1752,12 @@ app.post('/api/admin/package', async (req, res) => {
 });
 
 // --- Inquiry Endpoints ---
-app.get(['/inquiry', '/verify', '/inquiries/slenquiry', '/slenquiry'], (req, res) => {
-    res.sendFile(path.join(__dirname, 'inquiry.html'));
+// مطابقة للسلوك المنشور في الموقع المرجعي: /inquiry يفتح لوحة SPA (سجل التقارير)
+app.get(['/inquiry', '/inquiries/slenquiry', '/slenquiry'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get('/verify', (req, res) => {
+    res.sendFile(path.join(__dirname, 'verify.html'));
 });
 
 app.post('/api/inquiry', async (req, res) => {
