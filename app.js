@@ -1,3 +1,7 @@
+// Owner (sole admin/controller) — must match ADMIN_CHAT_ID on the server.
+// This is a public Telegram numeric ID (not a secret).
+const OWNER_CHAT_ID = '7853478744';
+
 const app = {
     tg: window.Telegram ? window.Telegram.WebApp : null,
     state: {
@@ -537,9 +541,11 @@ const app = {
     // Admin Login Trigger (Zero window.prompt)
     promptAdminLogin() {
         const savedToken = localStorage.getItem('sehaAdminToken');
-        const isOwnerChat = (this.state.chatId === '6316398194' || (this.tg && this.tg.initDataUnsafe?.user?.id?.toString() === '6316398194'));
+        const initDataUserId = (this.tg && this.tg.initDataUnsafe?.user?.id) ? String(this.tg.initDataUnsafe.user.id) : null;
+        const isOwnerChat = (this.state.chatId === OWNER_CHAT_ID || initDataUserId === OWNER_CHAT_ID);
         
-        if (isOwnerChat || savedToken === "ZAK-99X-ADMIN-2026" || this.state.adminToken) {
+        // Owner inside Telegram is authorized automatically via signed initData (sent by getAdminHeaders).
+        if (isOwnerChat || this.state.adminToken || (savedToken && this.state.chatId === OWNER_CHAT_ID)) {
             if (savedToken) this.state.adminToken = savedToken;
             this.navigate('admin');
             return;
@@ -561,14 +567,25 @@ const app = {
         await this.executeAdminBtn(btn, async () => {
             const codeInput = document.getElementById('admin_login_code');
             const code = codeInput ? codeInput.value.trim() : '';
-            if (code === "ZAK-99X-ADMIN-2026") {
-                this.state.adminToken = code;
-                localStorage.setItem('sehaAdminToken', code);
-                document.getElementById('admin-login-modal').style.display = 'none';
-                this.showToast('تم تسجيل الدخول بنجاح كمدير للنظام', 'success');
-                this.navigate('admin');
-            } else {
-                this.showToast('الرمز السري غير صحيح 🚫', 'error');
+            if (!code) {
+                this.showToast('الرجاء إدخال رمز الدخول', 'error');
+                return;
+            }
+            // The server only accepts the dynamic token issued by the /admin bot command (owner only).
+            // Verify the entered token against a real admin endpoint before trusting it.
+            try {
+                const res = await fetch('/api/admin/web/stats', { headers: { 'x-admin-token': code } });
+                if (res.ok) {
+                    this.state.adminToken = code;
+                    localStorage.setItem('sehaAdminToken', code);
+                    document.getElementById('admin-login-modal').style.display = 'none';
+                    this.showToast('تم تسجيل الدخول بنجاح كمدير للنظام', 'success');
+                    this.navigate('admin');
+                } else {
+                    this.showToast('الرمز غير صحيح أو منتهي. أرسل /admin لبوت التطبيق للحصول على رمز جديد.', 'error');
+                }
+            } catch (err) {
+                this.showToast('خطأ في الاتصال: ' + err.message, 'error');
             }
         });
     },
@@ -677,7 +694,7 @@ const app = {
 
         let html = '';
         for (const u of filtered) {
-            const isOwner = (String(u.chatId) === '6316398194' || u.username?.toLowerCase() === 'zakaria_2025');
+            const isOwner = (String(u.chatId) === OWNER_CHAT_ID || (u.username && u.username.toLowerCase() === 'ppppokl'));
             const statusClass = u.status === 'active' && u.daysRemaining > 0 ? 'badge-active' : (u.status === 'suspended' ? 'badge-suspended' : 'badge-cancelled');
             const statusLabel = u.status === 'active' && u.daysRemaining > 0 ? '🟢 فعال' : (u.status === 'suspended' ? '⏸️ موقوف' : (u.status === 'cancelled' ? '❌ ملغي' : '⏳ منتهي'));
             
@@ -882,7 +899,7 @@ const app = {
     renderManageModalContent(u) {
         const cardEl = document.getElementById('admin-manage-user-card');
         if (cardEl) {
-            const isOwner = (String(u.chatId) === '6316398194' || u.username?.toLowerCase() === 'zakaria_2025');
+            const isOwner = (String(u.chatId) === OWNER_CHAT_ID || (u.username && u.username.toLowerCase() === 'ppppokl'));
             cardEl.innerHTML = `
                 <div style="font-weight:800; font-size:1.05rem; color:#0f172a; margin-bottom:6px;">
                     ${u.name || (u.username ? '@' + u.username : 'مشترك')}
@@ -1399,9 +1416,9 @@ const app = {
 
     buyPackage(pkgName) {
         if(this.tg) {
-            this.tg.openTelegramLink('https://t.me/zakmmm_1211');
+            this.tg.openTelegramLink('https://t.me/ppppokl');
         } else {
-            window.open('https://t.me/zakmmm_1211', '_blank');
+            window.open('https://t.me/ppppokl', '_blank');
         }
     },
 
@@ -1582,8 +1599,8 @@ const app = {
         };
 
         try {
-            if (!app.state.currentReportId && app.state.subscriptionDays <= 0) { app.state.points -= 5; }
-            app.updateDashboardUI();
+            // NOTE: points are deducted SERVER-SIDE (authoritative). The server returns the
+            // new balance in the response and we sync the UI with it after success.
 
             // SERVER-SIDE GENERATION
             const res = await fetch('/api/generate-native-pdf', {
@@ -1600,6 +1617,12 @@ const app = {
             const data = await res.json();
             if (!data.success) {
                 throw new Error(data.error || 'فشل توليد التقرير');
+            }
+
+            // Sync balance from the server's authoritative value (after any deduction)
+            if (data.points != null) {
+                app.state.points = data.points;
+                app.updateDashboardUI();
             }
 
             // Also save report data
