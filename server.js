@@ -16,14 +16,35 @@ let currentAdminToken = null;
 // causing PDFs to print with a fallback font (wrong look). Loading these at
 // startup makes PDF rendering deterministic and offline-safe.
 let EMBEDDED_FONTS_CSS = "";
+let FONT_MODE = 'system-fallback';
 try {
     EMBEDDED_FONTS_CSS = fsSync.readFileSync(path.join(__dirname, 'fonts', 'fonts-embedded.css'), 'utf8');
+    FONT_MODE = 'embedded';
     console.log('[fonts] embedded fonts CSS loaded (' + Math.round(EMBEDDED_FONTS_CSS.length / 1024) + ' KB)');
 } catch (e) {
-    // Fallback to the CDN import if the file is missing (should never happen in production)
-    EMBEDDED_FONTS_CSS = "@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');";
-    console.warn('[fonts] fonts-embedded.css missing, falling back to Google Fonts CDN:', e.message);
+    // Graceful degradation: NO external @import fallback. A hanging Google Fonts
+    // request would block page rendering (networkidle0) and break printing entirely.
+    // With zero external resources, PDF rendering is fully deterministic.
+    EMBEDDED_FONTS_CSS = "";
+    console.warn('[fonts] fonts-embedded.css missing — PDFs will use system fonts:', e.message);
 }
+
+// --- PDF render queue (serialization) --------------------------------------------
+// Render Free (512MB) cannot run multiple concurrent Chrome instances reliably;
+// concurrent prints thrash memory and time out. Serialize renders and cap queue.
+let pdfRenderChain = Promise.resolve();
+let pdfQueueLength = 0;
+const PDF_QUEUE_MAX = 5;
+const enqueuePdfRender = (task) => {
+    if (pdfQueueLength >= PDF_QUEUE_MAX) {
+        return Promise.reject(new Error('الخادم مشغول حالياً بطباعة تقارير أخرى، يرجى المحاولة بعد لحظات'));
+    }
+    pdfQueueLength++;
+    const run = pdfRenderChain.then(task);
+    pdfRenderChain = run.catch(() => {});
+    run.finally(() => { pdfQueueLength = Math.max(0, pdfQueueLength - 1); });
+    return run;
+};
 
 // Resolve a usable Chrome/Chromium executable across environments (Render, Docker, local).
 // Order: explicit env override -> system Chrome/Chromium -> Puppeteer cache (.cache/puppeteer).
@@ -2326,39 +2347,53 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 </html>`;
 
         
-        addLog('Launching puppeteer...');
-        const chromePath = resolveChromeExecutablePath();
-        if (chromePath) addLog(`Using Chrome executable: ${chromePath}`);
-        browser = await puppeteer.launch({
-            headless: true,
-            timeout: 90000,
-            executablePath: chromePath,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
-        });
-        
-        // ALWAYS close the browser, even on errors. A leaked Chrome process eats RAM on the
-        // Render Free plan (512MB) and eventually crashes/restarts the service (broken printing).
-        let pdfResult;
-        try {
-            const page = await browser.newPage();
-            // networkidle0: wait until ALL resources settle (fonts/logos are embedded
-            // data-URIs now, so this is fast — but it guarantees nothing is missed).
-            await page.setContent(html, { waitUntil: 'networkidle0', timeout: 90000 });
-            // CRITICAL for correct fonts: wait until every @font-face is fully loaded
-            // and applied before printing. Previously the PDF was captured before the
-            // webfont finished loading => wrong font / broken Arabic layout.
-            await page.evaluateHandle('document.fonts.ready');
-            
-            addLog('Generating PDF via Puppeteer...');
-            pdfResult = await page.pdf({
-                printBackground: true,
-                width: '794px',
-                height: '1123px',
-                pageRanges: '1'
+        // Serialize renders through the queue (Render Free has 512MB RAM; concurrent
+        // Chrome instances thrash memory and time out) and use a two-pass render ladder.
+        addLog('Queueing PDF render...');
+        const pdfResult = await enqueuePdfRender(async () => {
+            const chromePath = resolveChromeExecutablePath();
+            if (chromePath) addLog(`Using Chrome executable: ${chromePath}`);
+            const b = await puppeteer.launch({
+                headless: true,
+                timeout: 90000,
+                executablePath: chromePath,
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
             });
-        } finally {
-            try { await browser.close(); } catch (e) {}
-        }
+            try {
+                const renderPass = async (waitUntil, timeout) => {
+                    const page = await b.newPage();
+                    try {
+                        await page.setContent(html, { waitUntil, timeout });
+                        // CRITICAL for correct fonts: wait until every @font-face is fully
+                        // loaded and applied before printing. Previously the PDF was captured
+                        // before the webfont finished loading => wrong font / broken layout.
+                        await page.evaluateHandle('document.fonts.ready');
+                        addLog(`Generating PDF via Puppeteer (waitUntil=${waitUntil})...`);
+                        return await page.pdf({
+                            printBackground: true,
+                            width: '794px',
+                            height: '1123px',
+                            pageRanges: '1'
+                        });
+                    } finally {
+                        try { await page.close(); } catch (e) {}
+                    }
+                };
+                try {
+                    // Pass 1: wait for full network idle (instant when everything is inline)
+                    return await renderPass('networkidle0', 45000);
+                } catch (e1) {
+                    // Pass 2: never depend on the network — all resources are embedded
+                    // data-URIs, so DOM-ready + fonts.ready is sufficient and unblockable.
+                    addLog(`Render pass 1 failed (${e1.message}); retrying with domcontentloaded`);
+                    return await renderPass('domcontentloaded', 60000);
+                }
+            } finally {
+                // ALWAYS close the browser, even on errors. A leaked Chrome process eats
+                // RAM on the Render Free plan (512MB) and eventually crashes the service.
+                try { await b.close(); } catch (e) {}
+            }
+        });
         
         // CRITICAL FIX: Puppeteer > v22 returns a Uint8Array instead of a Buffer.
         // node-telegram-bot-api (via request/form-data) attempts to deeply stringify Uint8Array
@@ -2594,7 +2629,7 @@ app.get('/api/verify', async (req, res) => {
 
 // Health check endpoint (required by Render healthCheckPath)
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
+    res.status(200).json({ status: 'ok', fonts: FONT_MODE, printQueue: pdfQueueLength });
 });
 
 // Ensure SPA routes always return index.html instead of Not Found
