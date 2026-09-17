@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: floseseh-app
+    name: floseseh
     env: node
     buildCommand: npm run build
     startCommand: npm start
