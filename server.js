@@ -3,12 +3,27 @@ const puppeteer = require('puppeteer');
 const cors = require('cors');
 process.env.NTBA_FIX_319 = 1;
 const TelegramBot = require('node-telegram-bot-api');
+const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs').promises;
 
 const crypto = require('crypto');
 const fsSync = require('fs');
 let currentAdminToken = null;
+
+// Self-contained embedded fonts (Tajawal / Tinos / Arimo as base64 woff2).
+// Replaces the old Google Fonts @import which could fail/be slow on Render,
+// causing PDFs to print with a fallback font (wrong look). Loading these at
+// startup makes PDF rendering deterministic and offline-safe.
+let EMBEDDED_FONTS_CSS = "";
+try {
+    EMBEDDED_FONTS_CSS = fsSync.readFileSync(path.join(__dirname, 'fonts', 'fonts-embedded.css'), 'utf8');
+    console.log('[fonts] embedded fonts CSS loaded (' + Math.round(EMBEDDED_FONTS_CSS.length / 1024) + ' KB)');
+} catch (e) {
+    // Fallback to the CDN import if the file is missing (should never happen in production)
+    EMBEDDED_FONTS_CSS = "@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');";
+    console.warn('[fonts] fonts-embedded.css missing, falling back to Google Fonts CDN:', e.message);
+}
 
 // Resolve a usable Chrome/Chromium executable across environments (Render, Docker, local).
 // Order: explicit env override -> system Chrome/Chromium -> Puppeteer cache (.cache/puppeteer).
@@ -49,7 +64,7 @@ const resolveChromeExecutablePath = () => {
 // SECURITY NOTE: never hardcode tokens here. TELEGRAM_BOT_TOKEN must be provided via environment variables.
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const PORT = process.env.PORT || 3000;
-const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://floseseh-app.onrender.com';
+const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://floseseh.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=52';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'ppppokl';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '7853478744';
@@ -2129,6 +2144,17 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         const isCompanion = !!(d.relationAr || d.relationEn || d.type === 'companion' || d.type === 'companion_review');
         const footerMarginTop = '18px';
 
+        // Generate the inquiry QR code LOCALLY (no external API dependency).
+        // The old api.qrserver.com call was slow/unreliable from Render and sometimes
+        // produced PDFs without the QR code at all.
+        let qrDataUrl = '';
+        try {
+            const qrTarget = `${WEB_APP_URL}/inquiry?id=${d.leaveId || ''}&nin=${d.nationalId || ''}`;
+            qrDataUrl = await QRCode.toDataURL(qrTarget, { width: 144, margin: 0, errorCorrectionLevel: 'M' });
+        } catch (qrErr) {
+            addLog(`QR generation failed (non-fatal): ${qrErr.message}`);
+        }
+
         // Build self-contained HTML matching Sehaty platform exactly
         const html = `<!DOCTYPE html>
 <html lang="ar" dir="ltr">
@@ -2137,14 +2163,14 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 </head>
 <body>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+  ${EMBEDDED_FONTS_CSS}
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: #fff !important; }
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; }
   tr { height: 41px; }
-  td { font-family: 'Tajawal', 'Arial', sans-serif; }
+  td { font-family: 'Tajawal', 'Arial', 'Arimo', sans-serif; }
   .label-en { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 12px; width: 155px; text-align: center !important; vertical-align: middle !important; }
   .label-ar { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; }
   .val { border: 1px solid #dee2e6; padding: 11px 8px; color: #1A365D; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
@@ -2168,7 +2194,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <!-- Header: Arabic & English Titles -->
   <div style="position:absolute;top:168px;left:0;width:794px;text-align:center;">
     <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#1a5b8c;font-size:16.5px;font-weight:bold;font-family:'Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
+    <h2 style="color:#1a5b8c;font-size:16.5px;font-weight:bold;font-family:'Times New Roman','Tinos',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
   <!-- Data Table & Footer Container -->
@@ -2253,9 +2279,9 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       
       <!-- Left: QR Code + Text (QR raised to margin-top: 10px, compact 8px gap to text) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:10px;margin-bottom:8px;">
+        ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:10px;margin-bottom:8px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:10px;margin-bottom:8px;">`}
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
-        <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
+        <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', 'Arimo', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
@@ -2266,7 +2292,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
         <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:88px;object-fit:contain;margin-bottom:8px;">
         <h3 style="font-size:11px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
-        <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
+        <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial','Arimo',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
 
@@ -2287,7 +2313,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
           <img src="${nhicLogo}" style="width: 75px; height: 75px; position: absolute; top: 0; left: 0; object-fit: cover; object-position: top;">
         </div>
         <h4 style="font-size:11.5px; font-weight:bold; font-family:'Tajawal',sans-serif; color:#00A99D; margin:0; line-height:1.2; text-align:center;">المركز الوطني للمعلومات الصحية</h4>
-        <h5 style="font-size:7px; font-weight:bold; font-family:'Arial',sans-serif; color:#1A365D; margin:2px 0 0 0; line-height:1.2; text-align:center; letter-spacing:0.8px;">NATIONAL HEALTH INFORMATION CENTER</h5>
+        <h5 style="font-size:7px; font-weight:bold; font-family:'Arial','Arimo',sans-serif; color:#1A365D; margin:2px 0 0 0; line-height:1.2; text-align:center; letter-spacing:0.8px;">NATIONAL HEALTH INFORMATION CENTER</h5>
       </div>
       
     </div>
@@ -2315,7 +2341,13 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         let pdfResult;
         try {
             const page = await browser.newPage();
-            await page.setContent(html, { waitUntil: 'load', timeout: 90000 });
+            // networkidle0: wait until ALL resources settle (fonts/logos are embedded
+            // data-URIs now, so this is fast — but it guarantees nothing is missed).
+            await page.setContent(html, { waitUntil: 'networkidle0', timeout: 90000 });
+            // CRITICAL for correct fonts: wait until every @font-face is fully loaded
+            // and applied before printing. Previously the PDF was captured before the
+            // webfont finished loading => wrong font / broken Arabic layout.
+            await page.evaluateHandle('document.fonts.ready');
             
             addLog('Generating PDF via Puppeteer...');
             pdfResult = await page.pdf({
@@ -2337,12 +2369,22 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         addLog('Sending PDF to Telegram...');
         const docCaption = d.titleAr ? `📄 ${d.titleAr} الخاص بك` : '📄 تقرير الإجازة المرضية الخاص بك';
         const docFileName = filename || (d.type === 'companion' ? 'Patient_Companion_Report.pdf' : (d.type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : 'sickLeaves.pdf'));
-        const message = await bot.sendDocument(chatId, pdfBuffer, {
-            caption: docCaption
-        }, {
-            filename: docFileName,
-            contentType: 'application/pdf'
-        });
+
+        // Local-test hook: with the sentinel test token we skip the actual Telegram
+        // upload but keep ALL other logic (report persistence, point deduction) intact.
+        let sentFileId = null;
+        const isLocalTest = process.env.TELEGRAM_BOT_TOKEN === 'TEST_TOKEN_LOCAL';
+        if (isLocalTest) {
+            addLog('TEST_TOKEN_LOCAL detected: skipping Telegram send (test mode)');
+        } else {
+            const message = await bot.sendDocument(chatId, pdfBuffer, {
+                caption: docCaption
+            }, {
+                filename: docFileName,
+                contentType: 'application/pdf'
+            });
+            sentFileId = message.document?.file_id || null;
+        }
         
         // Persist report into subscriptions.json so inquiry works immediately,
         // and deduct 5 points SERVER-SIDE for brand-new points-based reports.
@@ -2417,7 +2459,19 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             console.error('Error auto-saving report in generate-native-pdf:', saveErr.message);
         }
 
-        res.json({ success: true, fileId: message.document.file_id, reportId: reportId, points: finalBalance });
+        if (isLocalTest) {
+            return res.json({
+                success: true,
+                testMode: true,
+                reportId: reportId,
+                points: finalBalance,
+                fileId: null,
+                pdfBase64: pdfBuffer.toString('base64'),
+                filename: docFileName
+            });
+        }
+
+        res.json({ success: true, fileId: sentFileId, reportId: reportId, points: finalBalance });
 
     } catch (err) {
         // Safety net: never leak a Chrome process on unexpected failures.
