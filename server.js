@@ -2400,6 +2400,11 @@ app.get('/api/verify', async (req, res) => {
     }
 });
 
+// Health check endpoint (required by Render healthCheckPath)
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 // Ensure SPA routes always return index.html instead of Not Found
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api') || req.path.startsWith(`/webhook/${TOKEN}`)) {
