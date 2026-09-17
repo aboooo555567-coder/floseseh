@@ -7,15 +7,61 @@ const path = require('path');
 const fs = require('fs').promises;
 
 const crypto = require('crypto');
+const fsSync = require('fs');
 let currentAdminToken = null;
 
+// Resolve a usable Chrome/Chromium executable across environments (Render, Docker, local).
+// Order: explicit env override -> system Chrome/Chromium -> Puppeteer cache (.cache/puppeteer).
+// Prevents 'Could not find Chrome' launch failures in production PDF printing.
+const resolveChromeExecutablePath = () => {
+    try {
+        if (process.env.PUPPETEER_EXECUTABLE_PATH && fsSync.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+            return process.env.PUPPETEER_EXECUTABLE_PATH;
+        }
+        const systemCandidates = [
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/google-chrome',
+            '/usr/bin/chromium-browser',
+            '/usr/bin/chromium',
+            '/snap/bin/chromium'
+        ];
+        for (const p of systemCandidates) {
+            if (fsSync.existsSync(p)) return p;
+        }
+        const cacheDir = process.env.PUPPETEER_CACHE_DIR || path.join(__dirname, '.cache', 'puppeteer');
+        const chromeRoot = path.join(cacheDir, 'chrome');
+        if (fsSync.existsSync(chromeRoot)) {
+            const versions = fsSync.readdirSync(chromeRoot).filter(d => d.startsWith('linux-')).sort().reverse();
+            for (const v of versions) {
+                for (const bin of ['chrome-linux64/chrome', 'chrome-linux/chrome']) {
+                    const candidate = path.join(chromeRoot, v, bin);
+                    if (fsSync.existsSync(candidate)) return candidate;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('resolveChromeExecutablePath notice:', e.message);
+    }
+    return undefined; // fall back to Puppeteer's own resolution
+};
+
 // Configuration
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2nTthvJR_ysJNaQk';
+// SECURITY NOTE: never hardcode tokens here. TELEGRAM_BOT_TOKEN must be provided via environment variables.
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const PORT = process.env.PORT || 3000;
-const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
-const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=51';
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
-const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '6316398194';
+const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://floseseh-app.onrender.com';
+const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=52';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'ppppokl';
+const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '7853478744';
+
+// Single source of truth for admin authorization (owner = sole controller).
+// Owner is identified by numeric Telegram Chat ID first, username is a secondary convenience.
+const isBotAdmin = (chatId, username = null) => {
+    if (!chatId) return false;
+    if (String(chatId) === String(ADMIN_CHAT_ID)) return true;
+    if (username && typeof username === 'string' && username.toLowerCase() === String(ADMIN_USERNAME).toLowerCase()) return true;
+    return false;
+};
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
 
@@ -149,11 +195,12 @@ const saveLocalSubscriptions = async (data) => {
     }
 };
 
-// Auto-bootstrap Owner Account (6316398194) with 10,000 points and 365-day active unlimited
+// Auto-bootstrap Owner Account (ADMIN_CHAT_ID -> 7853478744 / @ppppokl) with 10,000 points and 365-day active unlimited
 const bootstrapOwnerAccount = async () => {
     return withDbLock(async () => {
         const data = await loadLocalSubscriptions();
-        const ownerId = '6316398194';
+        const ownerId = String(ADMIN_CHAT_ID);
+        const ownerUsername = String(ADMIN_USERNAME).replace(/^@/, '').toLowerCase();
         const now = new Date();
         const start = new Date('2026-09-15T00:00:00.000Z');
         const end = new Date('2027-09-15T23:59:59.999Z');
@@ -163,8 +210,8 @@ const bootstrapOwnerAccount = async () => {
         
         if (!owner) {
             owner = {
-                username: 'zakaria_2025',
-                name: 'Zakaria Mohammed',
+                username: ownerUsername,
+                name: 'المالك',
                 status: 'active',
                 plan: 'unlimited',
                 report_payment_source: 'unlimited',
@@ -221,22 +268,24 @@ const bootstrapOwnerAccount = async () => {
                 owner.subscriptionDays = 365;
                 needsSave = true;
             }
-            owner.username = 'zakaria_2025';
-            owner.name = owner.name || 'Zakaria Mohammed';
+            owner.username = ownerUsername;
+            owner.name = owner.name || 'المالك';
             owner.updatedAt = now.toISOString();
         }
         
-        if (data.subscriptions['pending_zakaria_2025']) {
-            if (data.subscriptions['pending_zakaria_2025'].reports && data.subscriptions['pending_zakaria_2025'].reports.length > 0) {
-                owner.reports = [...(owner.reports || []), ...data.subscriptions['pending_zakaria_2025'].reports];
+        // Migrate any legacy pending_* account for the owner username (generic cleanup)
+        const pendingKey = 'pending_' + ownerUsername;
+        if (data.subscriptions[pendingKey]) {
+            if (data.subscriptions[pendingKey].reports && data.subscriptions[pendingKey].reports.length > 0) {
+                owner.reports = [...(owner.reports || []), ...data.subscriptions[pendingKey].reports];
             }
-            delete data.subscriptions['pending_zakaria_2025'];
+            delete data.subscriptions[pendingKey];
             needsSave = true;
         }
         
         if (needsSave) {
             await saveLocalSubscriptions(data);
-            console.log('✅ Owner account 6316398194 bootstrapped: 10,000 points, 365 days, active, unlimited');
+            console.log(`✅ Owner account ${ownerId} (@${ownerUsername}) bootstrapped: 10,000 points, 365 days, active, unlimited`);
         }
     });
 };
@@ -543,7 +592,7 @@ bot.onText(/\/buy/, async (msg) => {
 // Command /myid to display numeric Chat ID
 bot.onText(/\/myid/, async (msg) => {
     const chatId = msg.chat.id.toString();
-    const isOwner = (chatId === ADMIN_CHAT_ID || chatId === '6316398194');
+    const isOwner = isBotAdmin(chatId, msg.from?.username);
     const ownerNote = isOwner ? '\n\n👑 أنت المالك/المشرف المعتمد للنظام.' : '';
     await bot.sendMessage(chatId, `🆔 الـ Numeric Chat ID الخاص بك هو:\n<code>${chatId}</code>${ownerNote}`, { parse_mode: 'HTML' });
 });
@@ -551,8 +600,7 @@ bot.onText(/\/myid/, async (msg) => {
 // /admin command
 bot.onText(/\/admin/, async (msg) => {
     const chatId = msg.chat.id.toString();
-    const username = msg.from?.username;
-    const isAuthorized = (chatId === ADMIN_CHAT_ID || chatId === '6316398194' || (username && ['zakaria_2025', 'zakmmm_1211'].includes(username.toLowerCase())));
+    const isAuthorized = isBotAdmin(chatId, msg.from?.username);
     if (!isAuthorized) {
         await bot.sendMessage(chatId, 'عذراً، هذه القائمة للمسؤول فقط.');
         return;
@@ -577,10 +625,8 @@ bot.onText(/\/admin/, async (msg) => {
 // Admin commands to add subscriptions
 bot.onText(/\/addsub\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
     const chatId = msg.chat.id.toString();
-    const username = msg.from?.username;
     
-    const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
-    if (!username || !allowedAdmins.includes(username.toLowerCase())) {
+    if (!isBotAdmin(chatId, msg.from?.username)) {
         await bot.sendMessage(chatId, 'ليس لديك صلاحية المسؤول لتنفيذ هذا الأمر.');
         return;
     }
@@ -605,13 +651,12 @@ bot.onText(/\/addsub\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
 });
 
 
-// Admin command to add points
+// Admin command to add points (owner only)
+// Supports both targets: /addpoints @username 50  OR  /addpoints 123456789 50
 bot.onText(/\/addpoints\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
     const chatId = msg.chat.id.toString();
-    const username = msg.from?.username;
     
-    const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
-    if (!username || !allowedAdmins.includes(username.toLowerCase())) {
+    if (!isBotAdmin(chatId, msg.from?.username)) {
         await bot.sendMessage(chatId, 'ليس لديك صلاحية المسؤول لتنفيذ هذا الأمر.');
         return;
     }
@@ -619,37 +664,56 @@ bot.onText(/\/addpoints\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
     const targetUsername = match[1];
     const pointsToAdd = parseInt(match[2], 10);
     if (!targetUsername || isNaN(pointsToAdd) || pointsToAdd <= 0) {
-        await bot.sendMessage(chatId, 'يرجى استخدام الصيغة الصحيحة: /addpoints @username 50');
+        await bot.sendMessage(chatId, 'يرجى استخدام الصيغة الصحيحة:\n/addpoints @username 50\nأو بالـ Chat ID:\n/addpoints 123456789 50');
         return;
     }
 
     try {
         const data = await loadLocalSubscriptions();
         const cleaned = targetUsername.toLowerCase();
+        const isNumericTarget = /^\d+$/.test(cleaned);
         
         let foundChatId = null;
-        for (const [cid, sub] of Object.entries(data.subscriptions)) {
-            if (sub.username && sub.username.toLowerCase() === cleaned) {
-                foundChatId = cid;
-                break;
+        if (isNumericTarget && data.subscriptions[cleaned]) {
+            foundChatId = cleaned;
+        } else {
+            for (const [cid, sub] of Object.entries(data.subscriptions)) {
+                if (sub.username && sub.username.toLowerCase() === cleaned) {
+                    foundChatId = cid;
+                    break;
+                }
             }
         }
         
         if (!foundChatId) {
-            foundChatId = 'pending_' + cleaned;
+            // Numeric target not found: create a real account under the given Chat ID so the user gets the points when they start the bot.
+            // Username target not found: create a pending account resolved on the user's next /start.
+            foundChatId = isNumericTarget ? cleaned : ('pending_' + cleaned);
             data.subscriptions[foundChatId] = {
                 points: 0,
                 subscriptionDays: 0,
                 subscriptionExpires: null,
-                username: cleaned,
+                username: isNumericTarget ? null : cleaned,
                 reports: [],
                 updatedAt: new Date().toISOString()
             };
         }
         
         const user = data.subscriptions[foundChatId];
-        user.points = (user.points || 0) + pointsToAdd;
+        const prevPoints = user.points || 0;
+        user.points = prevPoints + pointsToAdd;
+        user.balance_points = user.points;
         user.updatedAt = new Date().toISOString();
+        
+        logTransaction(data, {
+            admin_chat_id: chatId,
+            target_chat_id: foundChatId,
+            operation: 'add_points',
+            amount: pointsToAdd,
+            previous_value: prevPoints,
+            new_value: user.points,
+            details: `شحن نقاط عبر أمر تيليجرام (/addpoints) للمستخدم ${targetUsername}`
+        });
         
         await saveLocalSubscriptions(data);
         
@@ -770,10 +834,8 @@ bot.on('callback_query', async (query) => {
 // Admin command to cancel subscription
 bot.onText(/\/cancelsub\s+@?(\w+)/i, async (msg, match) => {
     const chatId = msg.chat.id.toString();
-    const username = msg.from?.username;
     
-    const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
-    if (!username || !allowedAdmins.includes(username.toLowerCase())) return;
+    if (!isBotAdmin(chatId, msg.from?.username)) return;
 
     const targetUsername = match[1].toLowerCase();
     try {
@@ -808,22 +870,28 @@ bot.onText(/\/cancelsub\s+@?(\w+)/i, async (msg, match) => {
     }
 });
 
-// Admin command to remove points
-bot.onText(/\/removepoints\s+@?(\w+)/i, async (msg, match) => {
+// Admin command to remove points (owner only)
+// Supports: /removepoints @username [amount]  OR  /removepoints 123456789 [amount]
+// Without an amount the balance is zeroed; with an amount only that amount is deducted.
+bot.onText(/\/removepoints\s+@?(\w+)(?:\s+(\d+))?/i, async (msg, match) => {
     const chatId = msg.chat.id.toString();
-    const username = msg.from?.username;
     
-    const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
-    if (!username || !allowedAdmins.includes(username.toLowerCase())) return;
+    if (!isBotAdmin(chatId, msg.from?.username)) return;
 
     const targetUsername = match[1].toLowerCase();
+    const amountToRemove = match[2] ? parseInt(match[2], 10) : null;
     try {
         const data = await loadLocalSubscriptions();
+        const isNumericTarget = /^\d+$/.test(targetUsername);
         let foundChatId = null;
-        for (const [cid, sub] of Object.entries(data.subscriptions)) {
-            if (sub.username && sub.username.toLowerCase() === targetUsername) {
-                foundChatId = cid;
-                break;
+        if (isNumericTarget && data.subscriptions[targetUsername]) {
+            foundChatId = targetUsername;
+        } else {
+            for (const [cid, sub] of Object.entries(data.subscriptions)) {
+                if (sub.username && sub.username.toLowerCase() === targetUsername) {
+                    foundChatId = cid;
+                    break;
+                }
             }
         }
         
@@ -833,14 +901,29 @@ bot.onText(/\/removepoints\s+@?(\w+)/i, async (msg, match) => {
         }
         
         const user = data.subscriptions[foundChatId];
-        user.points = 0;
+        const prevPoints = user.points || 0;
+        const newPoints = (amountToRemove !== null) ? Math.max(0, prevPoints - amountToRemove) : 0;
+        user.points = newPoints;
+        user.balance_points = newPoints;
         user.updatedAt = new Date().toISOString();
+        
+        logTransaction(data, {
+            admin_chat_id: chatId,
+            target_chat_id: foundChatId,
+            operation: 'remove_points',
+            amount: amountToRemove !== null ? (prevPoints - newPoints) : prevPoints,
+            previous_value: prevPoints,
+            new_value: newPoints,
+            details: `سحب نقاط عبر أمر تيليجرام (/removepoints) للمستخدم ${targetUsername}`
+        });
+        
         await saveLocalSubscriptions(data);
         
-        await bot.sendMessage(chatId, `✅ تم تصفير نقاط المستخدم @${targetUsername} بنجاح.`);
+        const targetLabel = isNumericTarget ? targetUsername : '@' + targetUsername;
+        await bot.sendMessage(chatId, `✅ تم سحب ${prevPoints - newPoints} نقطة من المستخدم ${targetLabel}. الرصيد الجديد: ${newPoints} نقطة.`);
         if (!foundChatId.startsWith('pending_')) {
             try {
-                await bot.sendMessage(foundChatId, `⚠️ تم سحب نقاطك من قبل الإدارة. يرجى الشحن للتمكن من استخراج التقارير.`);
+                await bot.sendMessage(foundChatId, `⚠️ تم سحب نقاطك من قبل الإدارة. رصيدك الحالي: ${newPoints} نقطة.`);
             } catch(e){}
         }
     } catch(err) {
@@ -851,10 +934,8 @@ bot.onText(/\/removepoints\s+@?(\w+)/i, async (msg, match) => {
 // Admin command to list subscribers
 bot.onText(/\/subscribers/i, async (msg) => {
     const chatId = msg.chat.id.toString();
-    const username = msg.from?.username;
     
-    const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
-    if (!username || !allowedAdmins.includes(username.toLowerCase())) return;
+    if (!isBotAdmin(chatId, msg.from?.username)) return;
 
     try {
         const data = await loadLocalSubscriptions();
@@ -893,7 +974,7 @@ bot.onText(/\/subscribers/i, async (msg) => {
 const sendReferralMessage = async (chatId, username) => {
     const user = await findSubscription(chatId, username);
     const botInfo = await bot.getMe();
-    const botUsername = botInfo.username || 'zakmmm_1211_bot';
+    const botUsername = botInfo.username || 'sehaaaabot';
     const referralLink = `https://t.me/${botUsername}?start=ref_${chatId}`;
 
     // Calculate actual referrals
@@ -1106,12 +1187,26 @@ app.post('/api/generate', async (req, res) => {
         }
 
         if (!isUpdate) {
-            // New report validation
-            if (normalized.subscriptionDays <= 0 && (normalized.points || 0) < 5) {
-                return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
-            }
-            if (normalized.subscriptionDays <= 0) {
-                userSub.points = (userSub.points || 0) - 5;
+            // PAYMENT-SOURCE AWARE GATE (consistent with /api/generate-native-pdf)
+            const paySource = normalized.report_payment_source || (normalized.subscriptionDays > 0 ? 'unlimited' : 'points');
+            if (paySource === 'points') {
+                if ((normalized.points || 0) < 5) {
+                    return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
+                }
+                const prevPts = userSub.points || 0;
+                userSub.points = prevPts - 5;
+                userSub.balance_points = userSub.points;
+                logTransaction(data, {
+                    admin_chat_id: 'system',
+                    target_chat_id: chatIdStr,
+                    operation: 'report_deduction',
+                    amount: 5,
+                    previous_value: prevPts,
+                    new_value: userSub.points,
+                    details: `خصم 5 نقاط لإصدار تقرير ${report.id || ''} (/api/generate)`
+                });
+            } else if (normalized.subscriptionDays <= 0) {
+                return res.status(403).json({ success: false, error: '❌ انتهت صلاحية اشتراكك. يرجى التجديد لإصدار التقارير.' });
             }
         }
 
@@ -1152,7 +1247,8 @@ const verifyAdmin = (req) => {
             if (calculatedHash === hash) {
                 const userObj = JSON.parse(urlParams.get('user') || '{}');
                 const uid = String(userObj.id || '');
-                if (uid === ADMIN_CHAT_ID || uid === '6316398194') {
+                // Owner = ADMIN_CHAT_ID only (7853478744 / @ppppokl)
+                if (uid === String(ADMIN_CHAT_ID)) {
                     return { authorized: true, adminId: uid };
                 }
             }
@@ -1161,14 +1257,9 @@ const verifyAdmin = (req) => {
         }
     }
     
-    // 2. Check admin token (generated via /admin bot command)
+    // 2. Check admin token (generated via /admin bot command, delivered ONLY to the owner's chat)
     const token = req.headers['x-admin-token'] || req.query.token || req.body?.token;
     if (currentAdminToken && token && token === currentAdminToken) {
-        return { authorized: true, adminId: ADMIN_CHAT_ID };
-    }
-    
-    // 3. Fallback secret token for manual admin login
-    if (token && token === 'ZAK-99X-ADMIN-2026') {
         return { authorized: true, adminId: ADMIN_CHAT_ID };
     }
     
@@ -1704,8 +1795,8 @@ app.post('/api/admin/package', async (req, res) => {
     try {
         const { token, chatId, points, subscriptionDays } = req.body;
         
-        // Allow either the dynamic token or the master secret password
-        if (token !== currentAdminToken && token !== 'ZAK-99X-ADMIN-2026') {
+        // Only the dynamic token issued via the /admin bot command is accepted (owner only)
+        if (token !== currentAdminToken) {
             return res.status(401).json({ success: false, error: 'الرمز السري غير صحيح!' });
         }
         
@@ -1811,9 +1902,6 @@ app.post('/api/report/:chatId', async (req, res) => {
             if (normalized.status === 'cancelled') {
                 return res.status(403).json({ success: false, error: '❌ اشتراكك ملغي. يرجى التواصل مع الإدارة.' });
             }
-            if (normalized.subscriptionDays <= 0) {
-                return res.status(403).json({ success: false, error: '❌ انتهت صلاحية اشتراكك. يرجى التجديد لإصدار التقارير.' });
-            }
             
             if (!userSub.reports) {
                 userSub.reports = [];
@@ -1833,7 +1921,10 @@ app.post('/api/report/:chatId', async (req, res) => {
                 }
             }
             
-            const paySource = userSub.report_payment_source || 'points';
+            // PAYMENT-SOURCE AWARE GATE (consistent with /api/generate-native-pdf):
+            // - points users need 5 points (0 subscription days must NOT block them)
+            // - unlimited users need an active subscription (days > 0)
+            const paySource = userSub.report_payment_source || (userSub.subscriptionDays > 0 ? 'unlimited' : 'points');
             if (!isUpdate) {
                 if (paySource === 'points') {
                     if ((userSub.points || 0) < 5) {
@@ -1852,6 +1943,9 @@ app.post('/api/report/:chatId', async (req, res) => {
                         details: `خصم 5 نقاط لإصدار تقرير ${reportData.id || ''}`
                     });
                 } else {
+                    if (normalized.subscriptionDays <= 0) {
+                        return res.status(403).json({ success: false, error: '❌ انتهت صلاحية اشتراكك. يرجى التجديد لإصدار التقارير.' });
+                    }
                     logTransaction(data, {
                         admin_chat_id: 'system',
                         target_chat_id: chatIdStr,
@@ -1986,9 +2080,6 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         if (normalized.status === 'cancelled') {
             return res.status(403).json({ success: false, error: '❌ تم إلغاء اشتراكك. يرجى التواصل مع الإدارة لإعادة التفعيل.' });
         }
-        if (normalized.subscriptionDays <= 0) {
-            return res.status(403).json({ success: false, error: '❌ عذراً، انتهت صلاحية اشتراكك. يرجى تجديد الاشتراك أولاً لإصدار التقارير.' });
-        }
         
         // Determine if it's an update
         let isUpdate = false;
@@ -1996,9 +2087,15 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             isUpdate = userSub.reports.some(r => r.id === reportId || r.id === reportData.id);
         }
         
-        const paymentSrc = normalized.report_payment_source || 'points';
-        if (!isUpdate && paymentSrc === 'points') {
-            if ((normalized.points || 0) < 5) {
+        // PAYMENT-SOURCE AWARE GATE (fixes printing for points-based users):
+        // - unlimited users need an active subscription (days > 0)
+        // - points users only need 5 points — having 0 subscription days must NOT block them
+        const paymentSrc = normalized.report_payment_source || (normalized.subscriptionDays > 0 ? 'unlimited' : 'points');
+        if (!isUpdate) {
+            if (paymentSrc === 'unlimited' && normalized.subscriptionDays <= 0) {
+                return res.status(403).json({ success: false, error: '❌ عذراً، انتهت صلاحية اشتراكك. يرجى تجديد الاشتراك أولاً لإصدار التقارير.' });
+            }
+            if (paymentSrc === 'points' && (normalized.points || 0) < 5) {
                 return res.status(403).json({ success: false, error: '❌ عذراً، رصيدك غير كافٍ. تحتاج إلى 5 نقاط لإصدار هذا التقرير.' });
             }
         }
@@ -2204,22 +2301,32 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
         
         addLog('Launching puppeteer...');
-        const browser = await puppeteer.launch({
-            headless: 'new',
+        const chromePath = resolveChromeExecutablePath();
+        if (chromePath) addLog(`Using Chrome executable: ${chromePath}`);
+        browser = await puppeteer.launch({
+            headless: true,
             timeout: 90000,
+            executablePath: chromePath,
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
         });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'load', timeout: 90000 });
         
-        addLog('Generating PDF via Puppeteer...');
-        const pdfResult = await page.pdf({
-            printBackground: true,
-            width: '794px',
-            height: '1123px',
-            pageRanges: '1'
-        });
-        await browser.close();
+        // ALWAYS close the browser, even on errors. A leaked Chrome process eats RAM on the
+        // Render Free plan (512MB) and eventually crashes/restarts the service (broken printing).
+        let pdfResult;
+        try {
+            const page = await browser.newPage();
+            await page.setContent(html, { waitUntil: 'load', timeout: 90000 });
+            
+            addLog('Generating PDF via Puppeteer...');
+            pdfResult = await page.pdf({
+                printBackground: true,
+                width: '794px',
+                height: '1123px',
+                pageRanges: '1'
+            });
+        } finally {
+            try { await browser.close(); } catch (e) {}
+        }
         
         // CRITICAL FIX: Puppeteer > v22 returns a Uint8Array instead of a Buffer.
         // node-telegram-bot-api (via request/form-data) attempts to deeply stringify Uint8Array
@@ -2237,7 +2344,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             contentType: 'application/pdf'
         });
         
-        // Persist report into subscriptions.json so inquiry works immediately
+        // Persist report into subscriptions.json so inquiry works immediately,
+        // and deduct 5 points SERVER-SIDE for brand-new points-based reports.
+        // (Fix: the report is saved here before the client calls /api/report/:chatId,
+        // which previously made that call see isUpdate=true and skip the deduction entirely.)
+        let finalBalance = null;
         try {
             await withDbLock(async () => {
                 const dbData = await loadLocalSubscriptions();
@@ -2275,6 +2386,29 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                     } else {
                         uSub.reports.push(repObj);
                     }
+                    
+                    // Server-side point deduction for NEW points-based reports (single source of truth).
+                    // Updates (edits within the 2-day window) are free, matching the legacy flow.
+                    normalizeSubscription(uSub);
+                    const paySrc = uSub.report_payment_source || (uSub.subscriptionDays > 0 ? 'unlimited' : 'points');
+                    if (rIdx < 0 && paySrc === 'points') {
+                        if ((uSub.points || 0) >= 5) {
+                            const prevPts = uSub.points || 0;
+                            uSub.points = prevPts - 5;
+                            uSub.balance_points = uSub.points;
+                            logTransaction(dbData, {
+                                admin_chat_id: 'system',
+                                target_chat_id: chatIdStr,
+                                operation: 'report_deduction',
+                                amount: 5,
+                                previous_value: prevPts,
+                                new_value: uSub.points,
+                                details: `خصم 5 نقاط عند إصدار التقرير ${currentRepId} (generate-native-pdf)`
+                            });
+                        }
+                    }
+                    finalBalance = (uSub.points != null) ? uSub.points : null;
+                    
                     uSub.updatedAt = new Date().toISOString();
                     await saveLocalSubscriptions(dbData);
                 }
@@ -2283,9 +2417,13 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             console.error('Error auto-saving report in generate-native-pdf:', saveErr.message);
         }
 
-        res.json({ success: true, fileId: message.document.file_id, reportId: reportId });
+        res.json({ success: true, fileId: message.document.file_id, reportId: reportId, points: finalBalance });
 
     } catch (err) {
+        // Safety net: never leak a Chrome process on unexpected failures.
+        if (browser) {
+            try { await browser.close(); } catch (e) {}
+        }
         addLog(`Error generating HTML for PDF: ${err.message}`);
         res.status(500).json({ success: false, error: err.message });
     }
@@ -2480,8 +2618,18 @@ const startServer = async () => {
         // Configure Webhook if in Production (Render)
         if (isProduction) {
             const webhookUrl = `${WEB_APP_URL}/webhook/${TOKEN}`;
-            await bot.setWebHook(webhookUrl);
-            console.log(`✓ Webhook set to: ${webhookUrl}`);
+            // Resilient webhook setup: a transient Telegram failure must NOT kill the service
+            // (health endpoint stays up for Render; webhook is retried automatically).
+            const setupWebhook = async () => {
+                try {
+                    await bot.setWebHook(webhookUrl);
+                    console.log(`✓ Webhook set to: ${webhookUrl}`);
+                } catch (e) {
+                    console.error(`⚠️ setWebHook failed (${e.message}) — retrying in 30s`);
+                    setTimeout(setupWebhook, 30000);
+                }
+            };
+            await setupWebhook();
             
             app.post(`/webhook/${TOKEN}`, (req, res) => {
                 bot.processUpdate(req.body);
