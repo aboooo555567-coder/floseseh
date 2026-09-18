@@ -1752,9 +1752,9 @@ app.post('/api/admin/package', async (req, res) => {
 });
 
 // --- Inquiry Endpoints ---
-// مطابقة للسلوك المنشور في الموقع المرجعي: /inquiry يفتح لوحة SPA (سجل التقارير)
+// مطابقة للمستودع المرجعي alehtiat-almorish: /inquiry يخدم صفحة الاستعلام بنمط منصة صحة (Cairo)
 app.get(['/inquiry', '/inquiries/slenquiry', '/slenquiry'], (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'inquiry.html'));
 });
 app.get('/verify', (req, res) => {
     res.sendFile(path.join(__dirname, 'verify.html'));
@@ -1832,6 +1832,75 @@ app.post('/api/inquiry', async (req, res) => {
             error: 'حدث خطأ مؤقت أثناء الاستعلام، يرجى المحاولة مرة أخرى.', 
             details: err.message 
         });
+    }
+});
+
+// POST /inquiry/api — مطابق للمستودع المرجعي alehtiat-almorish (routes/inquiry.js)
+// الطلب: { service_code, national_id } — الاستجابة: { success, data: {name, issue_date, date_from, date_to, day_count, doctor_name, doctor_specialty} }
+app.post('/inquiry/api', async (req, res) => {
+    const service_code = (req.body.service_code || '').trim();
+    const national_id = (req.body.national_id || '').trim();
+
+    if (!service_code || !national_id) {
+        return res.status(400).json({ success: false, message: "يرجى إدخال رمز الخدمة ورقم الهوية." });
+    }
+
+    try {
+        // إعادة استخدام نفس منطق البحث الموجود في /api/inquiry
+        const data = await loadLocalSubscriptions();
+
+        const cleanDigits = (s) => String(s || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).trim();
+        const cleanCode = (s) => cleanDigits(s).toUpperCase().replace(/\s+/g, '');
+
+        const leaveId = cleanCode(service_code);
+        const nid = cleanDigits(national_id);
+
+        let foundReport = null;
+        for (const chatId in data.subscriptions) {
+            const sub = data.subscriptions[chatId];
+            if (sub.reports && Array.isArray(sub.reports)) {
+                for (const r of sub.reports) {
+                    const rId = cleanCode(r.id || r.leaveId || (r.data && (r.data.id || r.data.leaveId || r.data.service_code)));
+                    if (rId === leaveId) {
+                        const rNid = cleanDigits((r.data && (r.data.national_id || r.data.nationalId)) || r.nationalId || r.national_id);
+                        if (rNid === nid) { foundReport = r; break; }
+                    }
+                }
+            }
+            if (foundReport) break;
+        }
+
+        // تنسيق التاريخ DD-MM-YYYY (نفس دالة formatDate في المرجع)
+        const formatDate = (date) => {
+            if (!date) return '';
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return date;
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${day}-${month}-${year}`;
+        };
+
+        if (foundReport) {
+            const rData = foundReport.data || {};
+            res.json({
+                success: true,
+                data: {
+                    name: rData.patient_name_ar || foundReport.patientName || '',
+                    issue_date: formatDate(rData.issue_date || foundReport.issueDate || ''),
+                    date_from: formatDate(rData.admission_date || rData.start_date || ''),
+                    date_to: formatDate(rData.discharge_date || rData.end_date || ''),
+                    day_count: String(rData.duration || '1'),
+                    doctor_name: rData.doctor_name_ar || rData.doctor_name || '',
+                    doctor_specialty: rData.job_title_ar || rData.position || ''
+                }
+            });
+        } else {
+            res.status(404).json({ success: false, message: "خطأ في الاستعلام" });
+        }
+    } catch (err) {
+        console.error('Inquiry API Error:', err);
+        res.status(500).json({ success: false, message: "حدث خطأ أثناء الاتصال بالنظام" });
     }
 });
 
