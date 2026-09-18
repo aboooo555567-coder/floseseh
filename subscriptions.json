@@ -9,7 +9,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T21:46:01.428Z",
+      "updatedAt": "2026-09-18T23:45:38.666Z",
       "balance_points": 0,
       "status": "active",
       "subscription_end_date": null,
@@ -112,7 +112,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T23:45:12.362Z",
+      "updatedAt": "2026-09-18T23:44:21.074Z",
       "reportsCount": 1,
       "daysRemaining": 363,
       "daysUsed": 3
@@ -397,6 +397,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789775138666_qv658q",
+      "timestamp": "2026-09-18T23:45:38.666Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "123456789",
+      "operation": "payment_source_changed",
+      "amount": null,
+      "previous_value": "points",
+      "new_value": "points",
+      "details": "تغيير مصدر دفع التقارير إلى بالنقاط"
+    },
     {
       "id": "tx_1789774880430_5dtz9a",
       "timestamp": "2026-09-18T23:41:20.430Z",
