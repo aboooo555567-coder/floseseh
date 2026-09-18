@@ -2268,21 +2268,22 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; }
-  tr { height: 41px; }
+  tr { height: 40px; }
   /* الخطوط من commit 94c2194: عربي = Noto Sans Arabic | إنجليزي/أرقام = Tinos (Times).
-     تنسيق الجدول (أحجام الخلايا والمسافات وأحجام الخطوط والألوان) مطابق حرفياً للكود المصدري
-     seha-sickleave: تسميات #1a5b8c (12px EN / 13px AR)، قيم #1A365D (12px)،
-     صف المدة #1F3864 (12px)، حدود #dee2e6، حشو 11px 8px، صفوف 41px، تسميات 155px،
-     تظليل الصفوف الزوجية #f5f7fa (nth-child(even))، عناوين 21px/16.5px #1a5b8c */
-  td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 12px; width: 155px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
-  .label-ar { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
-  .val { border: 1px solid #dee2e6; padding: 11px 8px; color: #1A365D; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
+     الجدول مطابق للنماذج المرجعية (سكاليف سابقة/sickLeaves*.pdf) بقياس بكسلي دقيق:
+     تسميات #366fb5 (12px EN / 13px AR)، قيم #2c3e77 (12px)، صف المدة #2c3e77 (12px)،
+     حدود #dedede، حشو 11px 8px، صفوف 40px، حشو رأسي 6px (صف الاسم سطران بنفس الارتفاع كما في النموذج)،
+     أعمدة 153/225/224/123 (عرض الجدول 725px)، تظليل الصفوف الزوجية #f7f7f7،
+     عنوان عربي 21px #306db5 + إنجليزي 16.5px #2c3e77، موضع العنوان top:145px */
+  td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; line-height: 1.2; }
+  .label-en { border: 1px solid #dedede; padding: 6px 8px; font-weight: bold; color: #366fb5; font-size: 12px; width: 153px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
+  .label-ar { border: 1px solid #dedede; padding: 6px 3px; font-weight: bold; color: #366fb5; font-size: 13px; width: 123px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
+  .val { border: 1px solid #dedede; padding: 6px 8px; color: #2c3e77; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
   .val[dir="rtl"] { font-family: 'Tinos', 'Noto Sans Arabic', 'Tajawal', serif; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 1px solid #dee2e6; padding: 11px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Noto Sans Arabic', serif; }
+  .dur-row td { background-color: #2c3e77 !important; color: white; border: 1px solid #dedede; padding: 6px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Noto Sans Arabic', serif; }
   .dur-row td.label-ar { font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
   .dur-label { font-weight: bold; }
-  tr:nth-child(even) td { background-color: #f5f7fa; }
+  tr:nth-child(even) td { background-color: #f7f7f7; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Noto Sans Arabic','Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
@@ -2298,24 +2299,24 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <img src="${ksaCalligraphy}" style="position:absolute;top:68px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
   
   <!-- Header: Arabic & English Titles -->
-  <div style="position:absolute;top:168px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#1a5b8c;font-size:16.5px;font-weight:bold;font-family:'Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
+  <div style="position:absolute;top:145px;left:0;width:794px;text-align:center;">
+    <h1 style="color:#306db5;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 20px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+    <h2 style="color:#2c3e77;font-size:16.5px;font-weight:bold;font-family:'Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
   <!-- Data Table & Footer Container -->
-  <div style="position:absolute;top:228px;left:40px;width:714px;">
+  <div style="position:absolute;top:228px;left:40px;width:725px;">
   <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
     <tr>
-      <td class="label-en" style="width:155px;">Leave ID</td>
-      <td class="val" colspan="2" style="width:404px; font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
-      <td class="label-ar" style="width:155px;">رمز الإجازة</td>
+      <td class="label-en" style="width:153px;">Leave ID</td>
+      <td class="val" colspan="2" style="width:449px; font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
+      <td class="label-ar" style="width:123px;">رمز الإجازة</td>
     </tr>
     <tr class="dur-row">
-      <td class="dur-label" style="width:155px;">Leave Duration</td>
-      <td style="width:202px;">${d.durationEn || ''}</td>
-      <td dir="rtl" style="width:202px;">${formattedDurationAr}</td>
-      <td class="dur-label" style="width:155px;">مدة الإجازة</td>
+      <td class="dur-label" style="width:153px;">Leave Duration</td>
+      <td style="width:225px;">${d.durationEn || ''}</td>
+      <td dir="rtl" style="width:224px;">${formattedDurationAr}</td>
+      <td class="dur-label" style="width:123px;">مدة الإجازة</td>
     </tr>
     <tr>
       <td class="label-en">Admission Date</td>
