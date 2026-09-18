@@ -277,6 +277,22 @@
       "subscription_start_date": "2026-09-18T21:33:34.621Z",
       "daysRemaining": 0,
       "daysUsed": 0
+    },
+    "5729445246": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "amal331c",
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-09-18T22:43:29.878Z"
     }
   },
   "transactions": [
