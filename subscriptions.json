@@ -59,10 +59,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T21:22:30.153Z",
-      "daysRemaining": 366,
-      "daysUsed": 0,
-      "reportsCount": 0,
+      "updatedAt": "2026-09-18T21:24:27.119Z",
+      "daysRemaining": 0,
+      "daysUsed": 3,
+      "reportsCount": 1,
       "subscriptionExpires": null
     },
     "7853478744": {
@@ -114,6 +114,21 @@
       "referralPoints": 0,
       "updatedAt": "2026-09-18T20:17:59.470Z",
       "reportsCount": 1
+    },
+    "8337606751": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "plan": "none",
+      "report_payment_source": "none",
+      "username": "basmmma2",
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-09-18T21:24:32.889Z"
     }
   },
   "transactions": [
