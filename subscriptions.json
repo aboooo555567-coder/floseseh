@@ -118,19 +118,24 @@
       "daysUsed": 3
     },
     "8337606751": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 10,
+      "balance_points": 10,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
-      "plan": "none",
-      "report_payment_source": "none",
+      "plan": "points",
+      "report_payment_source": "points",
       "username": "basmmma2",
       "reports": [],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T21:24:32.889Z"
+      "updatedAt": "2026-09-18T21:44:57.808Z",
+      "status": "active",
+      "subscription_start_date": "2026-09-18T21:24:32.889Z",
+      "daysRemaining": 0,
+      "daysUsed": 0,
+      "reportsCount": 0
     },
     "5275574402": {
       "points": 0,
@@ -241,6 +246,28 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789767897808_7a2mv3",
+      "timestamp": "2026-09-18T21:44:57.808Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8337606751",
+      "operation": "subscription_activate",
+      "amount": null,
+      "previous_value": "active",
+      "new_value": "active",
+      "details": "تغيير حالة المشترك إلى فعال"
+    },
+    {
+      "id": "tx_1789767893919_12lkwv",
+      "timestamp": "2026-09-18T21:44:53.919Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8337606751",
+      "operation": "add_points",
+      "amount": 10,
+      "previous_value": "0",
+      "new_value": "10",
+      "details": "إضافة 10 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
     {
       "id": "tx_1789766550153_h1ii8o",
       "timestamp": "2026-09-18T21:22:30.153Z",
