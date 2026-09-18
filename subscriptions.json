@@ -82,7 +82,17 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:22:51.146Z"
+      "updatedAt": "2026-09-18T20:23:41.891Z",
+      "balance_points": 0,
+      "status": "active",
+      "subscription_end_date": "2027-09-18T20:22:51.146Z",
+      "subscription_start_date": "2026-09-18T20:22:51.146Z",
+      "daysRemaining": 365,
+      "daysUsed": 0,
+      "plan": "unlimited",
+      "report_payment_source": "unlimited",
+      "reportsCount": 0,
+      "trialUsed": true
     }
   },
   "transactions": [
