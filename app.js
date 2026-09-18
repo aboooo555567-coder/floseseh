@@ -10,6 +10,7 @@ const app = {
         points: 0,
         adminToken: null,
         subscriptionDays: 0,
+        reportPaymentSource: null, // مصدر الدفع: 'points' أو 'unlimited' (يتبع ما شحنه الأدمن)
         trialUsed: false,
         trialMode: false, // وضع التجريبي: بيانات ثابتة معبأة غير قابلة للتعديل
         reports: [],
@@ -386,6 +387,7 @@ const app = {
                     const u = data.subscriptions[this.state.chatId];
                     this.state.points = u.points || 0;
                     this.state.subscriptionDays = u.subscriptionDays || 0;
+                    this.state.reportPaymentSource = u.report_payment_source || null;
                     this.state.reports = u.reports || [];
                 }
             }
@@ -417,6 +419,7 @@ const app = {
             const data = await res.json();
             this.state.points = data.user?.points || data.points || 0;
             this.state.subscriptionDays = data.user?.subscriptionDays || data.subscriptionDays || 0;
+            this.state.reportPaymentSource = data.user?.report_payment_source || this.state.reportPaymentSource;
             this.state.trialUsed = !!(data.user?.trialUsed);
             this.state.reports = data.reports || data.user?.reports || [];
             if (data.user?.mohLogo) this.state.mohLogoUrl = data.user.mohLogo;
@@ -1630,10 +1633,17 @@ const app = {
             return;
         }
 
-        // Final Validation — نفس آلية الكود المصدري: من لا رصيد له لا يُصدر تقريراً جديداً
-        if(!this.state.currentReportId && this.state.points < 5 && this.state.subscriptionDays <= 0) {
-            this.showNoCreditModal();
-            return;
+        // Final Validation — نفس آلية الكود المصدري مع مصدر الدفع الذي حددته الإدارة:
+        // نقاط → يلزم 5 نقاط لكل تقرير جديد | غير محدود → يغطيها الاشتراك النشط
+        if(!this.state.currentReportId) {
+            const paySrc = this.state.reportPaymentSource || (this.state.subscriptionDays > 0 ? 'unlimited' : 'points');
+            const blocked = (paySrc === 'points')
+                ? (this.state.points < 5)
+                : (this.state.subscriptionDays <= 0 && this.state.points < 5);
+            if (blocked) {
+                this.showNoCreditModal();
+                return;
+            }
         }
 
         // Show loading
@@ -1783,7 +1793,27 @@ const app = {
             // Sync balance from the server's authoritative value (after any deduction)
             if (data.points != null) {
                 app.state.points = data.points;
-                app.updateDashboardUI();
+            }
+            if (data.subscriptionDays != null) {
+                app.state.subscriptionDays = data.subscriptionDays;
+            }
+            if (data.paySource) {
+                app.state.reportPaymentSource = data.paySource;
+            }
+            app.updateDashboardUI();
+
+            // إشعار الرصيد داخل التطبيق بعد كل إصدار رسمي (كم تبقى له نقاط)
+            const balanceBox = document.getElementById('post-issue-balance');
+            if (balanceBox) {
+                if (isTrial) {
+                    balanceBox.style.display = 'none';
+                } else if (data.paySource === 'points') {
+                    balanceBox.innerHTML = `🧾 خُصمت 5 نقاط لإصدار التقرير<br><b style="font-size:19px;color:#112233;">🌑 رصيدك المتبقي: ${data.points != null ? data.points : 0} نقطة</b>`;
+                    balanceBox.style.display = 'block';
+                } else {
+                    balanceBox.innerHTML = `♾️ اشتراك غير محدود<br><b style="font-size:19px;color:#112233;">📅 الأيام المتبقية: ${data.subscriptionDays != null ? data.subscriptionDays : 0} يوم</b>`;
+                    balanceBox.style.display = 'block';
+                }
             }
 
             // Also save report data (trials are NEVER persisted — non-official samples)

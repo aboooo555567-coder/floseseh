@@ -199,8 +199,22 @@ const normalizeSubscription = (user) => {
     user.plan = user.plan || (user.subscriptionDays > 0 ? 'unlimited' : 'points');
     user.report_payment_source = user.report_payment_source || (user.plan === 'unlimited' ? 'unlimited' : 'points');
     user.reportsCount = Array.isArray(user.reports) ? user.reports.length : 0;
-    
+
     return user;
+};
+
+// آلية الدفع عند الإصدار (نفس آلية الكود المصدري مع تحكم الإدارة):
+// - الأدمن عندما يشحن نقاطاً لمستخدم يصبح مصدر الدفع «نقاط» → كل إصدار تقرير جديد يخصم 5 نقاط
+// - عندما يجدد أياماً يصبح المصدر «غير محدود» → يغطيها الاشتراك النشط
+// - وإذا انتهت أيام اشتراك «غير محدود» وبقي رصيد نقاط → تُستهلك النقاط (سلوك المصدر الأصلي)
+const REPORT_COST_POINTS = 5;
+const resolvePaySource = (uSub) => {
+    normalizeSubscription(uSub);
+    const src = uSub.report_payment_source || (uSub.subscriptionDays > 0 ? 'unlimited' : 'points');
+    if (src === 'unlimited' && (uSub.subscriptionDays || 0) <= 0 && (uSub.points || 0) >= REPORT_COST_POINTS) {
+        return 'points';
+    }
+    return src;
 };
 
 // Read local subscriptions.json
@@ -486,8 +500,10 @@ const bootstrapOwnerAccount = async () => {
                 details: 'Owner account created with 10,000 points and 365 days active unlimited'
             });
         } else {
-            if ((owner.points || 0) < 10000 || (owner.balance_points || 0) < 10000) {
-                const prev = owner.points || 0;
+            // مهم: لا نسترجع النقاط تلقائياً ولا نفرض مصدر الدفع عند كل إقلاع —
+            // الخصم عند الإصدار يجب أن يبقى حقيقياً ودائماً (طلبات المستخدم).
+            // نعبّئ الحقول فقط عندما تكون مفقودة تماماً.
+            if (owner.points == null) {
                 owner.points = 10000;
                 owner.balance_points = 10000;
                 needsSave = true;
@@ -495,21 +511,20 @@ const bootstrapOwnerAccount = async () => {
                     admin_chat_id: ownerId,
                     target_chat_id: ownerId,
                     operation: 'add_points',
-                    amount: 10000 - prev,
-                    previous_value: prev,
+                    amount: 10000,
                     new_value: 10000,
-                    details: 'Owner points restored/updated to 10,000 points'
+                    details: 'Owner points initialized (were missing)'
                 });
             }
             if (owner.status !== 'active') {
                 owner.status = 'active';
                 needsSave = true;
             }
-            if (owner.report_payment_source !== 'unlimited') {
+            if (!owner.report_payment_source) {
                 owner.report_payment_source = 'unlimited';
                 needsSave = true;
             }
-            if (!owner.subscription_end_date || new Date(owner.subscription_end_date) < new Date('2027-09-15T00:00:00.000Z')) {
+            if (!owner.subscription_end_date) {
                 owner.subscription_start_date = start.toISOString();
                 owner.subscription_end_date = end.toISOString();
                 owner.subscriptionExpires = end.toISOString();
@@ -958,6 +973,9 @@ bot.onText(/\/addpoints\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
         const prevPoints = user.points || 0;
         user.points = prevPoints + pointsToAdd;
         user.balance_points = user.points;
+        // شحن النقاط يجعل مصدر الدفع «نقاط» — كل إصدار تقرير جديد سيخصم 5 نقاط
+        user.report_payment_source = 'points';
+        user.plan = 'points';
         user.updatedAt = new Date().toISOString();
         
         logTransaction(data, {
@@ -1374,6 +1392,16 @@ app.post('/api/admin/add-user', express.json(), async (req, res) => {
             user.subscriptionDays = getDaysRemaining(newExpires.toISOString());
         }
         
+        // مصدر الدفع يتبع ما شحنه الأدمن (اختيار «نوع الاشتراك» في اللوحة):
+        // نقاط → الدفع بالنقاط (خصم 5 لكل تقرير) | أيام → اشتراك غير محدود
+        if ((parseInt(points) || 0) > 0 && addedDays === 0) {
+            user.report_payment_source = 'points';
+            user.plan = 'points';
+        } else if (addedDays > 0 && !(parseInt(points) || 0)) {
+            user.report_payment_source = 'unlimited';
+            user.plan = 'unlimited';
+        }
+        
         await saveLocalSubscriptions(data);
         
         if (!foundChatId.startsWith('pending_')) {
@@ -1443,24 +1471,24 @@ app.post('/api/generate', async (req, res) => {
 
         if (!isUpdate) {
             // PAYMENT-SOURCE AWARE GATE (consistent with /api/generate-native-pdf)
-            const paySource = normalized.report_payment_source || (normalized.subscriptionDays > 0 ? 'unlimited' : 'points');
+            const paySource = resolvePaySource(userSub);
             if (paySource === 'points') {
-                if ((normalized.points || 0) < 5) {
-                    return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
+                if ((userSub.points || 0) < REPORT_COST_POINTS) {
+                    return res.status(403).json({ success: false, error: `عذراً، رصيدك غير كافٍ. تحتاج ${REPORT_COST_POINTS} نقاط لإصدار تقرير جديد.` });
                 }
                 const prevPts = userSub.points || 0;
-                userSub.points = prevPts - 5;
+                userSub.points = prevPts - REPORT_COST_POINTS;
                 userSub.balance_points = userSub.points;
                 logTransaction(data, {
                     admin_chat_id: 'system',
                     target_chat_id: chatIdStr,
                     operation: 'report_deduction',
-                    amount: 5,
+                    amount: REPORT_COST_POINTS,
                     previous_value: prevPts,
                     new_value: userSub.points,
-                    details: `خصم 5 نقاط لإصدار تقرير ${report.id || ''} (/api/generate)`
+                    details: `خصم ${REPORT_COST_POINTS} نقاط لإصدار تقرير ${report.id || ''} (/api/generate)`
                 });
-            } else if (normalized.subscriptionDays <= 0) {
+            } else if ((userSub.subscriptionDays || 0) <= 0) {
                 return res.status(403).json({ success: false, error: '❌ انتهت صلاحية اشتراكك. يرجى التجديد لإصدار التقارير.' });
             }
         }
@@ -1725,6 +1753,9 @@ app.post('/api/admin/web/user/update', async (req, res) => {
                 const prev = user.points || 0;
                 user.points = prev + amt;
                 user.balance_points = user.points;
+                // شحن النقاط يجعل مصدر الدفع «نقاط» — التقرير التالي يخصم 5 نقاط فوراً
+                user.report_payment_source = 'points';
+                user.plan = 'points';
                 logTransaction(data, {
                     admin_chat_id: auth.adminId,
                     target_chat_id: cleanChatId,
@@ -1732,9 +1763,9 @@ app.post('/api/admin/web/user/update', async (req, res) => {
                     amount: amt,
                     previous_value: prev,
                     new_value: user.points,
-                    details: `إضافة ${amt} نقطة إلى رصيد المشترك`
+                    details: `إضافة ${amt} نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)`
                 });
-                message = `تم إضافة ${amt} نقطة بنجاح (الرصيد الجديد: ${user.points})`;
+                message = `تم إضافة ${amt} نقطة بنجاح (الرصيد الجديد: ${user.points}) — مصدر الدفع الآن: 🪙 بالنقاط`;
             } else if (action === 'remove_points') {
                 const amt = parseInt(amount) || 0;
                 if (amt <= 0) return res.status(400).json({ success: false, error: 'عدد النقاط يجب أن يكون أكبر من 0' });
@@ -1801,6 +1832,9 @@ app.post('/api/admin/web/user/update', async (req, res) => {
                 user.subscription_end_date = newEnd.toISOString();
                 user.subscriptionExpires = newEnd.toISOString();
                 user.status = 'active'; // Always reactivate on renewal
+                // تجديد الأيام يجعل مصدر الدفع «غير محدود» — يغطيها الاشتراك النشط
+                user.report_payment_source = 'unlimited';
+                user.plan = 'unlimited';
                 logTransaction(data, {
                     admin_chat_id: auth.adminId,
                     target_chat_id: cleanChatId,
@@ -1942,6 +1976,14 @@ app.post('/api/admin/package', async (req, res) => {
                     const newEnd = new Date(base.getTime() + days * 86400000);
                     user.subscription_end_date = newEnd.toISOString();
                     user.subscriptionExpires = newEnd.toISOString();
+                }
+                // مصدر الدفع يتبع ما شحنه الأدمن
+                if (pts > 0 && days === 0) {
+                    user.report_payment_source = 'points';
+                    user.plan = 'points';
+                } else if (days > 0 && pts === 0) {
+                    user.report_payment_source = 'unlimited';
+                    user.plan = 'unlimited';
                 }
                 user.status = 'active';
                 user.updatedAt = now.toISOString();
@@ -2250,28 +2292,28 @@ app.post('/api/report/:chatId', async (req, res) => {
             }
             
             // PAYMENT-SOURCE AWARE GATE (consistent with /api/generate-native-pdf):
-            // - points users need 5 points (0 subscription days must NOT block them)
-            // - unlimited users need an active subscription (days > 0)
-            const paySource = userSub.report_payment_source || (userSub.subscriptionDays > 0 ? 'unlimited' : 'points');
+            // - مصدر «نقاط»: كل تقرير جديد يخصم 5 نقاط
+            // - مصدر «غير محدود»: يغطيها الاشتراك النشط
+            const paySource = resolvePaySource(userSub);
             if (!isUpdate) {
                 if (paySource === 'points') {
-                    if ((userSub.points || 0) < 5) {
-                        return res.status(403).json({ success: false, error: 'عذراً، رصيدك غير كافٍ. تحتاج 5 نقاط لإصدار تقرير جديد.' });
+                    if ((userSub.points || 0) < REPORT_COST_POINTS) {
+                        return res.status(403).json({ success: false, error: `عذراً، رصيدك غير كافٍ. تحتاج ${REPORT_COST_POINTS} نقاط لإصدار تقرير جديد.` });
                     }
                     const prevPts = userSub.points || 0;
-                    userSub.points = prevPts - 5;
+                    userSub.points = prevPts - REPORT_COST_POINTS;
                     userSub.balance_points = userSub.points;
                     logTransaction(data, {
                         admin_chat_id: 'system',
                         target_chat_id: chatIdStr,
                         operation: 'report_deduction',
-                        amount: 5,
+                        amount: REPORT_COST_POINTS,
                         previous_value: prevPts,
                         new_value: userSub.points,
-                        details: `خصم 5 نقاط لإصدار تقرير ${reportData.id || ''}`
+                        details: `خصم ${REPORT_COST_POINTS} نقاط لإصدار تقرير ${reportData.id || ''}`
                     });
                 } else {
-                    if (normalized.subscriptionDays <= 0) {
+                    if ((userSub.subscriptionDays || 0) <= 0) {
                         return res.status(403).json({ success: false, error: '❌ انتهت صلاحية اشتراكك. يرجى التجديد لإصدار التقارير.' });
                     }
                     logTransaction(data, {
@@ -2420,21 +2462,23 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             isUpdate = userSub.reports.some(r => r.id === reportId || r.id === reportData.id);
         }
         
-        // PAYMENT-SOURCE AWARE GATE (fixes printing for points-based users):
-        // - unlimited users need an active subscription (days > 0)
-        // - points users only need 5 points — having 0 subscription days must NOT block them
-        // - trial=true: free watermarked sample — skips the credit gate, ONE per account
-        const paymentSrc = normalized.report_payment_source || (normalized.subscriptionDays > 0 ? 'unlimited' : 'points');
+        // PAYMENT-SOURCE AWARE GATE (آلية المصدر مع تحكم الإدارة):
+        // - مصدر «نقاط»: كل تقرير جديد يكلّف 5 نقاط — لا يُصدر بدون رصيد كافٍ
+        // - مصدر «غير محدود»: يغطيها الاشتراك النشط (الأيام المتبقية > 0)
+        // - trial=true: عينة مجانية مائية — تتجاوز بوابة الرصيد، مرة واحدة لكل حساب
+        const paySrc = resolvePaySource(userSub);
         const isTrial = trial === true || trial === 'true';
         if (!isUpdate) {
             if (isTrial) {
                 if (userSub.trialUsed) {
                     return res.status(403).json({ success: false, error: '🧪 لقد استخدمت تجربتك المجانية بالفعل. للحصول على تقارير رسمية يرجى طلب الاشتراك.' });
                 }
-            } else if (paymentSrc === 'unlimited' && normalized.subscriptionDays <= 0) {
+            } else if (paySrc === 'points') {
+                if ((userSub.points || 0) < REPORT_COST_POINTS) {
+                    return res.status(403).json({ success: false, error: `❌ عذراً، رصيدك غير كافٍ. تحتاج إلى ${REPORT_COST_POINTS} نقاط لإصدار هذا التقرير.` });
+                }
+            } else if ((userSub.subscriptionDays || 0) <= 0) {
                 return res.status(403).json({ success: false, error: '❌ عذراً، انتهت صلاحية اشتراكك. يرجى تجديد الاشتراك أولاً لإصدار التقارير.' });
-            } else if (paymentSrc === 'points' && (normalized.points || 0) < 5) {
-                return res.status(403).json({ success: false, error: '❌ عذراً، رصيدك غير كافٍ. تحتاج إلى 5 نقاط لإصدار هذا التقرير.' });
             }
         }
         // -----------------------------
@@ -2776,6 +2820,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // (Fix: the report is saved here before the client calls /api/report/:chatId,
         // which previously made that call see isUpdate=true and skip the deduction entirely.)
         let finalBalance = null;
+        let paySourceUsed = null;
+        let daysAfterIssuance = null;
         try {
             await withDbLock(async () => {
                 const dbData = await loadLocalSubscriptions();
@@ -2825,29 +2871,32 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                     } else {
                         uSub.reports.push(repObj);
                     }
-                    
-                    // Server-side point deduction for NEW points-based reports (single source of truth).
-                    // Updates (edits within the 2-day window) are free, matching the legacy flow.
+
+                    // Server-side point deduction for NEW reports (single source of truth).
+                    // آلية المصدر: كل تقرير جديد يخصم 5 نقاط عندما يكون مصدر الدفع «نقاط»؛
+                    // التعديل خلال نافذة اليومين مجاني. resolvePaySource تقرأ ما شحنه الأدمن فعلياً.
                     normalizeSubscription(uSub);
-                    const paySrc = uSub.report_payment_source || (uSub.subscriptionDays > 0 ? 'unlimited' : 'points');
-                    if (rIdx < 0 && paySrc === 'points') {
-                        if ((uSub.points || 0) >= 5) {
+                    const paySrcNow = resolvePaySource(uSub);
+                    paySourceUsed = paySrcNow;
+                    if (rIdx < 0 && paySrcNow === 'points') {
+                        if ((uSub.points || 0) >= REPORT_COST_POINTS) {
                             const prevPts = uSub.points || 0;
-                            uSub.points = prevPts - 5;
+                            uSub.points = prevPts - REPORT_COST_POINTS;
                             uSub.balance_points = uSub.points;
                             logTransaction(dbData, {
                                 admin_chat_id: 'system',
                                 target_chat_id: chatIdStr,
                                 operation: 'report_deduction',
-                                amount: 5,
+                                amount: REPORT_COST_POINTS,
                                 previous_value: prevPts,
                                 new_value: uSub.points,
-                                details: `خصم 5 نقاط عند إصدار التقرير ${currentRepId} (generate-native-pdf)`
+                                details: `خصم ${REPORT_COST_POINTS} نقاط عند إصدار التقرير ${currentRepId} (generate-native-pdf)`
                             });
                         }
                     }
                     finalBalance = (uSub.points != null) ? uSub.points : null;
-                    
+                    daysAfterIssuance = uSub.subscriptionDays || 0;
+
                     uSub.updatedAt = new Date().toISOString();
                     await saveLocalSubscriptions(dbData);
                 }
@@ -2856,12 +2905,38 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             console.error('Error auto-saving report in generate-native-pdf:', saveErr.message);
         }
 
+        // إشعار الرصيد بعد كل إصدار رسمي: كم تبقى له نقاط (أو أيام الاشتراك غير المحدود)
+        let notificationText = null;
+        if (!isTrial) {
+            const title = d.titleAr || 'تقرير';
+            if (paySourceUsed === 'points') {
+                notificationText = [
+                    '🔔 إشعار رصيد',
+                    `✅ تم إصدار «${title}» بنجاح.`,
+                    `🧾 خُصمت ${REPORT_COST_POINTS} نقاط لإصدار التقرير.`,
+                    `🌑 رصيدك المتبقي: ${finalBalance != null ? finalBalance : 0} نقطة.`
+                ].join('\n');
+            } else {
+                notificationText = [
+                    '🔔 إشعار',
+                    `✅ تم إصدار «${title}» بنجاح.`,
+                    `♾️ اشتراك غير محدود — الأيام المتبقية: ${daysAfterIssuance != null ? daysAfterIssuance : 0} يوم.`
+                ].join('\n');
+            }
+            if (!isLocalTest) {
+                bot.sendMessage(chatId, notificationText).catch(e => console.warn('Could not send balance notification:', e.message));
+            }
+        }
+
         if (isLocalTest) {
             return res.json({
                 success: true,
                 testMode: true,
                 reportId: reportId,
                 points: finalBalance,
+                paySource: paySourceUsed,
+                subscriptionDays: daysAfterIssuance,
+                notificationText: notificationText || undefined,
                 fileId: null,
                 pdfBase64: pdfBuffer.toString('base64'),
                 filename: docFileName,
@@ -2870,7 +2945,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             });
         }
 
-        res.json({ success: true, fileId: sentFileId, reportId: reportId, points: finalBalance, trial: isTrial || undefined, trialUsed: isTrial ? true : undefined });
+        res.json({ success: true, fileId: sentFileId, reportId: reportId, points: finalBalance, paySource: paySourceUsed, subscriptionDays: daysAfterIssuance, trial: isTrial || undefined, trialUsed: isTrial ? true : undefined });
 
     } catch (err) {
         // Safety net: never leak a Chrome process on unexpected failures.
