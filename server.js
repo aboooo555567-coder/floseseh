@@ -599,6 +599,49 @@ const enforceOwnerGrantModel = async () => {
     });
 };
 
+// ==================================================================================
+// استرجاع المشتركين كـ«فعالين» برصيد صفر (طلب المالك):
+// «استرجع المستخدمين وخلي حالتهم فعالين كلهم ولاكن اجعل نقاطهم صفرا وانا بضيفلهم نقاط»
+// - ترحيل «مرة واحدة فقط» (علم activeZeroModel): كل مشترك حالته «بدون» (none)
+//   يُستعاد إلى حساب فعّال: status=active + plan=points + مصدر الدفع «نقاط».
+// - النقاط تبقى كما هي (صفراً) — لا يُصدر أي تقرير حتى يشحن المالك نقاطاً،
+//   وعندها تظهر له نافذة «رصيد غير كافٍ → طلب الاشتراك / تجريبي» آلية المصدر.
+// - منح المالك السابق (نقاط مشحونة فعلاً) لا يُمس إطلاقاً.
+// - التقارير المرفوعة لا تُمس إطلاقاً (نظام الحفظ الدائم).
+// ==================================================================================
+const restoreActiveSubscribers = async () => {
+    return withDbLock(async () => {
+        const data = await loadLocalSubscriptions();
+        if (data.activeZeroModel === true) return; // تم الاسترجاع سابقاً — لا نلمس منح المالك
+        const ownerId = String(ADMIN_CHAT_ID);
+        const now = new Date().toISOString();
+        let restored = 0;
+        for (const [cid, user] of Object.entries(data.subscriptions)) {
+            if (cid === ownerId) continue; // حساب المالك خارج الترخيل
+            if (user.report_payment_source !== 'none' && user.plan !== 'none') continue; // له منح فعلي — يُترك
+            const before = `${user.points || 0}pts/${user.plan || '-'}/${user.report_payment_source || '-'}`;
+            user.status = 'active';
+            user.plan = 'points';
+            user.report_payment_source = 'points';
+            user.updatedAt = now;
+            restored++;
+            logTransaction(data, {
+                admin_chat_id: 'system',
+                target_chat_id: cid,
+                operation: 'restore_active_status',
+                previous_value: before,
+                new_value: `${user.points || 0} نقطة / فعال / مصدر نقاط`,
+                details: 'استرجاع المشتركين: الحالة «فعال» للجميع مع رصيد صفر — الإصدار بعد شحن المالك للنقاط'
+            });
+            console.log(`🟢 [restore-active] ${cid} (was ${before}) → فعال / مصدر نقاط / ${user.points || 0} نقطة`);
+        }
+        data.activeZeroModel = true;
+        data.activeZeroModelAt = now;
+        await saveLocalSubscriptions(data);
+        console.log(`✅ [restore-active] Done: ${restored} subscriber(s) → فعال برصيد صفر (الإصدار بعد شحن المالك)`);
+    });
+};
+
 // Find user subscription by Chat ID or Telegram Username
 const findSubscription = async (chatId, username, referrerId = null) => {
     const data = await loadLocalSubscriptions();
@@ -662,16 +705,17 @@ const findSubscription = async (chatId, username, referrerId = null) => {
         data.subscriptions[chatIdStr].updatedAt = new Date().toISOString();
         await saveLocalSubscriptions(data);
     } else {
-        // نموذج منح المالك: المستخدم الجديد يبدأ «بدون» — بلا نقاط وبلا أيام مجانية،
-        // ولا يستطيع الإصدار حتى يمنحه المالك نقاطاً أو اشتراكاً (طلب المالك).
+        // نموذج المالك المحدّث: المستخدم الجديد يبدأ «فعالاً» برصيد صفر نقاط،
+        // ولا يستطيع الإصدار حتى يشحن له المالك نقاطاً (عندها تظهر نافذة الرصيد/التجريبي).
         userSub = {
             points: 0,
             balance_points: 0,
             subscriptionDays: 0,
             subscriptionExpires: null,
             subscription_end_date: null,
-            plan: 'none',
-            report_payment_source: 'none',
+            status: 'active',
+            plan: 'points',
+            report_payment_source: 'points',
             username: cleanedUsername,
             reports: [],
             referredBy: referrerId ? referrerId.toString() : null,
@@ -3362,6 +3406,11 @@ const serverPromise = startServer().then(async (srv) => {
         console.error('Owner grant model error:', e.message);
     }
     try {
+        await restoreActiveSubscribers();
+    } catch (e) {
+        console.error('Restore active subscribers error:', e.message);
+    }
+    try {
         await reconcileArchivedReports();
     } catch (e) {
         console.error('Archive reconciliation error:', e.message);
@@ -3369,4 +3418,4 @@ const serverPromise = startServer().then(async (srv) => {
     return srv;
 });
 
-module.exports = { app, startServer, serverPromise, bootstrapOwnerAccount, enforceOwnerGrantModel };
+module.exports = { app, startServer, serverPromise, bootstrapOwnerAccount, enforceOwnerGrantModel, restoreActiveSubscribers };
