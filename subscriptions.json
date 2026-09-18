@@ -9,7 +9,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:40:15.114Z",
+      "updatedAt": "2026-09-18T20:58:07.640Z",
       "balance_points": 0,
       "status": "active",
       "subscription_end_date": "2027-09-18T20:37:59.902Z",
@@ -17,7 +17,7 @@
       "daysRemaining": 365,
       "daysUsed": 0,
       "plan": "unlimited",
-      "report_payment_source": "unlimited",
+      "report_payment_source": "points",
       "reportsCount": 0
     },
     "6316398194": {
@@ -80,7 +80,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:57:27.303Z",
+      "updatedAt": "2026-09-18T20:58:00.998Z",
       "daysRemaining": 363,
       "daysUsed": 3,
       "reportsCount": 0
@@ -168,6 +168,28 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789765087640_o8m76q",
+      "timestamp": "2026-09-18T20:58:07.640Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "123456789",
+      "operation": "payment_source_changed",
+      "amount": null,
+      "previous_value": "unlimited",
+      "new_value": "points",
+      "details": "تغيير مصدر دفع التقارير إلى بالنقاط"
+    },
+    {
+      "id": "tx_1789765085235_so7kbp",
+      "timestamp": "2026-09-18T20:58:05.235Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "123456789",
+      "operation": "payment_source_changed",
+      "amount": null,
+      "previous_value": "unlimited",
+      "new_value": "unlimited",
+      "details": "تغيير مصدر دفع التقارير إلى غير محدود"
+    },
     {
       "id": "tx_1789765047303_6dk8ok",
       "timestamp": "2026-09-18T20:57:27.303Z",
