@@ -69,7 +69,7 @@
       "name": "المالك",
       "status": "active",
       "plan": "unlimited",
-      "report_payment_source": "unlimited",
+      "report_payment_source": "points",
       "points": 10000,
       "balance_points": 10000,
       "subscriptionDays": 363,
@@ -80,7 +80,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:55:47.984Z",
+      "updatedAt": "2026-09-18T20:57:27.303Z",
       "daysRemaining": 363,
       "daysUsed": 3,
       "reportsCount": 0
@@ -168,6 +168,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789765047303_6dk8ok",
+      "timestamp": "2026-09-18T20:57:27.303Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7853478744",
+      "operation": "payment_source_changed",
+      "amount": null,
+      "previous_value": "unlimited",
+      "new_value": "points",
+      "details": "تغيير مصدر دفع التقارير إلى بالنقاط"
+    },
     {
       "id": "tx_1789764945656_l0cezn",
       "timestamp": "2026-09-18T20:55:45.656Z",
