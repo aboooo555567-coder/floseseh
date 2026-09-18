@@ -153,7 +153,39 @@
           "license_number": ""
         }
       }
+    },
+    "5729445246": {
+      "PSL26091960674": {
+        "id": "PSL26091960674",
+        "patientName": "امل ناصر محمد الحربي",
+        "type": "sickleave",
+        "issueDate": "2026-09-19",
+        "data": {
+          "admission_date": "2026-09-19",
+          "discharge_date": "2026-09-19",
+          "duration": "1",
+          "issue_date": "2026-09-19",
+          "issue_time": "21:30",
+          "national_id": "1034680783",
+          "patient_name_ar": "امل ناصر محمد الحربي",
+          "patient_name_en": "AMAL NASSER MOHAMMED AL-HARBI",
+          "nationality": "السعودية",
+          "employer": "قطاع خاص",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "",
+          "doctor_name_en": "",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى نجران العام",
+          "hospital_en": "Najran General Hospital",
+          "hospital_type": "private",
+          "license_number": "1961771454"
+        }
+      }
     }
   },
-  "updatedAt": "2026-09-18T22:30:32.030Z"
+  "updatedAt": "2026-09-18T22:55:44.102Z"
 }
