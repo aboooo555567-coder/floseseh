@@ -30,8 +30,38 @@
           "hospital_type": "gov",
           "license_number": ""
         }
+      },
+      "GSL26091816442": {
+        "id": "GSL26091816442",
+        "patientName": "تتت",
+        "type": "sickleave",
+        "issueDate": "2026-09-18",
+        "data": {
+          "admission_date": "2026-09-18",
+          "discharge_date": "2026-09-18",
+          "duration": "1",
+          "issue_date": "2026-09-18",
+          "issue_time": "11:11",
+          "national_id": "تتت",
+          "patient_name_ar": "تتت",
+          "patient_name_en": "نظظ",
+          "nationality": "السعودية",
+          "employer": "",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "",
+          "doctor_name_en": "تتت",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "زنGeneral",
+          "hospital_ar": "مستشفى الملك خالد بنجران",
+          "hospital_en": "King Khalid Hospital, Najran",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
       }
     }
   },
-  "updatedAt": "2026-09-18T20:24:57.385Z"
+  "updatedAt": "2026-09-18T20:51:21.259Z"
 }
