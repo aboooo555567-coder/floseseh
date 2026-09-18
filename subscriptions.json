@@ -80,7 +80,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:52:24.276Z",
+      "updatedAt": "2026-09-18T20:55:47.984Z",
       "daysRemaining": 363,
       "daysUsed": 3,
       "reportsCount": 0
@@ -155,10 +155,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:54:06.940Z",
+      "updatedAt": "2026-09-18T20:55:45.656Z",
       "reportsCount": 2,
       "balance_points": 0,
-      "status": "cancelled",
+      "status": "active",
       "subscription_end_date": "2027-09-18T20:50:43.968Z",
       "subscription_start_date": "2026-09-18T20:50:43.968Z",
       "daysRemaining": 365,
@@ -168,6 +168,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789764945656_l0cezn",
+      "timestamp": "2026-09-18T20:55:45.656Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "5275574402",
+      "operation": "subscription_activate",
+      "amount": null,
+      "previous_value": "cancelled",
+      "new_value": "active",
+      "details": "تغيير حالة المشترك إلى فعال"
+    },
     {
       "id": "tx_1789764793682_d224kn",
       "timestamp": "2026-09-18T20:53:13.682Z",
