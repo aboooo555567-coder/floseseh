@@ -1,0 +1,15 @@
+{
+  "reports": {
+    "777333111": {
+      "GSL25999SYNC1": {
+        "id": "GSL25999SYNC1",
+        "patientName": "مختبِر المزامنة",
+        "type": "sickleave",
+        "issueDate": "2026-09-18",
+        "data": {}
+      }
+    },
+    "888222444": {}
+  },
+  "updatedAt": "2026-09-18T20:10:37.974Z"
+}
