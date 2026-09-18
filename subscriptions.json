@@ -9,7 +9,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T21:30:35.355Z",
+      "updatedAt": "2026-09-18T21:46:01.428Z",
       "balance_points": 0,
       "status": "active",
       "subscription_end_date": null,
@@ -246,6 +246,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789767961428_kg27re",
+      "timestamp": "2026-09-18T21:46:01.428Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "123456789",
+      "operation": "subscription_activate",
+      "amount": null,
+      "previous_value": "active",
+      "new_value": "active",
+      "details": "تغيير حالة المشترك إلى فعال"
+    },
     {
       "id": "tx_1789767939918_98ixsf",
       "timestamp": "2026-09-18T21:45:39.918Z",
