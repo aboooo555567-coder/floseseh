@@ -3,23 +3,32 @@
     "123456789": {
       "points": 0,
       "subscriptionDays": 365,
-      "subscriptionExpires": "2027-09-18T20:19:35.307Z",
+      "subscriptionExpires": "2027-09-18T20:37:59.902Z",
       "username": null,
       "reports": [],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:19:35.307Z"
+      "updatedAt": "2026-09-18T20:40:15.114Z",
+      "balance_points": 0,
+      "status": "active",
+      "subscription_end_date": "2027-09-18T20:37:59.902Z",
+      "subscription_start_date": "2026-09-18T20:37:59.902Z",
+      "daysRemaining": 365,
+      "daysUsed": 0,
+      "plan": "unlimited",
+      "report_payment_source": "unlimited",
+      "reportsCount": 0
     },
     "6316398194": {
       "username": "zakaria_2025",
       "name": "Zakaria Mohammed",
-      "status": "cancelled",
+      "status": "active",
       "plan": "unlimited",
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 363,
+      "subscriptionDays": 366,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-15T23:59:59.999Z",
       "reports": [
@@ -50,10 +59,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:28:36.116Z",
-      "daysRemaining": 363,
-      "daysUsed": 3,
-      "reportsCount": 1
+      "updatedAt": "2026-09-15T21:09:25.479Z",
+      "daysRemaining": 366,
+      "daysUsed": 0,
+      "reportsCount": 0
     },
     "7853478744": {
       "username": "ppppokl",
@@ -63,7 +72,7 @@
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 363,
+      "subscriptionDays": 365,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-15T23:59:59.999Z",
       "subscriptionExpires": "2027-09-15T23:59:59.999Z",
@@ -71,76 +80,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:27:51.536Z",
-      "daysRemaining": 363,
-      "daysUsed": 3,
-      "reportsCount": 0
-    },
-    "5275574402": {
-      "points": 0,
-      "subscriptionDays": 365,
-      "subscriptionExpires": "2027-09-18T20:22:51.146Z",
-      "username": "hm999m",
-      "reports": [
-        {
-          "id": "GSL26091856528",
-          "patientName": "تبب",
-          "type": "sickleave",
-          "issueDate": "2026-09-18",
-          "data": {
-            "admission_date": "2026-09-18",
-            "discharge_date": "2026-09-18",
-            "duration": "1",
-            "issue_date": "2026-09-18",
-            "issue_time": "05:36",
-            "national_id": "وو",
-            "patient_name_ar": "تبب",
-            "patient_name_en": "بب",
-            "nationality": "ببالسعودية",
-            "employer": "بب",
-            "escort_name_ar": "",
-            "escort_name_en": "",
-            "relation_ar": "",
-            "relation_en": "",
-            "doctor_name_ar": "ببب",
-            "doctor_name_en": "ب",
-            "job_title_ar": "ببطبيب عام",
-            "job_title_en": "ببGeneral",
-            "hospital_ar": "مستشفى الملك خالد بنجران",
-            "hospital_en": "King Khalid Hospital, Najran",
-            "hospital_type": "gov",
-            "license_number": ""
-          }
-        }
-      ],
-      "referredBy": null,
-      "referralsCount": 0,
-      "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:25:44.492Z",
-      "balance_points": 0,
-      "status": "active",
-      "subscription_end_date": "2027-09-18T20:22:51.146Z",
-      "subscription_start_date": "2026-09-18T20:22:51.146Z",
-      "daysRemaining": 365,
-      "daysUsed": 0,
-      "plan": "unlimited",
-      "report_payment_source": "unlimited",
-      "reportsCount": 1,
-      "trialUsed": true
+      "updatedAt": "2026-09-18T20:17:59.470Z"
     }
   },
   "transactions": [
-    {
-      "id": "tx_1789763316116_oezfml",
-      "timestamp": "2026-09-18T20:28:36.116Z",
-      "admin_chat_id": "7853478744",
-      "target_chat_id": "6316398194",
-      "operation": "subscription_cancel",
-      "amount": null,
-      "previous_value": "active",
-      "new_value": "cancelled",
-      "details": "إلغاء الاشتراك نهائياً"
-    },
     {
       "id": "tx_1789762679470_t9t4n2",
       "timestamp": "2026-09-18T20:17:59.470Z",
