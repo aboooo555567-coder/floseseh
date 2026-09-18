@@ -11,7 +11,8 @@ const crypto = require('crypto');
 const fsSync = require('fs');
 let currentAdminToken = null;
 
-// Self-contained embedded fonts (Tajawal / Tinos / Arimo as base64 woff2).
+// Self-contained embedded fonts (Cairo / Tajawal / Tinos / Arimo as base64 woff2).
+// Cairo = خط المستودع المرجعي alehtiat-almorish المستخدم في الملفات المولدة.
 // Replaces the old Google Fonts @import which could fail/be slow on Render,
 // causing PDFs to print with a fallback font (wrong look). Loading these at
 // startup makes PDF rendering deterministic and offline-safe.
@@ -2268,20 +2269,21 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; }
   tr { height: 41px; }
-  /* تنسيق المرجع alehtiat-almorish (sickLeaveReportGenerator.js):
-     عربي = Noto Sans Arabic | إنجليزي/أرقام = Times (Tinos) | ألوان: عنوان #306db5،
-     عنوان EN #2c3e77، تسميات #2b5d88، قيم #29396e، حدود #e0e0e0، صف المدة #2c3e77، صفوف ظل #f7f7f7 */
-  td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 1px solid #e0e0e0; padding: 11px 8px; font-weight: bold; color: #2b5d88; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
-  .label-ar { border: 1px solid #e0e0e0; padding: 11px 8px; font-weight: bold; color: #2b5d88; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
-  .val { border: 1px solid #e0e0e0; padding: 11px 8px; color: #29396e; font-weight: normal; font-size: 13px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
-  .val[dir="rtl"] { font-family: 'Tinos', 'Noto Sans Arabic', 'Tajawal', serif; }
-  .dur-row td { background-color: #2c3e77 !important; color: white; border: 1px solid #e0e0e0; padding: 11px 8px; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Noto Sans Arabic', serif; }
-  .dur-row td.label-ar { font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
+  /* تنسيق المرجع alehtiat-almorish: خط Cairo v31 (variable) لكل النصوص عربي/إنجليزي —
+     نفس ملفات gstatic المضمّنة base64 في fonts-embedded.css (أوزان 200-1000).
+     ألوان: عنوان #306db5، عنوان EN #2c3e77، تسميات #2b5d88، قيم #29396e،
+     حدود #e0e0e0، صف المدة #2c3e77، صفوف ظل #f7f7f7 */
+  td { font-family: 'Cairo', 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; }
+  .label-en { border: 1px solid #e0e0e0; padding: 11px 8px; font-weight: bold; color: #2b5d88; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; font-family: 'Cairo', 'Tinos', 'Times New Roman', serif; }
+  .label-ar { border: 1px solid #e0e0e0; padding: 11px 8px; font-weight: bold; color: #2b5d88; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; font-family: 'Cairo', 'Noto Sans Arabic', 'Tajawal', sans-serif; }
+  .val { border: 1px solid #e0e0e0; padding: 11px 8px; color: #29396e; font-weight: normal; font-size: 13px; text-align: center !important; vertical-align: middle !important; font-family: 'Cairo', 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
+  .val[dir="rtl"] { font-family: 'Cairo', 'Noto Sans Arabic', 'Tajawal', 'Tinos', serif; }
+  .dur-row td { background-color: #2c3e77 !important; color: white; border: 1px solid #e0e0e0; padding: 11px 8px; font-size: 11.5px; text-align: center !important; vertical-align: middle !important; font-family: 'Cairo', 'Tinos', 'Noto Sans Arabic', serif; }
+  .dur-row td.label-ar { font-family: 'Cairo', 'Noto Sans Arabic', 'Tajawal', sans-serif; }
   .dur-label { font-weight: bold; }
   tr.alt td { background-color: #f7f7f7 !important; }
 </style>
-<div style="width:794px;height:1123px;background:#fff;font-family:'Noto Sans Arabic','Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
+<div style="width:794px;height:1123px;background:#fff;font-family:'Cairo','Noto Sans Arabic','Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
   <!-- Header: Seha Logo (left) -->
   <img src="${sehaLogo}" style="position:absolute;top:32px;left:38px;width:155px;height:auto;">
@@ -2296,8 +2298,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   
   <!-- Header: Arabic & English Titles -->
   <div style="position:absolute;top:168px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#306db5;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#2c3e77;font-size:18px;font-weight:bold;font-family:'Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
+    <h1 style="color:#306db5;font-size:21px;font-weight:bold;font-family:'Cairo','Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+    <h2 style="color:#2c3e77;font-size:18px;font-weight:bold;font-family:'Cairo','Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
   <!-- Data Table & Footer Container -->
@@ -2305,7 +2307,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:155px;">Leave ID</td>
-      <td class="val" colspan="2" style="width:404px; font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
+      <td class="val" colspan="2" style="width:404px; font-family: 'Cairo', 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
       <td class="label-ar" style="width:155px;">رمز الإجازة</td>
     </tr>
     <tr class="dur-row">
@@ -2339,7 +2341,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr>
       <td class="label-en">National ID / Iqama</td>
-      <td class="val" colspan="2" style="font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.nationalId || ''}</td>
+      <td class="val" colspan="2" style="font-family: 'Cairo', 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.nationalId || ''}</td>
       <td class="label-ar">رقم الهوية/الاقامه</td>
     </tr>
     <tr class="alt">
@@ -2383,8 +2385,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 20px -> text starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
         ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">`}
-        <p style="font-size:10px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;color:#000;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
-        <p style="font-size:8px;color:#000;text-align:center;margin:0 0 3px 0;font-weight:bold;font-family:'Tinos','Times New Roman',serif;">To check the report please visit Seha's offical website</p>
+        <p style="font-size:10px;font-weight:bold;font-family:'Cairo','Noto Sans Arabic','Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;color:#000;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
+        <p style="font-size:8px;color:#000;text-align:center;margin:0 0 3px 0;font-weight:bold;font-family:'Cairo','Tinos','Times New Roman',serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
@@ -2394,8 +2396,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <!-- Right: MOH Logo (clean cropped, height: 92px, margin-bottom: 8px -> hospital name starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
         <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:92px;object-fit:contain;margin-bottom:8px;">
-        <h3 style="font-size:11px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
-        <h4 style="font-size:9.5px;font-weight:bold;font-family:'Tinos','Times New Roman',serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
+        <h3 style="font-size:11px;font-weight:bold;font-family:'Cairo','Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
+        <h4 style="font-size:9.5px;font-weight:bold;font-family:'Cairo','Tinos','Times New Roman',serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
 
@@ -2405,7 +2407,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:6px; margin-right:-10px;">
       
       <!-- Left: Time / Date -->
-      <div style="font-weight:bold;font-size:11px;color:#000;font-family:'Tinos','Times New Roman',serif;">
+      <div style="font-weight:bold;font-size:11px;color:#000;font-family:'Cairo','Tinos','Times New Roman',serif;">
         <p style="margin:0 0 10px 0;">${d.time || ''}</p>
         <p style="margin:0;">${d.dayDate || ''}</p>
       </div>
@@ -2415,8 +2417,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         <div style="width: 75px; height: 55px; overflow: hidden; position: relative; margin-bottom: 2px;">
           <img src="${nhicLogo}" style="width: 75px; height: 75px; position: absolute; top: 0; left: 0; object-fit: cover; object-position: top;">
         </div>
-        <h4 style="font-size:11.5px; font-weight:bold; font-family:'Noto Sans Arabic','Tajawal',sans-serif; color:#00A99D; margin:0; line-height:1.2; text-align:center;">المركز الوطني للمعلومات الصحية</h4>
-        <h5 style="font-size:7px; font-weight:bold; font-family:'Tinos','Times New Roman',serif; color:#1A365D; margin:2px 0 0 0; line-height:1.2; text-align:center; letter-spacing:0.8px;">NATIONAL HEALTH INFORMATION CENTER</h5>
+        <h4 style="font-size:11.5px; font-weight:bold; font-family:'Cairo','Noto Sans Arabic','Tajawal',sans-serif; color:#00A99D; margin:0; line-height:1.2; text-align:center;">المركز الوطني للمعلومات الصحية</h4>
+        <h5 style="font-size:7px; font-weight:bold; font-family:'Cairo','Tinos','Times New Roman',serif; color:#1A365D; margin:2px 0 0 0; line-height:1.2; text-align:center; letter-spacing:0.8px;">NATIONAL HEALTH INFORMATION CENTER</h5>
       </div>
       
     </div>
@@ -2450,6 +2452,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                         // before printing. Waiting only for DOMContentLoaded can capture the
                         // page while the browser is still using a fallback font.
                         await page.evaluate(async () => {
+                            // Cairo أولاً (خط المرجع) ثم البدائل الاحتياطية
+                            await document.fonts.load('400 12px Cairo');
+                            await document.fonts.load('600 12px Cairo');
+                            await document.fonts.load('700 12px Cairo');
+                            await document.fonts.load('800 12px Cairo');
                             await document.fonts.load('400 12px Tajawal');
                             await document.fonts.load('700 12px Tajawal');
                             await document.fonts.load('400 12px "Noto Sans Arabic"');
