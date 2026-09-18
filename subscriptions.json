@@ -279,8 +279,8 @@
       "daysUsed": 0
     },
     "5729445246": {
-      "points": 25,
-      "balance_points": 25,
+      "points": 20,
+      "balance_points": 20,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -318,16 +318,46 @@
             "hospital_type": "private",
             "license_number": "1961771454"
           }
+        },
+        {
+          "id": "GSL26091950981",
+          "patientName": "امل ناصر محمد الحربي ",
+          "type": "sickleave",
+          "issueDate": "2026-09-19",
+          "data": {
+            "admission_date": "2026-09-19",
+            "discharge_date": "2026-09-19",
+            "duration": "1",
+            "issue_date": "2026-09-19",
+            "issue_time": "13:14",
+            "national_id": "1034680783",
+            "patient_name_ar": "امل ناصر محمد الحربي ",
+            "patient_name_en": "AMAL NASSER MOHAMMED AL-HARBI",
+            "nationality": "السعودية",
+            "employer": "قطاع خاص",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "محمد الشهراني ",
+            "doctor_name_en": "MOHAMMED ALSHRANE",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى نجران العام",
+            "hospital_en": "Najran General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T23:39:37.143Z",
+      "updatedAt": "2026-09-18T23:41:20.743Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
       "daysUsed": 0,
-      "reportsCount": 1
+      "reportsCount": 2
     },
     "7872802641": {
       "points": 0,
@@ -367,6 +397,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789774880430_5dtz9a",
+      "timestamp": "2026-09-18T23:41:20.430Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "5729445246",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "25",
+      "new_value": "20",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26091950981 (generate-native-pdf)"
+    },
     {
       "id": "tx_1789773479364_gu74br",
       "timestamp": "2026-09-18T23:17:59.364Z",
