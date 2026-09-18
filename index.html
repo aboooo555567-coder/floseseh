@@ -47,7 +47,10 @@
 
                 <div class="header-center">
                     <div class="status-badge" id="sub-status-badge">نشط - متبقي 0 يوم</div>
-                    <button class="btn-renew" onclick="app.navigate('packages')">تجديد</button>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-renew" onclick="app.navigate('packages')">تجديد</button>
+                        <button class="btn-renew" onclick="app.startTrialFlow()" title="تجربة مجانية واحدة لكل حساب" style="background:#fff7e0; color:#9a6b00; border:1px solid #f0d998;">🧪 تجريبي</button>
+                    </div>
                 </div>
 
                 <div class="header-left">
@@ -723,7 +726,19 @@
     <!-- Floating In-App Toast Banner (Zero window.alert) -->
     <div id="admin-toast" class="admin-toast-banner" style="display:none;"></div>
 
+    <!-- No-Credit Modal: يظهر عند الضغط على إصدار بدون رصيد — نفس آلية الكود المصدري + زر التجريبي -->
+    <div id="nocredit-overlay" onclick="if(event.target===this) app.closeNoCreditModal()" style="display:none; position:fixed; inset:0; background:rgba(10,20,40,0.55); z-index:3000; align-items:center; justify-content:center; font-family:'Tajawal',sans-serif;">
+        <div style="background:#fff; border-radius:18px; padding:26px 22px 20px; width:88%; max-width:360px; text-align:center; box-shadow:0 18px 60px rgba(0,0,0,0.25);">
+            <div style="font-size:42px; line-height:1; margin-bottom:10px;">🪙</div>
+            <h3 style="margin:0 0 8px 0; color:#1a365d; font-size:18px;">لا يوجد رصيد كافٍ</h3>
+            <p style="margin:0 0 20px 0; color:#555; font-size:14px; line-height:1.7;">ليس لديك رصيد. تحتاج 5 نقاط لإصدار تقرير جديد.<br>يمكنك طلب الاشتراك أو تجربة الخدمة بتقرير تجريبي مجاني.</p>
+            <button id="btn-request-sub" onclick="app.navigate('packages'); app.closeNoCreditModal();" style="display:block; width:100%; padding:13px; margin-bottom:10px; border:none; border-radius:12px; background:linear-gradient(135deg,#306db5,#2c6bb7); color:#fff; font-size:15px; font-weight:bold; font-family:'Tajawal',sans-serif; cursor:pointer;">طلب الاشتراك</button>
+            <button id="btn-make-trial" onclick="app.generateTrial();" style="display:block; width:100%; padding:13px; margin-bottom:8px; border:none; border-radius:12px; background:#fff7e0; color:#9a6b00; border:1px solid #f0d998; font-size:15px; font-weight:bold; font-family:'Tajawal',sans-serif; cursor:pointer;">🧪 إنشاء تجريبي</button>
+            <button onclick="app.closeNoCreditModal()" style="background:none; border:none; color:#98a2b3; font-size:13px; font-family:'Tajawal',sans-serif; cursor:pointer; padding:6px;">إلغاء</button>
+        </div>
+    </div>
+
     <!-- Application Logic (Loaded after all DOM elements & modals) -->
-    <script src="app.js?v=6000"></script>
+    <script src="app.js?v=6100"></script>
 </body>
 </html>
