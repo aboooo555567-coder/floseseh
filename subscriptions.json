@@ -23,7 +23,7 @@
     "6316398194": {
       "username": "zakaria_2025",
       "name": "Zakaria Mohammed",
-      "status": "active",
+      "status": "cancelled",
       "plan": "points",
       "report_payment_source": "points",
       "points": 0,
@@ -59,7 +59,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T21:24:27.119Z",
+      "updatedAt": "2026-09-18T23:17:59.364Z",
       "daysRemaining": 0,
       "daysUsed": 3,
       "reportsCount": 1,
@@ -323,7 +323,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T23:02:48.913Z",
+      "updatedAt": "2026-09-18T23:18:08.450Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
       "daysUsed": 0,
@@ -367,6 +367,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789773479364_gu74br",
+      "timestamp": "2026-09-18T23:17:59.364Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "6316398194",
+      "operation": "subscription_cancel",
+      "amount": null,
+      "previous_value": "active",
+      "new_value": "cancelled",
+      "details": "إلغاء الاشتراك نهائياً"
+    },
     {
       "id": "tx_1789773470057_iba7u1",
       "timestamp": "2026-09-18T23:17:50.057Z",
