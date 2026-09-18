@@ -629,6 +629,7 @@
                         <button type="button" class="btn-toggle-option" id="btn-set-paysrc-unlimited" onclick="app.adminSetPaymentSource('unlimited', this)" style="flex:1;">♾️ استخدام غير محدود</button>
                         <button type="button" class="btn-toggle-option" id="btn-set-paysrc-points" onclick="app.adminSetPaymentSource('points', this)" style="flex:1;">🪙 خصم 5 نقاط</button>
                     </div>
+                    <button type="button" class="btn-toggle-option" id="btn-set-paysrc-none" onclick="app.adminSetPaymentSource('none', this)" style="width:100%; margin-top:8px; background:#f1f5f9; color:#64748b; border:1px dashed #cbd5e1;">⚪ بدون (إيقاف الإصدار حتى المنح)</button>
                 </div>
 
                 <!-- Section: Status Toggle -->
@@ -751,6 +752,6 @@
     </div>
 
     <!-- Application Logic (Loaded after all DOM elements & modals) -->
-    <script src="app.js?v=6300"></script>
+    <script src="app.js?v=6400"></script>
 </body>
 </html>
