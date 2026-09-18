@@ -43,9 +43,38 @@
       "daysRemaining": 366,
       "daysUsed": 0,
       "reportsCount": 0
+    },
+    "7853478744": {
+      "username": "ppppokl",
+      "name": "المالك",
+      "status": "active",
+      "plan": "unlimited",
+      "report_payment_source": "unlimited",
+      "points": 10000,
+      "balance_points": 10000,
+      "subscriptionDays": 365,
+      "subscription_start_date": "2026-09-15T00:00:00.000Z",
+      "subscription_end_date": "2027-09-15T23:59:59.999Z",
+      "subscriptionExpires": "2027-09-15T23:59:59.999Z",
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-09-18T20:17:59.470Z"
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789762679470_t9t4n2",
+      "timestamp": "2026-09-18T20:17:59.470Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7853478744",
+      "operation": "owner_bootstrap_create",
+      "amount": 10000,
+      "previous_value": null,
+      "new_value": "10000 points, 365 days, active, unlimited",
+      "details": "Owner account created with 10,000 points and 365 days active unlimited"
+    },
     {
       "id": "tx_init_owner",
       "timestamp": "2026-09-15T20:36:37.968Z",
