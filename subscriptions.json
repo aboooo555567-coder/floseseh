@@ -86,7 +86,7 @@
       "reportsCount": 0
     },
     "5275574402": {
-      "points": 0,
+      "points": 10,
       "subscriptionDays": 365,
       "subscriptionExpires": "2027-09-18T20:50:43.968Z",
       "username": null,
@@ -155,19 +155,30 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:53:13.682Z",
+      "updatedAt": "2026-09-18T20:53:30.880Z",
       "reportsCount": 2,
-      "balance_points": 0,
+      "balance_points": 10,
       "status": "cancelled",
       "subscription_end_date": "2027-09-18T20:50:43.968Z",
       "subscription_start_date": "2026-09-18T20:50:43.968Z",
       "daysRemaining": 365,
       "daysUsed": 0,
-      "plan": "unlimited",
-      "report_payment_source": "unlimited"
+      "plan": "points",
+      "report_payment_source": "points"
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789764810880_l2c3jy",
+      "timestamp": "2026-09-18T20:53:30.880Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "5275574402",
+      "operation": "add_points",
+      "amount": 10,
+      "previous_value": "0",
+      "new_value": "10",
+      "details": "إضافة 10 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
     {
       "id": "tx_1789764793682_d224kn",
       "timestamp": "2026-09-18T20:53:13.682Z",
