@@ -102,7 +102,7 @@ module.exports = function fontInject() {
       if (url0 === '/selfhost-fonts.css') {
         return serveAsset(res, CSS_FILE, 'public, max-age=300', false);
       }
-      const mf = url0.match(/^\/fonts\/((?:tajawal-\d{3}-(?:arabic|latin)|cairo-(?:arabic|latin|latin-ext))\.woff2)$/);
+      const mf = url0.match(/^\/fonts\/((?:tajawal-\d{3}-(?:arabic|latin)|(?:cairo-(?:arabic|latin|latin-ext)|noto-sans-arabic-(?:arabic|latin)))\.woff2)$/);
       if (mf) {
         const safe = path.basename(mf[1]); // يمنع path traversal
         return serveAsset(res, path.join(FONTS_DIR, safe), 'public, max-age=31536000, immutable', true);
