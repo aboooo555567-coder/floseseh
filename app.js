@@ -1630,10 +1630,25 @@ const app = {
     },
 
     buyPackage(pkgName) {
-        if(this.tg) {
-            this.tg.openTelegramLink('https://t.me/ppppokl');
+        // كتالوج الباقات: الاسم الظاهر + السعر (يُرسل للمالك برسالة معبأة مسبقاً)
+        const catalog = {
+            'Points 5': 'حزمة البداية 5 نقاط (5 ريال)',
+            'Points 10': 'حزمة 10 نقاط (10 ريال)',
+            'Points 20': 'حزمة 20 نقطة (15 ريال)',
+            'Points 50': 'حزمة 50 نقطة (30 ريال)',
+            'Basic': 'حزمة النقاط الأساسية 30 نقطة (20 ريال)',
+            'Recommended': 'حزمة النقاط الموصى بها 100 نقطة (50 ريال)',
+            'Advanced': 'حزمة النقاط المتقدمة 200 نقطة (80 ريال)',
+            'Month 1': 'خطة 30 يوم لامحدودة (100 ريال)'
+        };
+        const label = catalog[pkgName] || pkgName;
+        const idPart = this.state.chatId ? ` — معرّف حسابي: ${this.state.chatId}` : '';
+        const text = `مرحباً، أود شراء باقة: ${label} لحسابي${idPart}`;
+        const url = 'https://t.me/ppppokl?text=' + encodeURIComponent(text);
+        if (this.tg) {
+            this.tg.openTelegramLink(url);
         } else {
-            window.open('https://t.me/ppppokl', '_blank');
+            window.open(url, '_blank');
         }
     },
 

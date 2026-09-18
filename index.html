@@ -202,7 +202,31 @@
                 
                 <div class="package-section" style="margin-top: 25px;">
                     <h3 class="section-title">🪙 حزم شحن النقاط</h3>
-                    
+
+                    <div class="package-card" onclick="app.buyPackage('Points 5')">
+                        <div class="package-details">
+                            <h4>حزمة البداية (5 نقاط)</h4>
+                            <p>تمنحك 5 نقاط — تكفي تقريراً واحداً (بدون تاريخ انتهاء)</p>
+                        </div>
+                        <div class="package-price">5<br>ريال</div>
+                    </div>
+
+                    <div class="package-card" onclick="app.buyPackage('Points 10')">
+                        <div class="package-details">
+                            <h4>حزمة 10 نقاط</h4>
+                            <p>تمنحك 10 نقاط — تكفي تقريرين (بدون تاريخ انتهاء)</p>
+                        </div>
+                        <div class="package-price">10<br>ريال</div>
+                    </div>
+
+                    <div class="package-card" onclick="app.buyPackage('Points 20')">
+                        <div class="package-details">
+                            <h4>حزمة 20 نقطة</h4>
+                            <p>تمنحك 20 نقطة — تكفي 4 تقارير (بدون تاريخ انتهاء)</p>
+                        </div>
+                        <div class="package-price">15<br>ريال</div>
+                    </div>
+
                     <div class="package-card" onclick="app.buyPackage('Basic')">
                         <div class="package-details">
                             <h4>حزمة النقاط الأساسية (30 نقطة)</h4>
@@ -212,6 +236,14 @@
                             </div>
                         </div>
                         <div class="package-price">20<br>ريال</div>
+                    </div>
+
+                    <div class="package-card" onclick="app.buyPackage('Points 50')">
+                        <div class="package-details">
+                            <h4>حزمة 50 نقطة</h4>
+                            <p>تمنحك 50 نقطة — تكفي 10 تقارير (بدون تاريخ انتهاء)</p>
+                        </div>
+                        <div class="package-price">30<br>ريال</div>
                     </div>
 
                     <div class="package-card recommended" onclick="app.buyPackage('Recommended')">
@@ -752,6 +784,6 @@
     </div>
 
     <!-- Application Logic (Loaded after all DOM elements & modals) -->
-    <script src="app.js?v=6500"></script>
+    <script src="app.js?v=6600"></script>
 </body>
 </html>
