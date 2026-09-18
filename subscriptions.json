@@ -279,8 +279,8 @@
       "daysUsed": 0
     },
     "5729445246": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 30,
+      "balance_points": 30,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -292,7 +292,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T22:45:27.311Z",
+      "updatedAt": "2026-09-18T22:45:53.029Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
       "daysUsed": 0,
@@ -300,6 +300,28 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789771553029_nk9wai",
+      "timestamp": "2026-09-18T22:45:53.029Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "5729445246",
+      "operation": "subscription_activate",
+      "amount": null,
+      "previous_value": "active",
+      "new_value": "active",
+      "details": "تغيير حالة المشترك إلى فعال"
+    },
+    {
+      "id": "tx_1789771548062_i46914",
+      "timestamp": "2026-09-18T22:45:48.062Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "5729445246",
+      "operation": "add_points",
+      "amount": 30,
+      "previous_value": "0",
+      "new_value": "30",
+      "details": "إضافة 30 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
     {
       "id": "tx_1789770631599_kiq93a",
       "timestamp": "2026-09-18T22:30:31.599Z",
