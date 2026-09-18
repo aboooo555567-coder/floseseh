@@ -279,8 +279,8 @@
       "daysUsed": 0
     },
     "5729445246": {
-      "points": 30,
-      "balance_points": 30,
+      "points": 25,
+      "balance_points": 25,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -288,15 +288,46 @@
       "plan": "points",
       "report_payment_source": "points",
       "username": "amal331c",
-      "reports": [],
+      "reports": [
+        {
+          "id": "PSL26091960674",
+          "patientName": "امل ناصر محمد الحربي",
+          "type": "sickleave",
+          "issueDate": "2026-09-19",
+          "data": {
+            "admission_date": "2026-09-19",
+            "discharge_date": "2026-09-19",
+            "duration": "1",
+            "issue_date": "2026-09-19",
+            "issue_time": "21:30",
+            "national_id": "1034680783",
+            "patient_name_ar": "امل ناصر محمد الحربي",
+            "patient_name_en": "AMAL NASSER MOHAMMED AL-HARBI",
+            "nationality": "السعودية",
+            "employer": "قطاع خاص",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "",
+            "doctor_name_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى نجران العام",
+            "hospital_en": "Najran General Hospital",
+            "hospital_type": "private",
+            "license_number": "1961771454"
+          }
+        }
+      ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T22:52:02.557Z",
+      "updatedAt": "2026-09-18T22:55:44.100Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
       "daysUsed": 0,
-      "reportsCount": 0
+      "reportsCount": 1
     },
     "7872802641": {
       "points": 0,
@@ -320,6 +351,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789772143785_vw6uao",
+      "timestamp": "2026-09-18T22:55:43.785Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "5729445246",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "30",
+      "new_value": "25",
+      "details": "خصم 5 نقاط عند إصدار التقرير PSL26091960674 (generate-native-pdf)"
+    },
     {
       "id": "tx_1789771553029_nk9wai",
       "timestamp": "2026-09-18T22:45:53.029Z",
