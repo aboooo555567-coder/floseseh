@@ -1,273 +1,192 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="ltr" data-react-helmet="true">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الاستعلام عن الإجازات المرضية - منصة صحة</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="icon" href="https://www.seha.sa/favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="https://www.seha.sa/logo.png">
+    <title>صحة - منصة الخدمات الصحية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&amp;display=swap" rel="stylesheet">
+
+    <link rel="modulepreload" crossorigin="" href="https://www.seha.sa/assets/components-Au9m-AvA.js">
+    <link rel="modulepreload" crossorigin="" href="https://www.seha.sa/assets/main-BzZ1Bshx.js">
+    <link rel="stylesheet" crossorigin="" href="https://www.seha.sa/assets/index-YNlqp8zs.css">
+    <meta name="description"
+        content="هي منصة إلكترونية تخدم القطاع الصحي في المملكة من خلال تقديم خدمات إلكترونية معتمدة من قبل وزارة الصحة، أنشئت منصة صحة تماشيًا مع رؤية المملكة 2030 وتفعيلاً للتوجه الحكومي، وتهدف إلى أتمتة وتوحيد الإجراءات والخدمات وتسهيلها في جميع الجهات الصحية وتشمل العديد من الخدمات الصحية التي تحت مظلة منظومة الصحة وقطاعاتها المتنوعة للأفراد من المنشأت الطبية."
+        data-react-helmet="true">
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&amp;display=swap" rel="stylesheet">
+    <!-- Assets served from /assets -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/mo.css" type="text/css" media="all">
+    <link rel="stylesheet" href="/assets/css/ali.css" type="text/css" media="all">
+    <link rel="stylesheet" href="/assets/css/tyi.css" type="text/css" media="all">
+    <link rel="stylesheet" href="/assets/css/Ais.css" type="text/css" media="all">
+    <script src="/assets/css/moh.js" type="text/JavaScript"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const inquiryForm = document.getElementById('inquiryForm');
+            if (inquiryForm) {
+                inquiryForm.addEventListener('submit', async function (event) {
+                    event.preventDefault(); // Prevent default submission
+
+                    const serviceCode = document.getElementById("service_code").value.trim();
+                    const nationalId = document.getElementById("national_id").value.trim();
+                    const errorMessage = document.getElementById("error-message");
+                    const submitBtn = document.getElementById("submit-btn");
+                    const resultsSection = document.getElementById("results-section");
+
+                    // Reset UI
+                    errorMessage.style.display = "none";
+                    errorMessage.textContent = "";
+
+                    // Basic Validation
+                    if (!serviceCode || !nationalId) {
+                        errorMessage.style.display = "block";
+                        errorMessage.textContent = "يرجى إدخال رمز الخدمة ورقم الهوية.";
+                        return;
+                    }
+
+                    // Show Loading - إظهار الدائرة المتحركة
+                    submitBtn.disabled = true;
+                    submitBtn.style.display = "none";
+                    const spinnerOverlay = document.getElementById('spinner-overlay');
+                    spinnerOverlay.classList.add('active');
+
+                    try {
+                        const apiUrl = '/inquiry/api';
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ service_code: serviceCode, national_id: nationalId })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Populate Results
+                            document.getElementById('res-name').textContent = result.data.name;
+                            document.getElementById('res-issue-date').textContent = result.data.issue_date;
+                            document.getElementById('res-date-from').textContent = result.data.date_from;
+                            document.getElementById('res-date-to').textContent = result.data.date_to;
+                            document.getElementById('res-day-count').textContent = result.data.day_count;
+                            document.getElementById('res-doctor-name').textContent = result.data.doctor_name;
+                            document.getElementById('res-doctor-specialty').textContent = result.data.doctor_specialty;
+
+                            // Show Results, Hide Submit Button
+                            resultsSection.style.display = "flex";
+                            submitBtn.style.display = "none";
+
+                            // Disable inputs
+                            document.getElementById("service_code").disabled = true;
+                            document.getElementById("national_id").disabled = true;
+
+                        } else {
+                            errorMessage.style.display = "block";
+                            errorMessage.textContent = result.message || "خطأ في الاستعلام";
+                        }
+
+                    } catch (error) {
+                        console.error('Error:', error);
+                        errorMessage.style.display = "block";
+                        errorMessage.textContent = "حدث خطأ أثناء الاتصال بالنظام، يرجى المحاولة لاحقًا.";
+                    } finally {
+                        // إخفاء الدائرة المتحركة
+                        spinnerOverlay.classList.remove('active');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "استعلام";
+                        submitBtn.style.display = "inline-block";
+                    }
+                });
+            }
+
+            // Input event listener to hide error message
+            let service_code_input = document.getElementById("service_code");
+            if (service_code_input) {
+                service_code_input.addEventListener('keydown', function () {
+                    document.getElementById("error-message").style.display = 'none';
+                });
+            }
+        });
+
+        function resetForm() {
+            document.getElementById('inquiryForm').reset();
+            document.getElementById("results-section").style.display = "none";
+            document.getElementById("submit-btn").style.display = "inline-block";
+            document.getElementById("service_code").disabled = false;
+            document.getElementById("national_id").disabled = false;
+            document.getElementById("error-message").style.display = 'none';
+        }
+    </script>
+    <script type="text/javascript" async="" charset="utf-8"
+        src="https://www.gstatic.com/recaptcha/releases/xds@rzGrktR88uEZ2JUvdgoy/recaptcha__en.js"
+        crossorigin="anonymous" integrity="sha384- LsgFz6D31XKi1Rzqj4uhSQDNZOj1dcZCWXIгJG5IYGWvpJ384xZdrK8AXV/L1QPB">
+        </script>
+    <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-88SPGVGKSY&cx=c&_slc=1">
+    </script>
+
+    <script async="" src="https://www.google-analytics.com/analytics.js">
+    </script>
+    <script
+        src="https://objectstorage.me-jeddah-1.oraclecloud.com/n/axcv6afvufi6/b/Rum-JS-Public/o/elastic-apm-rum.umd.min.js"
+        crossorigin=""></script>
+    <script></script>
+
     <style>
-        * {
+        html,
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            width: 100%;
+            overflow-x: hidden;
+            direction: rtl;
+            /* Content direction: Right to Left */
         }
 
+        /* Override html to force scrollbar to right side (LTR default) */
+        html {
+            direction: ltr !important;
+            /* Scrollbar on right */
+        }
+
+        /* Ensure body content is still RTL */
         body {
-            background-color: #ffffff;
-            color: #1e293b;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
             direction: rtl;
         }
 
-        /* Top Header */
-        .header {
-            background: #ffffff;
-            border-bottom: 1px solid #edf2f7;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-        }
-
-        .header-logo img {
-            height: 36px;
-            object-fit: contain;
-        }
-
-        .header-menu-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            display: flex;
-            flex-direction: column;
+        /* Spinning circle animation - الدائرة المتحركة */
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            z-index: 9999;
             justify-content: center;
-            gap: 5px;
-        }
-
-        .header-menu-btn span {
-            display: block;
-            width: 22px;
-            height: 2.5px;
-            background-color: #1f4f89;
-            border-radius: 2px;
-        }
-
-        /* Breadcrumb */
-        .breadcrumb-bar {
-            background: #ffffff;
-            padding: 12px 20px;
-            font-size: 13.5px;
-            font-weight: 500;
-            display: flex;
             align-items: center;
-            gap: 8px;
-            color: #4a5568;
-            border-bottom: 1px solid #f1f5f9;
+            flex-direction: column;
         }
 
-        .breadcrumb-bar a {
-            color: #1f548e;
-            text-decoration: none;
-            font-weight: 600;
+        .spinner-overlay.active {
+            display: flex;
         }
 
-        .breadcrumb-bar .sep {
-            color: #94a3b8;
-        }
-
-        .breadcrumb-bar .current {
-            color: #475569;
-        }
-
-        /* Main Container */
-        .main-container {
-            flex: 1;
-            width: 100%;
-            max-width: 440px;
-            margin: 0 auto;
-            padding: 28px 20px 40px 20px;
-            text-align: center;
-        }
-
-        .title-wrapper {
-            margin-bottom: 16px;
-        }
-
-        .page-title {
-            display: inline-block;
-            position: relative;
-            color: #1f548e;
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-
-        .page-title::after {
-            content: "";
-            position: absolute;
-            left: -8px;
-            right: -8px;
-            bottom: 3px;
-            height: 9px;
-            background: #e2effd;
-            z-index: -1;
-            border-radius: 4px;
-        }
-
-        .page-subtitle {
-            color: #64748b;
-            font-size: 13.5px;
-            line-height: 1.75;
-            margin: 0 auto 28px auto;
-            max-width: 360px;
-        }
-
-        /* Form Inputs */
-        .form-section {
-            margin-bottom: 24px;
-        }
-
-        .input-group {
-            margin-bottom: 14px;
-        }
-
-        .form-input {
-            width: 100%;
-            height: 48px;
-            border: 1.5px solid #d1d5db;
-            border-radius: 8px;
-            padding: 0 16px;
-            font-size: 15.5px;
-            font-weight: 600;
-            color: #1e293b;
-            text-align: center;
-            background-color: #ffffff;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            font-family: inherit;
-        }
-
-        .form-input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        }
-
-        .form-input::placeholder {
-            color: #94a3b8;
-            font-weight: 400;
-            text-align: center;
-        }
-
-        .form-input:disabled {
-            background-color: #ffffff;
-            color: #1e293b;
-            cursor: default;
-        }
-
-        /* Buttons */
-        .btn-seha {
-            display: block;
-            width: 200px;
-            height: 44px;
-            margin: 0 auto 12px auto;
-            background-color: #24588e;
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 700;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: background-color 0.2s, transform 0.1s;
-            box-shadow: 0 2px 4px rgba(36, 88, 142, 0.15);
-        }
-
-        .btn-seha:hover {
-            background-color: #1a426c;
-        }
-
-        .btn-seha:active {
-            transform: scale(0.98);
-        }
-
-        .btn-seha:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Result Card (exact match with media_1789516741334.png) */
-        .result-card {
-            background-color: #f3f4f6;
-            border-radius: 14px;
-            padding: 26px 20px;
-            margin: 22px 0 28px 0;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .result-item {
-            margin-bottom: 16px;
-        }
-
-        .result-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .result-label {
-            font-size: 15px;
-            font-weight: 800;
-            color: #111827;
-            margin-bottom: 3px;
-        }
-
-        .result-val {
-            font-size: 14.5px;
-            font-weight: 500;
-            color: #374151;
-            word-break: break-word;
-        }
-
-        /* Status & Alert Messages */
-        .alert-box {
-            background-color: #fee2e2;
-            border: 1px solid #fca5a5;
-            color: #b91c1c;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            margin: 16px 0;
-            display: none;
-            line-height: 1.5;
-        }
-
-        .loading-spinner {
-            display: none;
-            margin: 20px auto;
-            width: 32px;
-            height: 32px;
-            border: 3px solid #e2e8f0;
-            border-top: 3px solid #24588e;
+        .spinner-circle {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #e0e0e0;
+            border-top: 5px solid #306db5;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
         }
 
         @keyframes spin {
@@ -275,578 +194,210 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Footer (exact match with user screenshots) */
-        .footer {
-            background-color: #1e4a7a;
-            color: #ffffff;
-            padding: 40px 20px 28px 20px;
-            text-align: center;
-            margin-top: auto;
-        }
-
-        .footer-logo-wrap {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .footer-logo-wrap img {
-            height: 48px;
-            filter: brightness(0) invert(1);
-        }
-
-        .footer-desc {
-            color: #e2e8f0;
-            font-size: 12.5px;
-            line-height: 1.8;
-            max-width: 330px;
-            margin: 0 auto 30px auto;
-            text-align: center;
-        }
-
-        .footer-section-title {
+        .spinner-text {
+            font-family: 'Cairo', sans-serif;
             font-size: 16px;
-            font-weight: 800;
-            color: #ffffff;
-            margin-bottom: 8px;
-        }
-
-        .footer-title-bar {
-            width: 85px;
-            height: 3px;
-            background-color: #5ba2df;
-            margin: 0 auto 16px auto;
-            border-radius: 2px;
-        }
-
-        .footer-links {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 34px;
-        }
-
-        .footer-links a {
-            color: #ffffff;
-            text-decoration: none;
-            font-size: 14.5px;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: #93c5fd;
-        }
-
-        .footer-contact-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 24px;
-            direction: ltr;
-        }
-
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ffffff;
-            text-decoration: none;
-            font-size: 14px;
+            color: #306db5;
             font-weight: 600;
-        }
-
-        .contact-item svg {
-            width: 16px;
-            height: 16px;
-            fill: #ffffff;
-        }
-
-        .footer-partners {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 28px;
-            margin: 20px auto;
-            padding: 10px 0;
-        }
-
-        .work-hours {
-            font-size: 13px;
-            color: #cbd5e1;
-            margin: 14px 0 18px 0;
-        }
-
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 18px;
-            margin-bottom: 24px;
-        }
-
-        .social-icons a {
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .social-icons svg {
-            width: 22px;
-            height: 22px;
-            fill: #ffffff;
-        }
-
-        .footer-divider {
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            margin: 24px auto 18px auto;
-            max-width: 360px;
-        }
-
-        .copyright-text {
-            font-size: 12px;
-            color: #cbd5e1;
-            margin-bottom: 10px;
-        }
-
-        .footer-sub-links {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            font-size: 12px;
-        }
-
-        .footer-sub-links a {
-            color: #cbd5e1;
-            text-decoration: none;
-        }
-
-        /* Floating Chat Widget */
-        .chat-widget-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #ffffff;
-            border-radius: 30px;
-            padding: 6px 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.18);
-            z-index: 1000;
-            cursor: pointer;
-            border: 1px solid #e2e8f0;
-        }
-
-        .chat-widget-btn .bot-circle {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .chat-widget-btn .bot-circle svg {
-            width: 18px;
-            height: 18px;
-            fill: #ffffff;
-        }
-
-        .chat-widget-btn .chat-bubble {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #2563eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .chat-widget-btn .chat-bubble svg {
-            width: 16px;
-            height: 16px;
-            fill: #ffffff;
         }
     </style>
 </head>
-<body>
 
-    <!-- Header (Logo on right, Menu on left) -->
-    <header class="header">
-        <div class="header-logo">
-            <img src="data:image/png;base64,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" alt="منصة صحة | Seha">
-        </div>
-        <button class="header-menu-btn" aria-label="القائمة">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-    </header>
+<body dir="rtl">
+    <!-- Spinner Overlay - الدائرة المتحركة -->
+    <div id="spinner-overlay" class="spinner-overlay">
+        <div class="spinner-circle"></div>
+        <div class="spinner-text">جاري التحقق من البيانات...</div>
+    </div>
 
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb-bar" aria-label="مسار التنقل">
-        <a href="#">الرئيسية</a>
-        <span class="sep">/</span>
-        <a href="#">الاستعلامات</a>
-        <span class="sep">/</span>
-        <span class="current">الإجازات المرضية</span>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="main-container">
-        <div class="title-wrapper">
-            <h1 class="page-title">الإجازات المرضية</h1>
-        </div>
-        
-        <p class="page-subtitle">
-            خدمة الاستعلام عن الإجازات المرضية تتيح لك الاستعلام عن حالة طلبك للإجازة ويمكنك طباعتها عن طريق تطبيق صحتي
-        </p>
-
-        <!-- Form Inputs -->
-        <div class="form-section">
-            <div class="input-group">
-                <input type="text" id="serviceCode" class="form-input" placeholder="رمز الخدمة" autocomplete="off" spellcheck="false">
+    <div style="z-index: 99; opacity: 1; transform: none">
+        <nav class="header navbar-expand-lg navbar-light px-4">
+            <div class="nav-container">
+                <a class="" href="https://www.seha.sa/#/">
+                    <img src="/assets/images/seha_logo.4dde29e5c4f38890ccf9787220bcc5be.svg" alt="logo" class="logo" style="filter: brightness(0) invert(1);">
+                </a>
+                <div class="d-lg-none d-xl-none justify-content-end menu">
+                    <button aria-controls="responsive-navbar-nav" type="button" aria-label="Toggle navigation"
+                        id="menu_but" class="d-inline-flex menu-img navbar-toggler collapsed" onclick="showSlidbar()">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+                <div class="white justify-content-around navbar-collapse collapse" id="responsive-navbar-nav">
+                    <div class="navbar justify-content-around navbar-nav">
+                        <a data-rr-ui-event-key="1" class="link nav-link active"
+                            href="https://www.seha.sa/#/">الرئيسية</a>
+                        <a data-rr-ui-event-key="2" class="link nav-link"
+                            href="https://www.seha.sa/#/services">الخدمات</a>
+                        <a data-rr-ui-event-key="3" class="link nav-link"
+                            href="https://www.seha.sa/#/inquiries">الاستعلامات</a>
+                        <a data-rr-ui-event-key="4" class="link nav-link" href="https://seha.sa/#/faq">الأسئلة
+                            الشائعة</a>
+                    </div>
+                    <div class="navbar justify-content-end navbar-nav">
+                        <a data-rr-ui-event-key="6" class=" nav-link" href="https://www.seha.sa/#/iamredirection/1">
+                            <p>إنشاء حساب</p>
+                        </a>
+                        <a data-rr-ui-event-key="7" class="login nav-link" href="https://www.seha.sa/#/account/login"
+                            style="display: flex; align-items: center; gap: 5px;">
+                            <img src="/assets/" height="15" alt="logo" class="">
+                            <p style="margin: 0;">تسجيل الدخول</p>
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="input-group">
-                <input type="text" id="nationalId" class="form-input" placeholder="رقم الهوية / الإقامة" autocomplete="off" spellcheck="false">
-            </div>
-        </div>
-
-        <!-- Alert & Loading -->
-        <div id="alertBox" class="alert-box"></div>
-        <div id="loadingSpinner" class="loading-spinner"></div>
-
-        <!-- Result Card (exact match with media_1789516741334.png) -->
-        <div id="resultCard" class="result-card" style="display: none;">
-            <div class="result-item">
-                <div class="result-label">الاسم:</div>
-                <div class="result-val" id="rName">--</div>
-            </div>
-            <!-- Escort / Companion fields (shown for companion reports matching Screenshot 2) -->
-            <div class="result-item" id="rEscortNameItem" style="display: none;">
-                <div class="result-label">اسم المرافق:</div>
-                <div class="result-val" id="rEscortName">--</div>
-            </div>
-            <div class="result-item" id="rRelationItem" style="display: none;">
-                <div class="result-label">صلة القرابة:</div>
-                <div class="result-val" id="rRelation">--</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">تاريخ إصدار تقرير الإجازة:</div>
-                <div class="result-val" id="rIssueDate">--</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">تبدأ من:</div>
-                <div class="result-val" id="rStartDate">--</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">وحتى:</div>
-                <div class="result-val" id="rEndDate">--</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">المدة بالأيام:</div>
-                <div class="result-val" id="rDuration">--</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">اسم الطبيب:</div>
-                <div class="result-val" id="rDoctorName">--</div>
-            </div>
-            <div class="result-item">
-                <div class="result-label">المسمى الوظيفي:</div>
-                <div class="result-val" id="rJobTitle">--</div>
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div id="initialButtons">
-            <button id="btnInquire" class="btn-seha" onclick="handleInquiry()">استعلام</button>
-            <button id="btnBackInitial" class="btn-seha" onclick="handleBack()">رجوع للاستعلامات</button>
-        </div>
-
-        <div id="resultButtons" style="display: none;">
-            <button id="btnNewInquiry" class="btn-seha" onclick="handleNewInquiry()">استعلام جديد</button>
-            <button id="btnBackResult" class="btn-seha" onclick="handleBack()">رجوع للاستعلامات</button>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-logo-wrap">
-            <img src="data:image/png;base64,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" alt="منصة صحة">
-        </div>
-
-        <p class="footer-desc">
-            منصة صحة تخدم جميع المنشآت الطبية من خلال تقديم الخدمات الصحية إلكترونياً لجميع المنشآت الطبية وتسعى إلى توحيد وأتمتة الإجراءات والخدمات بما في ذلك رفع جودة الأداء وخفض التكاليف.
-        </p>
-
-        <div class="footer-section-title">القائمة الرئيسية</div>
-        <div class="footer-title-bar"></div>
-        <nav class="footer-links">
-            <a href="#">الخدمات</a>
-            <a href="#">الاستعلامات</a>
-            <a href="#">الأسئلة الشائعة</a>
-            <a href="#">تواصل معنا</a>
         </nav>
+    </div>
 
-        <div class="footer-section-title">تواصل معنا</div>
-        <div class="footer-title-bar"></div>
-        <div class="footer-contact-list">
-            <a href="tel:920002005" class="contact-item">
-                <span>920002005</span>
-                <svg viewBox="0 0 24 24"><path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.24.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.21 2.2z"/></svg>
-            </a>
-            <a href="mailto:support@seha.sa" class="contact-item">
-                <span>support@seha.sa</span>
-                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-            </a>
-            <a href="https://wa.me/920002005" class="contact-item">
-                <span>920002005</span>
-                <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 012.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 01-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.24-.75-.67-1.25-1.49-1.4-1.74-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.12.17 1.78 2.71 4.3 3.8 2.53 1.09 2.53.73 2.98.69.46-.04 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29z"/></svg>
-            </a>
-        </div>
+    <div class="inner-page inquiries-container">
+        <h1 class="heading">الإجازات المرضية</h1>
+        <p class="sub-heading">
+            خدمة الاستعلام عن الإجازات المرضية تتيح لك الاستعلام عن حالة طلبك
+            للإجازة ويمكنك طباعتها عن طريق تطبيق صحتي
+        </p>
+        <div class="row justify-content-center mt-1">
+            <div class="col-md-5 p-4">
 
-        <div class="footer-partners">
-            <!-- Ministry of Health Vector Logo in White -->
-            <svg width="120" height="58" viewBox="0 0 160 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g fill="#ffffff">
-                    <path d="M80 8 C78 14 74 20 70 24 C74 23 78 23 80 23 C82 23 86 23 90 24 C86 20 82 14 80 8 Z" />
-                    <path d="M70 11 C65 16 60 20 55 22 C59 23 63 24 67 24 C69 21 71 16 73 12 Z" />
-                    <path d="M90 11 C95 16 100 20 105 22 C101 23 97 24 93 24 C91 21 89 16 87 12 Z" />
-                    <path d="M63 18 C58 21 52 24 46 25 C50 27 55 27 60 27 C62 24 64 21 66 18 Z" />
-                    <path d="M97 18 C102 21 108 24 114 25 C110 27 105 27 100 27 C98 24 96 21 94 18 Z" />
-                    <path d="M79 24 L81 24 L81 33 L79 33 Z" />
-                    <path d="M56 36 C66 30 94 30 104 36 C94 42 66 42 56 36 Z" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" />
-                    <text x="80" y="56" font-family="'Tajawal', sans-serif" font-size="14" font-weight="bold" text-anchor="middle">وزارة الصحة</text>
-                    <text x="80" y="70" font-family="'Arial', sans-serif" font-size="9" text-anchor="middle" letter-spacing="0.5">Ministry of Health</text>
-                </g>
-            </svg>
+                <p id="error-message" class="alert alert-danger" style="display: none;"></p>
 
-            <!-- Lean Business Services Vector Logo in White -->
-            <svg width="70" height="58" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g fill="#ffffff">
-                    <rect x="18" y="4" width="10" height="7" rx="2" />
-                    <rect x="35" y="4" width="10" height="7" rx="2" />
-                    <rect x="52" y="4" width="10" height="7" rx="2" />
-                    
-                    <rect x="18" y="14" width="10" height="7" rx="2" />
-                    <rect x="35" y="14" width="10" height="7" rx="2" />
-                    <rect x="52" y="14" width="10" height="7" rx="2" />
-                    
-                    <rect x="18" y="24" width="10" height="7" rx="2" />
-                    <rect x="35" y="24" width="10" height="7" rx="2" />
-                    <rect x="52" y="24" width="10" height="7" rx="2" />
+                <form id="inquiryForm">
+                    <div class="form-group">
+                        <input type="text" name="service_code" id="service_code" maxlength="20" placeholder="رمز الخدمة"
+                            class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label></label>
+                        <input type="text" name="national_id" id="national_id" maxlength="10" pattern="\d*"
+                            placeholder="رقم الهوية / الإقامة" class="form-control">
+                    </div>
 
-                    <text x="40" y="47" font-family="'Tajawal', sans-serif" font-size="13" font-weight="bold" text-anchor="middle">لـيـن</text>
-                    <text x="40" y="61" font-family="'Arial', sans-serif" font-size="10" font-weight="bold" text-anchor="middle" letter-spacing="1">LEAN</text>
-                </g>
-            </svg>
-        </div>
+                    <!-- Results Section (Hidden by default) -->
+                    <div id="results-section" class="results-inquiery row" style="display: none;">
+                        <div class="col-md-6">
+                            <span>الاسم: </span> <span id="res-name"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span>تاريخ إصدار تقرير الإجازة:</span> <span id="res-issue-date"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span>تبدأ من:</span> <span id="res-date-from"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span>وحتى:</span> <span id="res-date-to"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span>المدة بالأيام:</span> <span id="res-day-count"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span>اسم الطبيب:</span> <span id="res-doctor-name"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span>المسمى الوظيفي:</span> <span id="res-doctor-specialty"></span>
+                        </div>
+                        <div class="col-md-12 text-center mt-3">
+                            <button type="button" class="btn btn-primary" onclick="resetForm()">استعلام جديد</button>
+                        </div>
+                    </div>
 
-        <div class="work-hours">
-            أوقات العمل: الأحد حتى الخميس 8 ص - 11 م
-        </div>
+                    <button type="submit" id="submit-btn" class="btn btn-primary mt-3">استعلام</button>
 
-        <div class="social-icons">
-            <a href="#" aria-label="X (Twitter)">
-                <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </a>
-            <a href="#" aria-label="YouTube">
-                <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-            </a>
-        </div>
-
-        <div class="footer-divider"></div>
-
-        <div class="copyright-text">
-            جميع الحقوق محفوظة من قبل وزارة الصحة © 2026
-        </div>
-
-        <div class="footer-sub-links">
-            <a href="#">سياسة الخصوصية وشروط الاستخدام</a>
-            <a href="#">دليل الاستخدام</a>
-        </div>
-    </footer>
-
-    <!-- Chat Widget Pill -->
-    <div class="chat-widget-btn" onclick="alert('خدمة المساعد الآلي لمنصة صحة')" title="المساعد الذكي">
-        <div class="bot-circle">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#ffffff" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="4" fill="#ffffff"/></svg>
-        </div>
-        <div class="chat-bubble">
-            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                </form>
+            </div>
+            <div class="col-md-12 text-center">
+                <a class="btn btn-primary mb-3" href="/inquiry">رجوع للاستعلامات</a>
+            </div>
         </div>
     </div>
 
-    <!-- Inquiry Script -->
-    <script>
-        function normalizeDigits(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
-                .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
-                .trim();
-        }
+    <div class="footer-container container-fluid">
+        <div class="footer">
+            <div class="about section"><img src="/assets/images/seha_logo.4dde29e5c4f38890ccf9787220bcc5be.svg" alt="Logo" style="filter: brightness(0) invert(1);">
+                <p class="about">منصة صحة تخدم جميع المنشأت الطبية من خلال تقديم الخدمات الصحية إلكترونياً لجميع المنشأت
+                    الطبية وتسعى إلى توحيد وأتمتة الاجراءات والخدمات بما في دوره رفع جودة الاداء وخفض التكاليف.</p>
+            </div>
+            <div class="links section" style="align-items: center;">
+                <h3 class="heading">القائمة الرئيسية</h3>
+                <ul class="links-wrapepr">
+                    <li class="inquiry-li"><a class="nav-link" href="https://www.seha.sa/ui#/services">الخدمات</a></li>
+                    <li class="inquiry-li"><a class="nav-link" href="https://www.seha.sa/ui#/inquiries">الاستعلامات</a>
+                    </li>
+                    <li class="inquiry-li"><a class="nav-link" href="https://www.seha.sa/ui#/faq">الأسئلة الشائعة</a>
+                    </li>
+                    <li class="inquiry-li" style="border-bottom: none;"><a class="nav-link"
+                            href="https://www.seha.sa/ui#/ContactUs">تواصل معنا</a></li>
+                </ul>
+            </div>
+            <div class="section d-none">
+                <h3 class="heading d-none">النشرة البريدية</h3>
+                <p class="about d-none">الاشتراك في الرسائل الإخبارية</p>
+                <form class="d-none">
+                    <div class="input-wrapper"><input placeholder="البريد الالكتروني" type="email"
+                            class="form-control"><button class="button-small">إشترك</button></div>
+                </form>
+            </div>
+            <div class="contact section">
+                <h3 class="heading">تواصل معنا</h3>
+                <div class="contact-wrapper">
+                    <div class="values">
+                        <div class="details"><img alt="phone icon"
+                                src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20width='13.667'%20height='13.662'%20viewBox='0%200%2013.667%2013.662'%3e%3cpath%20id='phone'%20d='M15.455,17.037h-.089C5.04,16.443,3.574,7.731,3.369,5.072a1.576,1.576,0,0,1,1.45-1.7h2.9a1.051,1.051,0,0,1,.978.662L9.491,6a1.051,1.051,0,0,1-.231,1.135L8.14,8.267a4.923,4.923,0,0,0,3.983,3.993l1.14-1.13a1.051,1.051,0,0,1,1.14-.215l1.981.794a1.051,1.051,0,0,1,.647.977V15.46a1.576,1.576,0,0,1-1.576,1.576ZM4.946,4.426a.525.525,0,0,0-.525.525v.042c.242,3.111,1.792,10.467,11,10.992a.525.525,0,0,0,.557-.494V12.686L14,11.892l-1.508,1.5-.252-.032c-4.571-.573-5.191-5.144-5.191-5.191l-.032-.252L8.508,6.406,7.72,4.426Z'%20transform='translate(-3.364%20-3.375)'%20fill='%237eb7db'/%3e%3c/svg%3e"><a
+                                href="tel:920002005">920002005</a></div>
+                        <div class="details"><img alt="email line"
+                                src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20width='13.667'%20height='10.25'%20viewBox='0%200%2013.667%2010.25'%3e%3cpath%20id='email-line'%20d='M14.812,6H2.854A.854.854,0,0,0,2,6.854V15.4a.854.854,0,0,0,.854.854H14.812a.854.854,0,0,0,.854-.854V6.854A.854.854,0,0,0,14.812,6Zm-.658,9.4H3.563L6.553,12.3l-.615-.594L2.854,14.9V7.5l5.309,5.283a.854.854,0,0,0,1.2,0l5.445-5.415v7.474L11.669,11.7l-.6.6ZM3.414,6.854H14.121L8.765,12.18Z'%20transform='translate(-2%20-6)'%20fill='%237eb7db'/%3e%3c/svg%3e"><a
+                                href="mailto:support@seha.sa">support@seha.sa</a></div>
+                        <div class="details"><img alt="whatsapp"
+                                src="data:image/svg+xml,%3csvg%20width='14'%20height='15'%20viewBox='0%200%2014%2015'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20fill-rule='evenodd'%20clip-rule='evenodd'%20d='M11.9602%202.27071C10.6442%200.953543%208.89393%200.227791%207.02923%200.227051C3.18704%200.227051%200.0599782%203.35292%200.0584405%207.19512C0.057928%208.42329%200.378928%209.62217%200.988904%2010.6789L-7.62939e-06%2014.29L3.69531%2013.321C4.71343%2013.8761%205.85977%2014.1687%207.02644%2014.1692H7.0293C10.8711%2014.1692%2013.9984%2011.0429%2014%207.20068C14.0007%205.33869%2013.2763%203.58787%2011.9602%202.27071ZM7.0293%2012.9922H7.02693C5.98731%2012.9918%204.96761%2012.7126%204.07808%2012.1849L3.86649%2012.0594L1.67367%2012.6344L2.25899%2010.4971L2.12121%2010.278C1.54125%209.35579%201.23492%208.28992%201.23538%207.19556C1.23665%204.00207%203.83576%201.40399%207.0316%201.40399C8.5791%201.40458%2010.0338%202.00783%2011.1277%203.10261C12.2216%204.19739%2012.8237%205.65261%2012.8231%207.20023C12.8217%2010.3939%2010.2227%2012.9922%207.0293%2012.9922ZM10.2073%208.65437C10.0331%208.56722%209.17681%208.14597%209.01715%208.08787C8.8575%208.02976%208.7414%208.00072%208.62527%208.17504C8.50917%208.34934%208.17537%208.74154%208.07374%208.85773C7.97216%208.97395%207.87056%208.98849%207.69638%208.90132C7.52221%208.81417%206.961%208.63032%206.29571%208.03711C5.77795%207.57544%205.42836%207.0052%205.32677%206.8309C5.22517%206.65658%205.31597%206.56233%205.40316%206.47554C5.4815%206.39752%205.57732%206.27218%205.66442%206.17049C5.75149%206.06881%205.78052%205.99618%205.83856%205.87999C5.89663%205.76378%205.86761%205.66209%205.82406%205.57494C5.78052%205.48779%205.4322%204.63075%205.28704%204.28213C5.14567%203.9426%205.00207%203.98854%204.89515%203.98322C4.79367%203.97817%204.67744%203.97709%204.56134%203.97709C4.44522%203.97709%204.25653%204.02068%204.09687%204.19498C3.93722%204.3693%203.48729%204.79055%203.48729%205.64756C3.48729%206.50458%204.11139%207.33254%204.19848%207.44875C4.28556%207.56497%205.42666%209.32371%207.17387%2010.0779C7.58943%2010.2573%207.91386%2010.3644%208.16681%2010.4447C8.58407%2010.5772%208.96377%2010.5585%209.26389%2010.5137C9.59852%2010.4637%2010.2944%2010.0925%2010.4395%209.68573C10.5847%209.279%2010.5847%208.93038%2010.5411%208.85775C10.4976%208.78513%2010.3815%208.74154%2010.2073%208.65437Z'%20fill='white'/%3e%3c/svg%3e"
+                                style="width: 16px; height: 16px; opacity: 0.5;"><a href="https://wa.me/920002005"
+                                target="_blank" rel="noreferrer">920002005</a></div>
+                        <div class="timings mt-3"><span style="font-size: 12px; color: rgb(240, 243, 248);">أوقات العمل:
+                                الأحد حتى الخميس 8 ص - 11م</span></div>
+                        <div class="social"><button><a
+                                    href="https://www.youtube.com/channel/UCb9ZrS2YcriYqIPIHNp9wcQ"><img
+                                        alt="youtube icon"
+                                        src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20width='18'%20height='18'%20viewBox='0%200%2018%2018'%3e%3cg%20id='Group_4247'%20data-name='Group%204247'%20transform='translate(-326%20-6335)'%3e%3cpath%20id='youtube'%20d='M6.848,12.169V9.444l2.62,1.368-2.62,1.358Zm5.754-3.2a2.094,2.094,0,0,0-.386-.963,1.388,1.388,0,0,0-.972-.411c-1.357-.1-3.393-.1-3.393-.1h0s-2.036,0-3.393.1a1.388,1.388,0,0,0-.972.411,2.1,2.1,0,0,0-.386.963,14.673,14.673,0,0,0-.1,1.57v.736a14.681,14.681,0,0,0,.1,1.57,2.094,2.094,0,0,0,.386.963,1.641,1.641,0,0,0,1.07.414c.776.074,3.3.1,3.3.1s2.038,0,3.4-.1a1.387,1.387,0,0,0,.972-.411,2.1,2.1,0,0,0,.386-.963,14.681,14.681,0,0,0,.1-1.57v-.736a14.665,14.665,0,0,0-.1-1.57Z'%20transform='translate(327%206333.5)'%20fill='%23f0f3f8'%20fill-rule='evenodd'/%3e%3cg%20id='Path_8137'%20data-name='Path%208137'%20transform='translate(326%206335)'%20fill='none'%20opacity='0'%3e%3cpath%20d='M9,0A9,9,0,1,1,0,9,9,9,0,0,1,9,0Z'%20stroke='none'/%3e%3cpath%20d='M%209.000004768371582%200.4999980926513672%20C%204.313084602355957%200.4999980926513672%200.4999942779541016%204.31309700012207%200.4999942779541016%209.00003719329834%20C%200.4999942779541016%2013.68697738647461%204.313084602355957%2017.50007629394531%209.000004768371582%2017.50007629394531%20C%2013.68692493438721%2017.50007629394531%2017.50000381469727%2013.68697738647461%2017.50000381469727%209.00003719329834%20C%2017.50000381469727%204.31309700012207%2013.68692493438721%200.4999980926513672%209.000004768371582%200.4999980926513672%20M%209.000004768371582%20-1.9073486328125e-06%20C%2013.97056484222412%20-1.9073486328125e-06%2018.00000381469727%204.029457092285156%2018.00000381469727%209.00003719329834%20C%2018.00000381469727%2013.97061729431152%2013.97056484222412%2018.00007629394531%209.000004768371582%2018.00007629394531%20C%204.029444694519043%2018.00007629394531%20-5.7220458984375e-06%2013.97061729431152%20-5.7220458984375e-06%209.00003719329834%20C%20-5.7220458984375e-06%204.029457092285156%204.029444694519043%20-1.9073486328125e-06%209.000004768371582%20-1.9073486328125e-06%20Z'%20stroke='none'%20fill='%23f0f3f8'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e"></a></button><button><a
+                                    href="https://twitter.com/seha_services"><svg width="14" height="14"
+                                        viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="#ffffff"
+                                            d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z">
+                                        </path>
+                                    </svg></a></button></div>
+                    </div>
+                    <div class="contact"><img alt="lean logo" src="/assets/images/lean-logo.png">
+                        <div class="spacer"></div><img alt="moh logo"
+                            src="/assets/images/moh-logo.png">
+                    </div>
+                </div>
+                <div class="footer-note-wrapper">
+                    <p>منصة صحة معتمدة من قبل وزارة الصحة © 2026 </p>
+                    <ul>
+                        <li><a>سياسة الخصوصية وشروط الإستخدام</a></li>
+                        <li><a class="" href="https://www.seha.sa/Content/LandingPages/UserManual.pdf">دليل
+                                الاستخدام</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </main>
+    </div>
+    </div>
 
-        function normalizeCode(str) {
-            if (!str) return '';
-            return normalizeDigits(str).toUpperCase().replace(/\s+/g, '');
-        }
-
-        function showAlert(msg) {
-            const box = document.getElementById('alertBox');
-            box.innerText = msg;
-            box.style.display = 'block';
-        }
-
-        function hideAlert() {
-            const box = document.getElementById('alertBox');
-            box.style.display = 'none';
-        }
-
-        function showLoading(show) {
-            document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
-            document.getElementById('btnInquire').disabled = show;
-        }
-
-        async function handleInquiry() {
-            const rawCode = document.getElementById('serviceCode').value;
-            const rawNid = document.getElementById('nationalId').value;
-
-            const serviceCode = normalizeCode(rawCode);
-            const nationalId = normalizeDigits(rawNid);
-
-            hideAlert();
-
-            if (!serviceCode || !nationalId) {
-                showAlert('الرجاء إدخال رمز الخدمة ورقم الهوية / الإقامة');
-                return;
-            }
-
-            showLoading(true);
-
-            try {
-                const response = await fetch('/api/inquiry', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ leaveId: serviceCode, nationalId: nationalId })
-                });
-
-                const result = await response.json();
-                showLoading(false);
-
-                if (result.success && result.report) {
-                    const rep = result.report;
-                    const rData = rep.data || {};
-                    const isCompanion = (rep.type === 'companion' || rep.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0));
-
-                    // Patient Name (الاسم:)
-                    document.getElementById('rName').innerText = rData.patient_name_ar || rep.patientName || rep.name || '-';
-
-                    // Companion Name & Relation (Shown for companion reports matching Screenshot 2)
-                    const escortItem = document.getElementById('rEscortNameItem');
-                    const relationItem = document.getElementById('rRelationItem');
-                    if (isCompanion) {
-                        document.getElementById('rEscortName').innerText = rData.escort_name_ar || rep.companionName || '-';
-                        document.getElementById('rRelation').innerText = rData.relation_ar || rep.relation || '-';
-                        escortItem.style.display = 'block';
-                        relationItem.style.display = 'block';
-                    } else {
-                        escortItem.style.display = 'none';
-                        relationItem.style.display = 'none';
-                    }
-
-                    document.getElementById('rIssueDate').innerText = rep.issueDate || rData.issue_date || '-';
-                    document.getElementById('rStartDate').innerText = rep.startDate || rData.admission_date || '-';
-                    document.getElementById('rEndDate').innerText = rep.endDate || rData.discharge_date || '-';
-                    document.getElementById('rDuration').innerText = rep.duration || rData.duration || '1';
-                    document.getElementById('rDoctorName').innerText = rep.doctorName || rData.doctor_name_ar || '-';
-                    document.getElementById('rJobTitle').innerText = rep.jobTitle || rData.job_title_ar || '-';
-
-                    // Lock inputs as disabled (matching Screenshot 2)
-                    document.getElementById('serviceCode').disabled = true;
-                    document.getElementById('nationalId').disabled = true;
-
-                    // Toggle visibility to show result card and change buttons
-                    document.getElementById('resultCard').style.display = 'block';
-                    document.getElementById('initialButtons').style.display = 'none';
-                    document.getElementById('resultButtons').style.display = 'block';
-
-                    // Smooth scroll to results
-                    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                } else {
-                    showAlert(result.error || 'التقرير غير موجود أو البيانات غير متطابقة.');
-                }
-            } catch (err) {
-                showLoading(false);
-                showAlert('حدث خطأ في الاتصال بالخدمة. يرجى المحاولة لاحقاً.');
+    <script type="text/javascript">
+        // Your JavaScript functions remain unchanged
+        function showSlidbar() {
+            const x = document.getElementById("menu_but");
+            const slider = document.querySelector('#responsive-navbar-nav');
+            if (x.classList.contains("collapsed")) {
+                slider.style.display = 'block';
+                x.classList.remove("collapsed");
+            } else {
+                slider.style.display = 'none';
+                x.classList.add("collapsed");
             }
         }
-
-        function handleNewInquiry() {
-            hideAlert();
-            // Unlock and clear inputs
-            const sCode = document.getElementById('serviceCode');
-            const nId = document.getElementById('nationalId');
-            
-            sCode.disabled = false;
-            nId.disabled = false;
-            sCode.value = '';
-            nId.value = '';
-
-            // Hide companion items & results
-            document.getElementById('rEscortNameItem').style.display = 'none';
-            document.getElementById('rRelationItem').style.display = 'none';
-            document.getElementById('resultCard').style.display = 'none';
-            document.getElementById('resultButtons').style.display = 'none';
-            document.getElementById('initialButtons').style.display = 'block';
-
-            // Clean URL query parameters
-            if (window.history.replaceState) {
-                window.history.replaceState(null, '', window.location.pathname);
-            }
-
-            sCode.focus();
-        }
-
-        function handleBack() {
-            handleNewInquiry();
-        }
-
-        // On Page Load: Check URL query parameters or hash parameters
-        document.addEventListener('DOMContentLoaded', () => {
-            const url = new URL(window.location.href);
-            let id = url.searchParams.get('id') || url.searchParams.get('serviceCode') || url.searchParams.get('leaveId') || '';
-            let nin = url.searchParams.get('nin') || url.searchParams.get('nid') || url.searchParams.get('nationalId') || '';
-
-            // If not found in query string, check URL hash (e.g. #/inquiries/slenquiry?id=...&nin=...)
-            if ((!id || !nin) && window.location.hash) {
-                const hashPart = window.location.hash;
-                const qIdx = hashPart.indexOf('?');
-                if (qIdx !== -1) {
-                    const hashParams = new URLSearchParams(hashPart.substring(qIdx));
-                    id = id || hashParams.get('id') || hashParams.get('serviceCode') || hashParams.get('leaveId') || '';
-                    nin = nin || hashParams.get('nin') || hashParams.get('nid') || hashParams.get('nationalId') || '';
-                }
-            }
-
-            if (id) {
-                document.getElementById('serviceCode').value = id.trim();
-            }
-            if (nin) {
-                document.getElementById('nationalId').value = nin.trim();
-            }
-
-            // If both ID and NIN are present in the URL (scanned from QR code or link), auto-execute inquiry!
-            if (id && nin) {
-                handleInquiry();
-            }
-        });
     </script>
+    <elevenlabs-convai dir="ltr" agent-id="agent_1301kg5kw3djfmn9wrwj8gqa0cee"></elevenlabs-convai>
+    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 </body>
+
 </html>
