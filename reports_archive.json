@@ -60,8 +60,38 @@
           "hospital_type": "gov",
           "license_number": ""
         }
+      },
+      "GSL26091909616": {
+        "id": "GSL26091909616",
+        "patientName": "نننت",
+        "type": "sickleave",
+        "issueDate": "2026-09-19",
+        "data": {
+          "admission_date": "2026-09-19",
+          "discharge_date": "2026-09-19",
+          "duration": "1",
+          "issue_date": "2026-09-19",
+          "issue_time": "03:15",
+          "national_id": "تتتتتتةة",
+          "patient_name_ar": "نننت",
+          "patient_name_en": "كككمثمثمثم",
+          "nationality": "أذربيجاني",
+          "employer": "وواااا",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "ايتايات",
+          "doctor_name_en": "وووتصتستثت",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى نجران العام",
+          "hospital_en": "Najran General Hospital",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
       }
     }
   },
-  "updatedAt": "2026-09-18T20:51:21.259Z"
+  "updatedAt": "2026-09-18T21:01:14.603Z"
 }
