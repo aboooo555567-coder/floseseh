@@ -11,6 +11,7 @@ const app = {
         adminToken: null,
         subscriptionDays: 0,
         trialUsed: false,
+        trialMode: false, // وضع التجريبي: بيانات ثابتة معبأة غير قابلة للتعديل
         reports: [],
         currentStep: 1,
         leaveType: 'sickleave', // 'sickleave' or 'companion'
@@ -533,37 +534,116 @@ const app = {
         if (ov) ov.style.display = 'none';
     },
 
-    // زر التجريبي في لوحة التحكم: يوجّه المستخدم لتجربة الخدمة مجاناً
+    // زر التجريبي في لوحة التحكم: يعبّئ النموذج ببيانات ثابتة غير قابلة للتعديل
     startTrialFlow() {
         if (this.state.subscriptionDays > 0 || this.state.points >= 5) {
             this.showToast('لديك رصيد كافٍ — يمكنك إصدار تقرير رسمي مباشرة دون الحاجة للتجريبي.', 'info');
             return;
         }
-        if (this.state.trialUsed) {
-            this.showToast('لقد استخدمت التجربة المجانية مسبقاً. اطلب اشتراكاً للمتابعة.', 'error');
-            this.navigate('packages');
-            return;
-        }
-        this.showToast('اختر نوع التقرير، أدخل البيانات، ثم اضغط «إصدار» ليتم إنشاؤه تجريبياً.', 'info');
-        if (!document.getElementById('fab-menu').classList.contains('active')) this.toggleFab();
+        this.enterTrialMode();
     },
 
-    // إنشاء تقرير تجريبي: بدون خصم نقاط، بدون حفظ، مع علامة مائية "تجريبي"
-    async generateTrial() {
-        this.closeNoCreditModal();
+    // ===== بيانات التجريبي الثابتة (تُعبّأ تلقائياً ولا يستطيع المستخدم تعديلها) =====
+    getTrialFixedData() {
+        const now = new Date();
+        const off = now.getTimezoneOffset() * 60000;
+        const iso = (d) => (new Date(d.getTime() - d.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+        const discharge = new Date(now.getTime() + 2 * 86400000);
+        return {
+            leave_type: 'GSL',
+            admission_date: iso(now),
+            discharge_date: iso(discharge),
+            duration: '3',
+            issue_date: iso(now),
+            issue_time: '10:30',
+            patient_name_ar: 'أحمد محمد العتيبي',
+            patient_name_en: 'AHMED MOHAMMED ALOTAIBI',
+            national_id: '1098765432',
+            nationality: 'السعودية',
+            employer: 'شركة النخبة للمقاولات',
+            doctor_name_ar: 'د. خالد عبدالله الشمري',
+            doctor_name_en: 'DR. KHALED ABDULLAH ALSHAMMARI',
+            job_title_ar: 'استشاري باطنية',
+            job_title_en: 'Internal Medicine Consultant',
+            hospital_ar: 'مستشفى الملك فهد التخصصي',
+            hospital_en: 'King Fahad Specialist Hospital',
+            hospital_type: 'gov'
+        };
+    },
+
+    // دخول وضع التجريبي: تعبئة النموذج ببيانات ثابتة + قفل جميع الحقول
+    enterTrialMode() {
         if (this.state.trialUsed) {
             this.showToast('لقد استخدمت التجربة المجانية مسبقاً. اطلب اشتراكاً للمتابعة.', 'error');
             this.navigate('packages');
             return;
         }
-        document.getElementById('loading-overlay').style.display = 'flex';
-        try {
-            await this.populatePdfAndGenerate(true);
-        } catch(e) {
-            console.error(e);
-            this.showToast("حدث خطأ أثناء إعداد التقرير التجريبي: " + (e.message || e), "error");
-            document.getElementById('loading-overlay').style.display = 'none';
+        this.closeNoCreditModal();
+        this.state.leaveType = 'sickleave';
+        this.state.currentStep = 1;
+        document.getElementById('form-title').innerText = 'إصدار تقرير تجريبي';
+        document.getElementById('leave_type').innerHTML = '<option value="GSL">GSL</option><option value="PSL">PSL</option>';
+        document.getElementById('escort-fields').style.display = 'none';
+        const idGroup = document.getElementById('national-id-group');
+        if (idGroup) {
+            const step2 = document.getElementById('step-2');
+            if (idGroup.parentElement !== step2) step2.insertBefore(idGroup, step2.firstChild);
         }
+        this.updateWizardUI();
+        this.navigate('form');
+
+        // تعبئة البيانات الثابتة أمام المستخدم
+        const d = this.getTrialFixedData();
+        const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+        setVal('leave_type', d.leave_type);
+        setVal('admission_date', d.admission_date);
+        setVal('discharge_date', d.discharge_date);
+        setVal('duration', d.duration);
+        setVal('issue_date', d.issue_date);
+        setVal('issue_time', d.issue_time);
+        setVal('patient_name_ar', d.patient_name_ar);
+        setVal('patient_name_en', d.patient_name_en);
+        setVal('national_id', d.national_id);
+        setVal('nationality', d.nationality);
+        setVal('employer', d.employer);
+        setVal('doctor_name_ar', d.doctor_name_ar);
+        setVal('doctor_name_en', d.doctor_name_en);
+        setVal('job_title_ar', d.job_title_ar);
+        setVal('job_title_en', d.job_title_en);
+        setVal('hospital_ar', d.hospital_ar);
+        setVal('hospital_en', d.hospital_en);
+        setVal('license_number', '');
+        const radio = document.querySelector(`input[name="hospital_type"][value="${d.hospital_type}"]`);
+        if (radio) radio.checked = true;
+        this.toggleLicense();
+
+        // قفل الحقول: لا يمكن للمستخدم تعديل بيانات التجريبي
+        this.state.trialMode = true;
+        this.setTrialFormLocked(true);
+        this.showToast('🧪 بيانات تجريبية ثابتة معبأة — اضغط «إصدار التقرير» ليتم التنزيل.', 'info');
+    },
+
+    setTrialFormLocked(locked) {
+        const form = document.getElementById('report-form');
+        if (form) {
+            form.querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = locked;
+                el.classList.toggle('trial-locked', locked);
+            });
+        }
+        const banner = document.getElementById('trial-mode-banner');
+        if (banner) banner.style.display = locked ? 'flex' : 'none';
+    },
+
+    // الخروج من وضع التجريبي: إعادة فتح الحقول للتعديل
+    exitTrialMode() {
+        this.state.trialMode = false;
+        this.setTrialFormLocked(false);
+    },
+
+    // (متوافق مع الإصدارات السابقة) إنشاء تجريبي = دخول وضع التجريبي ثم الإصدار من النموذج
+    async generateTrial() {
+        this.enterTrialMode();
     },
 
     // Safe button wrapper with loading state (Guaranteed finally restore)
@@ -1262,6 +1342,7 @@ const app = {
 
     startForm(type) {
         this.toggleFab();
+        this.exitTrialMode(); // بدء نموذج عادي يلغي وضع التجريبي ويعيد فتح الحقول
         this.state.leaveType = type;
         this.state.currentStep = 1;
         
@@ -1536,6 +1617,19 @@ const app = {
     },
 
     async submitForm() {
+        // وضع التجريبي: بيانات ثابتة معبأة مسبقاً — إصدار مباشر بفحص الرصيد (آلية التجريبي)
+        if (this.state.trialMode) {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            try {
+                await this.populatePdfAndGenerate(true);
+            } catch(e) {
+                console.error(e);
+                this.showToast("حدث خطأ أثناء إعداد التقرير التجريبي: " + (e.message || e), "error");
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+            return;
+        }
+
         // Final Validation — نفس آلية الكود المصدري: من لا رصيد له لا يُصدر تقريراً جديداً
         if(!this.state.currentReportId && this.state.points < 5 && this.state.subscriptionDays <= 0) {
             this.showNoCreditModal();
@@ -1682,7 +1776,9 @@ const app = {
             // Trial consumed server-side — sync so the button disables immediately
             if (data.trialUsed) {
                 this.state.trialUsed = true;
+                this.state.trialMode = false;
             }
+            if (isTrial) this.exitTrialMode(); // إنهاء وضع التجريبي بعد التنزيل
 
             // Sync balance from the server's authoritative value (after any deduction)
             if (data.points != null) {
