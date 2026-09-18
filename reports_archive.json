@@ -1,3 +1,37 @@
 {
-  "reports": {}
+  "reports": {
+    "5275574402": {
+      "GSL26091856528": {
+        "id": "GSL26091856528",
+        "patientName": "تبب",
+        "type": "sickleave",
+        "issueDate": "2026-09-18",
+        "data": {
+          "admission_date": "2026-09-18",
+          "discharge_date": "2026-09-18",
+          "duration": "1",
+          "issue_date": "2026-09-18",
+          "issue_time": "05:36",
+          "national_id": "وو",
+          "patient_name_ar": "تبب",
+          "patient_name_en": "بب",
+          "nationality": "ببالسعودية",
+          "employer": "بب",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "ببب",
+          "doctor_name_en": "ب",
+          "job_title_ar": "ببطبيب عام",
+          "job_title_en": "ببGeneral",
+          "hospital_ar": "مستشفى الملك خالد بنجران",
+          "hospital_en": "King Khalid Hospital, Najran",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
+      }
+    }
+  },
+  "updatedAt": "2026-09-18T20:24:57.385Z"
 }
