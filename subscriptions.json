@@ -241,8 +241,12 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T21:33:34.621Z",
-      "reportsCount": 3
+      "updatedAt": "2026-09-18T21:49:56.474Z",
+      "reportsCount": 3,
+      "status": "active",
+      "subscription_start_date": "2026-09-18T21:33:34.621Z",
+      "daysRemaining": 0,
+      "daysUsed": 0
     }
   },
   "transactions": [
