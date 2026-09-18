@@ -503,6 +503,9 @@ const app = {
         } else if ((this.state.reportPaymentSource || 'none') === 'none') {
             subBadge.innerText = 'بدون اشتراك — بانتظار منح المالك نقاطاً أو اشتراكاً';
             subBadge.style.color = '#94a3b8';
+        } else if ((this.state.reportPaymentSource || 'none') === 'points') {
+            subBadge.innerText = '🟢 حسابك فعّال — بانتظار إضافة النقاط من المالك';
+            subBadge.style.color = '#f59e0b';
         } else {
             subBadge.innerText = 'لا يوجد اشتراك فعال';
             subBadge.style.color = '#e74c3c';
@@ -904,8 +907,10 @@ const app = {
         for (const u of filtered) {
             const isOwner = (String(u.chatId) === OWNER_CHAT_ID || (u.username && u.username.toLowerCase() === 'ppppokl'));
             const isNoneState = u.status === 'active' && (u.daysRemaining || 0) <= 0 && (u.points || 0) < 5 && (u.report_payment_source || 'none') === 'none';
-            const statusClass = u.status === 'suspended' ? 'badge-suspended' : (u.status === 'cancelled' ? 'badge-cancelled' : (u.status === 'active' && u.daysRemaining > 0 ? 'badge-active' : (isNoneState ? 'badge' : 'badge-cancelled')));
-            const statusLabel = u.status === 'suspended' ? '⏸️ موقوف' : (u.status === 'cancelled' ? '❌ ملغي' : (u.status === 'active' && u.daysRemaining > 0 ? '🟢 فعال' : (isNoneState ? '⚪ بدون اشتراك' : '⏳ منتهي')));
+            // «فعال»: له أيام اشتراك، أو مصدر دفعه «نقاط» (حتى لو رصيده صفراً بانتظار شحن المالك)
+            const isActiveNow = u.status === 'active' && ((u.daysRemaining || 0) > 0 || u.report_payment_source === 'points');
+            const statusClass = u.status === 'suspended' ? 'badge-suspended' : (u.status === 'cancelled' ? 'badge-cancelled' : (isActiveNow ? 'badge-active' : (isNoneState ? 'badge' : 'badge-cancelled')));
+            const statusLabel = u.status === 'suspended' ? '⏸️ موقوف' : (u.status === 'cancelled' ? '❌ ملغي' : (isActiveNow ? '🟢 فعال' : (isNoneState ? '⚪ بدون اشتراك' : '⏳ منتهي')));
             
             const payBadge = u.report_payment_source === 'unlimited' ? '<span class="badge badge-unlimited">♾️ غير محدود</span>' : (u.report_payment_source === 'none' ? '<span class="badge" style="background:#f1f5f9; color:#94a3b8;">⚪ بدون</span>' : '<span class="badge badge-points">🪙 نقاط</span>');
             const ownerBadge = isOwner ? '<span class="badge badge-owner">👑 المالك</span>' : '';
