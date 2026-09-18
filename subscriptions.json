@@ -70,20 +70,51 @@
       "status": "active",
       "plan": "unlimited",
       "report_payment_source": "points",
-      "points": 10000,
-      "balance_points": 10000,
+      "points": 9995,
+      "balance_points": 9995,
       "subscriptionDays": 363,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-15T23:59:59.999Z",
       "subscriptionExpires": "2027-09-15T23:59:59.999Z",
-      "reports": [],
+      "reports": [
+        {
+          "id": "GSL26091903407",
+          "patientName": "و وة",
+          "type": "sickleave",
+          "issueDate": "2026-09-19",
+          "data": {
+            "admission_date": "2026-09-19",
+            "discharge_date": "2026-09-19",
+            "duration": "1",
+            "issue_date": "2026-09-19",
+            "issue_time": "15:15",
+            "national_id": "نزز",
+            "patient_name_ar": "و وة",
+            "patient_name_en": "ت",
+            "nationality": "السعودية",
+            "employer": "",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "عتت",
+            "doctor_name_en": "توو",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "",
+            "hospital_en": "",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
+        }
+      ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:58:00.998Z",
+      "updatedAt": "2026-09-18T21:04:48.730Z",
       "daysRemaining": 363,
       "daysUsed": 3,
-      "reportsCount": 0
+      "reportsCount": 1
     },
     "5275574402": {
       "points": 0,
@@ -198,6 +229,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789765488305_zdtdq8",
+      "timestamp": "2026-09-18T21:04:48.305Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "7853478744",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "10000",
+      "new_value": "9995",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26091903407 (generate-native-pdf)"
+    },
     {
       "id": "tx_1789765339394_h3a7es",
       "timestamp": "2026-09-18T21:02:19.394Z",
