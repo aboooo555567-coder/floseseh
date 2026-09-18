@@ -2172,7 +2172,7 @@ app.post('/api/send-pdf', async (req, res) => {
 app.post('/api/generate-native-pdf', async (req, res) => {
     let browser = null;
     try {
-        const { chatId, reportData, filename, reportId } = req.body;
+        const { chatId, reportData, filename, reportId, trial } = req.body;
         addLog(`generate-native-pdf called for chatId: ${chatId}`);
         
         if (!chatId || !reportData) {
@@ -2204,12 +2204,17 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // PAYMENT-SOURCE AWARE GATE (fixes printing for points-based users):
         // - unlimited users need an active subscription (days > 0)
         // - points users only need 5 points — having 0 subscription days must NOT block them
+        // - trial=true: free watermarked sample — skips the credit gate, ONE per account
         const paymentSrc = normalized.report_payment_source || (normalized.subscriptionDays > 0 ? 'unlimited' : 'points');
+        const isTrial = trial === true || trial === 'true';
         if (!isUpdate) {
-            if (paymentSrc === 'unlimited' && normalized.subscriptionDays <= 0) {
+            if (isTrial) {
+                if (userSub.trialUsed) {
+                    return res.status(403).json({ success: false, error: '🧪 لقد استخدمت تجربتك المجانية بالفعل. للحصول على تقارير رسمية يرجى طلب الاشتراك.' });
+                }
+            } else if (paymentSrc === 'unlimited' && normalized.subscriptionDays <= 0) {
                 return res.status(403).json({ success: false, error: '❌ عذراً، انتهت صلاحية اشتراكك. يرجى تجديد الاشتراك أولاً لإصدار التقارير.' });
-            }
-            if (paymentSrc === 'points' && (normalized.points || 0) < 5) {
+            } else if (paymentSrc === 'points' && (normalized.points || 0) < 5) {
                 return res.status(403).json({ success: false, error: '❌ عذراً، رصيدك غير كافٍ. تحتاج إلى 5 نقاط لإصدار هذا التقرير.' });
             }
         }
@@ -2437,7 +2442,13 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     
   </div>
 
-  </div>
+  ${isTrial ? `
+  <!-- TRIAL WATERMARK: عينة مجانية غير رسمية (نفس نمط add_watermark.js) -->
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-38deg);z-index:100;pointer-events:none;text-align:center;">
+    <div style="font-size:96px;font-weight:bold;color:rgba(255,0,0,0.11);white-space:nowrap;font-family:'Noto Sans Arabic','Tajawal',Arial,sans-serif;line-height:1;">تجريبي</div>
+    <div style="font-size:30px;font-weight:bold;color:rgba(255,0,0,0.11);white-space:nowrap;font-family:Arial,sans-serif;letter-spacing:6px;margin-top:8px;">SAMPLE — NOT OFFICIAL</div>
+  </div>` : ''}
+
 </div>
 </body>
 </html>`;
@@ -2518,8 +2529,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         const pdfBuffer = Buffer.isBuffer(pdfResult) ? pdfResult : Buffer.from(pdfResult);
 
         addLog('Sending PDF to Telegram...');
-        const docCaption = d.titleAr ? `📄 ${d.titleAr} الخاص بك` : '📄 تقرير الإجازة المرضية الخاص بك';
-        const docFileName = filename || (d.type === 'companion' ? 'Patient_Companion_Report.pdf' : (d.type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : 'sickLeaves.pdf'));
+        const docCaption = isTrial
+            ? '🧪 تقرير تجريبي — غير رسمي ولا يُعتمد. للاطلاع فقط.'
+            : (d.titleAr ? `📄 ${d.titleAr} الخاص بك` : '📄 تقرير الإجازة المرضية الخاص بك');
+        const docFileName = isTrial
+            ? 'Trial_Sample.pdf'
+            : (filename || (d.type === 'companion' ? 'Patient_Companion_Report.pdf' : (d.type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : 'sickLeaves.pdf')));
 
         // Local-test hook: with the sentinel test token we skip the actual Telegram
         // upload but keep ALL other logic (report persistence, point deduction) intact.
@@ -2547,6 +2562,14 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                 const dbData = await loadLocalSubscriptions();
                 const uSub = dbData.subscriptions[chatIdStr];
                 if (uSub) {
+                    if (isTrial) {
+                        // Trial: NO report persistence, NO point deduction — only mark the
+                        // one-time free trial as consumed (server-side source of truth).
+                        uSub.trialUsed = true;
+                        uSub.updatedAt = new Date().toISOString();
+                        await saveLocalSubscriptions(dbData);
+                        return;
+                    }
                     if (!uSub.reports) uSub.reports = [];
                     const currentRepId = reportId || d.leaveId;
                     const rIdx = uSub.reports.findIndex(r => r.id === currentRepId);
@@ -2622,11 +2645,13 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                 points: finalBalance,
                 fileId: null,
                 pdfBase64: pdfBuffer.toString('base64'),
-                filename: docFileName
+                filename: docFileName,
+                trial: isTrial || undefined,
+                trialUsed: isTrial ? true : undefined
             });
         }
 
-        res.json({ success: true, fileId: sentFileId, reportId: reportId, points: finalBalance });
+        res.json({ success: true, fileId: sentFileId, reportId: reportId, points: finalBalance, trial: isTrial || undefined, trialUsed: isTrial ? true : undefined });
 
     } catch (err) {
         // Safety net: never leak a Chrome process on unexpected failures.

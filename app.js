@@ -10,6 +10,7 @@ const app = {
         points: 0,
         adminToken: null,
         subscriptionDays: 0,
+        trialUsed: false,
         reports: [],
         currentStep: 1,
         leaveType: 'sickleave', // 'sickleave' or 'companion'
@@ -415,6 +416,7 @@ const app = {
             const data = await res.json();
             this.state.points = data.user?.points || data.points || 0;
             this.state.subscriptionDays = data.user?.subscriptionDays || data.subscriptionDays || 0;
+            this.state.trialUsed = !!(data.user?.trialUsed);
             this.state.reports = data.reports || data.user?.reports || [];
             if (data.user?.mohLogo) this.state.mohLogoUrl = data.user.mohLogo;
             if (data.user?.hospitalLogo) this.state.hospitalLogoUrl = data.user.hospitalLogo;
@@ -505,6 +507,63 @@ const app = {
         this._toastTimer = setTimeout(() => {
             toast.style.display = 'none';
         }, 3500);
+    },
+
+    // ===== نظام الرصيد والتجربة المجانية (آلية المصدر + زر التجريبي) =====
+    showNoCreditModal() {
+        const ov = document.getElementById('nocredit-overlay');
+        if (!ov) return;
+        const trialBtn = document.getElementById('btn-make-trial');
+        if (trialBtn) {
+            if (this.state.trialUsed) {
+                trialBtn.disabled = true;
+                trialBtn.style.opacity = '0.55';
+                trialBtn.textContent = 'تم استخدام التجربة مسبقاً';
+            } else {
+                trialBtn.disabled = false;
+                trialBtn.style.opacity = '1';
+                trialBtn.textContent = '🧪 إنشاء تجريبي';
+            }
+        }
+        ov.style.display = 'flex';
+    },
+
+    closeNoCreditModal() {
+        const ov = document.getElementById('nocredit-overlay');
+        if (ov) ov.style.display = 'none';
+    },
+
+    // زر التجريبي في لوحة التحكم: يوجّه المستخدم لتجربة الخدمة مجاناً
+    startTrialFlow() {
+        if (this.state.subscriptionDays > 0 || this.state.points >= 5) {
+            this.showToast('لديك رصيد كافٍ — يمكنك إصدار تقرير رسمي مباشرة دون الحاجة للتجريبي.', 'info');
+            return;
+        }
+        if (this.state.trialUsed) {
+            this.showToast('لقد استخدمت التجربة المجانية مسبقاً. اطلب اشتراكاً للمتابعة.', 'error');
+            this.navigate('packages');
+            return;
+        }
+        this.showToast('اختر نوع التقرير، أدخل البيانات، ثم اضغط «إصدار» ليتم إنشاؤه تجريبياً.', 'info');
+        if (!document.getElementById('fab-menu').classList.contains('active')) this.toggleFab();
+    },
+
+    // إنشاء تقرير تجريبي: بدون خصم نقاط، بدون حفظ، مع علامة مائية "تجريبي"
+    async generateTrial() {
+        this.closeNoCreditModal();
+        if (this.state.trialUsed) {
+            this.showToast('لقد استخدمت التجربة المجانية مسبقاً. اطلب اشتراكاً للمتابعة.', 'error');
+            this.navigate('packages');
+            return;
+        }
+        document.getElementById('loading-overlay').style.display = 'flex';
+        try {
+            await this.populatePdfAndGenerate(true);
+        } catch(e) {
+            console.error(e);
+            this.showToast("حدث خطأ أثناء إعداد التقرير التجريبي: " + (e.message || e), "error");
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
     },
 
     // Safe button wrapper with loading state (Guaranteed finally restore)
@@ -1477,9 +1536,9 @@ const app = {
     },
 
     async submitForm() {
-        // Final Validation
+        // Final Validation — نفس آلية الكود المصدري: من لا رصيد له لا يُصدر تقريراً جديداً
         if(!this.state.currentReportId && this.state.points < 5 && this.state.subscriptionDays <= 0) {
-            this.showToast("ليس لديك رصيد. تحتاج 5 نقاط لإصدار تقرير جديد.", "error");
+            this.showNoCreditModal();
             return;
         }
 
@@ -1495,7 +1554,7 @@ const app = {
         }
     },
 
-    async populatePdfAndGenerate() {
+    async populatePdfAndGenerate(isTrial = false) {
         const type = this.state.leaveType;
         const admission = document.getElementById('admission_date').value;
         const discharge = document.getElementById('discharge_date').value;
@@ -1610,7 +1669,8 @@ const app = {
                     chatId: app.state.chatId,
                     reportData: reportDataPayload,
                     filename: 'sickLeaves.pdf',
-                    reportId: reportId
+                    reportId: reportId,
+                    trial: isTrial
                 })
             });
             
@@ -1619,49 +1679,56 @@ const app = {
                 throw new Error(data.error || 'فشل توليد التقرير');
             }
 
+            // Trial consumed server-side — sync so the button disables immediately
+            if (data.trialUsed) {
+                this.state.trialUsed = true;
+            }
+
             // Sync balance from the server's authoritative value (after any deduction)
             if (data.points != null) {
                 app.state.points = data.points;
                 app.updateDashboardUI();
             }
 
-            // Also save report data
-            await fetch(`/api/report/${app.state.chatId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    report: {
-                        id: reportId,
-                        patientName: isCompanionType ? escAr : pNameAr,
-                        type: type,
-                        issueDate: issueDate,
-                        data: {
-                            admission_date: admission,
-                            discharge_date: discharge,
-                            duration: duration,
-                            issue_date: issueDate,
-                            issue_time: issueTime,
-                            national_id: idNum,
-                            patient_name_ar: pNameAr,
-                            patient_name_en: pNameEn,
-                            nationality: document.getElementById('nationality').value,
-                            employer: employer,
-                            escort_name_ar: escAr,
-                            escort_name_en: escEn,
-                            relation_ar: relAr,
-                            relation_en: relEn,
-                            doctor_name_ar: docNameAr,
-                            doctor_name_en: docNameEn,
-                            job_title_ar: jobAr,
-                            job_title_en: jobEn,
-                            hospital_ar: hospAr,
-                            hospital_en: hospEn,
-                            hospital_type: isPrivate ? 'private' : 'gov',
-                            license_number: license
+            // Also save report data (trials are NEVER persisted — non-official samples)
+            if (!isTrial) {
+                await fetch(`/api/report/${app.state.chatId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        report: {
+                            id: reportId,
+                            patientName: isCompanionType ? escAr : pNameAr,
+                            type: type,
+                            issueDate: issueDate,
+                            data: {
+                                admission_date: admission,
+                                discharge_date: discharge,
+                                duration: duration,
+                                issue_date: issueDate,
+                                issue_time: issueTime,
+                                national_id: idNum,
+                                patient_name_ar: pNameAr,
+                                patient_name_en: pNameEn,
+                                nationality: document.getElementById('nationality').value,
+                                employer: employer,
+                                escort_name_ar: escAr,
+                                escort_name_en: escEn,
+                                relation_ar: relAr,
+                                relation_en: relEn,
+                                doctor_name_ar: docNameAr,
+                                doctor_name_en: docNameEn,
+                                job_title_ar: jobAr,
+                                job_title_en: jobEn,
+                                hospital_ar: hospAr,
+                                hospital_en: hospEn,
+                                hospital_type: isPrivate ? 'private' : 'gov',
+                                license_number: license
+                            }
                         }
-                    }
-                })
-            });
+                    })
+                });
+            }
 
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('report-form').reset();
