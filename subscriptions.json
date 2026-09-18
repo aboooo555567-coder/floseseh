@@ -23,12 +23,12 @@
     "6316398194": {
       "username": "zakaria_2025",
       "name": "Zakaria Mohammed",
-      "status": "active",
+      "status": "cancelled",
       "plan": "unlimited",
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 366,
+      "subscriptionDays": 363,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-15T23:59:59.999Z",
       "reports": [
@@ -59,10 +59,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-15T21:09:25.479Z",
-      "daysRemaining": 366,
-      "daysUsed": 0,
-      "reportsCount": 0
+      "updatedAt": "2026-09-18T20:52:16.198Z",
+      "daysRemaining": 363,
+      "daysUsed": 3,
+      "reportsCount": 1
     },
     "7853478744": {
       "username": "ppppokl",
@@ -72,7 +72,7 @@
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 365,
+      "subscriptionDays": 363,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-15T23:59:59.999Z",
       "subscriptionExpires": "2027-09-15T23:59:59.999Z",
@@ -80,7 +80,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:17:59.470Z"
+      "updatedAt": "2026-09-18T20:52:24.276Z",
+      "daysRemaining": 363,
+      "daysUsed": 3,
+      "reportsCount": 0
     },
     "5275574402": {
       "points": 0,
@@ -165,6 +168,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789764736198_soapf3",
+      "timestamp": "2026-09-18T20:52:16.198Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "6316398194",
+      "operation": "subscription_cancel",
+      "amount": null,
+      "previous_value": "active",
+      "new_value": "cancelled",
+      "details": "إلغاء الاشتراك نهائياً"
+    },
     {
       "id": "tx_1789762679470_t9t4n2",
       "timestamp": "2026-09-18T20:17:59.470Z",
