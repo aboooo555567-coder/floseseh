@@ -78,11 +78,42 @@
       "subscriptionDays": 365,
       "subscriptionExpires": "2027-09-18T20:22:51.146Z",
       "username": "hm999m",
-      "reports": [],
+      "reports": [
+        {
+          "id": "GSL26091856528",
+          "patientName": "تبب",
+          "type": "sickleave",
+          "issueDate": "2026-09-18",
+          "data": {
+            "admission_date": "2026-09-18",
+            "discharge_date": "2026-09-18",
+            "duration": "1",
+            "issue_date": "2026-09-18",
+            "issue_time": "05:36",
+            "national_id": "وو",
+            "patient_name_ar": "تبب",
+            "patient_name_en": "بب",
+            "nationality": "ببالسعودية",
+            "employer": "بب",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "ببب",
+            "doctor_name_en": "ب",
+            "job_title_ar": "ببطبيب عام",
+            "job_title_en": "ببGeneral",
+            "hospital_ar": "مستشفى الملك خالد بنجران",
+            "hospital_en": "King Khalid Hospital, Najran",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
+        }
+      ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T20:23:41.891Z",
+      "updatedAt": "2026-09-18T20:24:58.022Z",
       "balance_points": 0,
       "status": "active",
       "subscription_end_date": "2027-09-18T20:22:51.146Z",
@@ -91,7 +122,7 @@
       "daysUsed": 0,
       "plan": "unlimited",
       "report_payment_source": "unlimited",
-      "reportsCount": 0,
+      "reportsCount": 1,
       "trialUsed": true
     }
   },
