@@ -184,8 +184,38 @@
           "hospital_type": "private",
           "license_number": "1961771454"
         }
+      },
+      "GSL26091950981": {
+        "id": "GSL26091950981",
+        "patientName": "امل ناصر محمد الحربي ",
+        "type": "sickleave",
+        "issueDate": "2026-09-19",
+        "data": {
+          "admission_date": "2026-09-19",
+          "discharge_date": "2026-09-19",
+          "duration": "1",
+          "issue_date": "2026-09-19",
+          "issue_time": "13:14",
+          "national_id": "1034680783",
+          "patient_name_ar": "امل ناصر محمد الحربي ",
+          "patient_name_en": "AMAL NASSER MOHAMMED AL-HARBI",
+          "nationality": "السعودية",
+          "employer": "قطاع خاص",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "محمد الشهراني ",
+          "doctor_name_en": "MOHAMMED ALSHRANE",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى نجران العام",
+          "hospital_en": "Najran General Hospital",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
       }
     }
   },
-  "updatedAt": "2026-09-18T22:55:44.102Z"
+  "updatedAt": "2026-09-18T23:41:20.745Z"
 }
