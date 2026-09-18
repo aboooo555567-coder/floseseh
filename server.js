@@ -2230,7 +2230,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         };
 
         // Pre-load images as base64
-        const sehaLogo = await imgToBase64('الشعارات/seha_logo_clean.png') || await imgToBase64('الشعارات/Seha.png');
+        // شعار صحة بالأزرق الرسمي #306db5 (نفس أزرق خيارات/زر أعلى صفحة الاستعلامات)
+        const sehaLogo = await imgToBase64('الشعارات/seha_logo_blue.png') || await imgToBase64('الشعارات/seha_logo_clean.png') || await imgToBase64('الشعارات/Seha.png');
         const ksaCalligraphy = await imgToBase64('الشعارات/ksa_emblem_clean.png') || await imgToBase64('الشعارات/ksa_calligraphy.png');
         const mohLogo = await imgToBase64('الشعارات/moh_logo_clean.png') || await imgToBase64('الشعارات/Saudi_Ministry_of_Health.JPG');
         const nhicLogo = await imgToBase64('الشعارات/dfhZfyJM_400x400 (1).jpg');
@@ -2276,8 +2277,9 @@ app.post('/api/generate-native-pdf', async (req, res) => {
      أعمدة 153/225/224/123 (عرض الجدول 725px)، تظليل الصفوف الزوجية #f7f7f7،
      عنوان عربي 21px #306db5 + إنجليزي 16.5px #2c3e77، موضع العنوان top:153px
      فجوة العنوانين 12px (النموذج: فجوة حبر 14px — كانت 20px زائدة)،
-     الفاصل العمودي في الفوتر: من أعلى الصف حتى منتصفه تماماً (80px = أسفل QR
-     = منتصف صف الفوتر) كما بالنماذج — لم يعد هابطاً أسفل الصورتين */
+     الفاصل العمودي بين الصورتين: طول طبيعي 191px من أعلى صف الفوتر (النماذج:
+     190.9px بالضبط)، مزاح يميناً ليستقر عند x=414.8 (النماذج: 414.83) محاذاً
+     خط منتصف الجدول — تموضع مطلق حتى لا يدفع الصف السفلي */
   td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; line-height: 1.2; }
   .label-en { border: 1px solid #dedede; padding: 6px 8px; font-weight: bold; color: #366fb5; font-size: 12px; width: 153px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
   .label-ar { border: 1px solid #dedede; padding: 6px 3px; font-weight: bold; color: #366fb5; font-size: 13px; width: 123px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
@@ -2385,7 +2387,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="margin-top:${footerMarginTop};">
     
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px; position:relative;">
       
       <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 20px -> text starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
@@ -2395,8 +2397,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
-      <!-- Center Vertical Divider: footer top -> footer middle (= QR bottom, 8+72=80px) -->
-      <div style="width:1px; background-color:#dddddd; height:80px;"></div>
+      <!-- Center 1px spacer: preserves exact flex centering of both cells -->
+      <div style="width:1px;"></div>
 
       <!-- Right: MOH Logo (clean cropped, height: 92px, margin-bottom: 8px -> hospital name starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
@@ -2405,6 +2407,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         <h4 style="font-size:9.5px;font-weight:bold;font-family:'Tinos','Times New Roman',serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
+
+      <!-- Vertical divider: natural length 191px (models: 190.9) from footer-row top,
+           shifted right to x=414.8 (models: 414.83) aligning the table middle line.
+           Absolute => does not push the bottom row. -->
+      <div style="position:absolute; top:0; left:374.8px; width:1px; height:191px; background-color:#dddddd;"></div>
 
     </div>
 
