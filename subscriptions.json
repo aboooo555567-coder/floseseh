@@ -112,7 +112,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T23:16:30.522Z",
+      "updatedAt": "2026-09-18T23:17:50.057Z",
       "reportsCount": 1,
       "daysRemaining": 363,
       "daysUsed": 3
@@ -367,6 +367,28 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789773470057_iba7u1",
+      "timestamp": "2026-09-18T23:17:50.057Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7853478744",
+      "operation": "subscription_activate",
+      "amount": null,
+      "previous_value": "cancelled",
+      "new_value": "active",
+      "details": "تغيير حالة المشترك إلى فعال"
+    },
+    {
+      "id": "tx_1789773455980_tptyir",
+      "timestamp": "2026-09-18T23:17:35.980Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7853478744",
+      "operation": "subscription_cancel",
+      "amount": null,
+      "previous_value": "active",
+      "new_value": "cancelled",
+      "details": "إلغاء الاشتراك نهائياً"
+    },
     {
       "id": "tx_1789772143785_vw6uao",
       "timestamp": "2026-09-18T22:55:43.785Z",
