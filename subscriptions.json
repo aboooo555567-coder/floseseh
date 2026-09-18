@@ -1,5 +1,16 @@
 {
   "subscriptions": {
+    "123456789": {
+      "points": 0,
+      "subscriptionDays": 365,
+      "subscriptionExpires": "2027-09-18T20:19:35.307Z",
+      "username": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-09-18T20:19:35.307Z"
+    },
     "6316398194": {
       "username": "zakaria_2025",
       "name": "Zakaria Mohammed",
