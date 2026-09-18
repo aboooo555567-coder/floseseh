@@ -2274,7 +2274,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
      تسميات #366fb5 (12px EN / 13px AR)، قيم #2c3e77 (12px)، صف المدة #2c3e77 (12px)،
      حدود #dedede، حشو 11px 8px، صفوف 40px، حشو رأسي 6px (صف الاسم سطران بنفس الارتفاع كما في النموذج)،
      أعمدة 153/225/224/123 (عرض الجدول 725px)، تظليل الصفوف الزوجية #f7f7f7،
-     عنوان عربي 21px #306db5 + إنجليزي 16.5px #2c3e77، موضع العنوان top:145px */
+     عنوان عربي 21px #306db5 + إنجليزي 16.5px #2c3e77، موضع العنوان top:153px
+     فجوة العنوانين 12px (النموذج: فجوة حبر 14px — كانت 20px زائدة)،
+     الفاصل العمودي في الفوتر: من أعلى الصف حتى منتصفه تماماً (80px = أسفل QR
+     = منتصف صف الفوتر) كما بالنماذج — لم يعد هابطاً أسفل الصورتين */
   td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; line-height: 1.2; }
   .label-en { border: 1px solid #dedede; padding: 6px 8px; font-weight: bold; color: #366fb5; font-size: 12px; width: 153px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
   .label-ar { border: 1px solid #dedede; padding: 6px 3px; font-weight: bold; color: #366fb5; font-size: 13px; width: 123px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
@@ -2299,8 +2302,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <img src="${ksaCalligraphy}" style="position:absolute;top:68px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
   
   <!-- Header: Arabic & English Titles -->
-  <div style="position:absolute;top:145px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#306db5;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 20px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+  <div style="position:absolute;top:153px;left:0;width:794px;text-align:center;">
+    <h1 style="color:#306db5;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 12px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
     <h2 style="color:#2c3e77;font-size:16.5px;font-weight:bold;font-family:'Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
@@ -2392,8 +2395,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
-      <!-- Center Vertical Divider -->
-      <div style="width:1px; background-color:#cccccc; height:155px; margin-top: 5px;"></div>
+      <!-- Center Vertical Divider: footer top -> footer middle (= QR bottom, 8+72=80px) -->
+      <div style="width:1px; background-color:#dddddd; height:80px;"></div>
 
       <!-- Right: MOH Logo (clean cropped, height: 92px, margin-bottom: 8px -> hospital name starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
