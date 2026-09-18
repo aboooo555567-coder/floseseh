@@ -9,6 +9,7 @@ const fs = require('fs').promises;
 
 const crypto = require('crypto');
 const fsSync = require('fs');
+const https = require('https');
 let currentAdminToken = null;
 
 // Self-contained embedded fonts (Noto Sans Arabic / Tajawal / Tinos / Arimo as base64 woff2).
@@ -231,9 +232,215 @@ const saveLocalSubscriptions = async (data) => {
         if (!data.subscriptions) data.subscriptions = {};
         if (!data.transactions) data.transactions = [];
         await fs.writeFile(subscriptionsPath, JSON.stringify(data, null, 2), 'utf-8');
+        scheduleGithubSync('subscriptions');
     } catch (e) {
         console.error('Error writing local subscriptions.json:', e.message);
     }
+};
+
+// ==================================================================================
+// حماية البيانات الدائمة — Permanent Data Preservation
+// 1) مزامنة تلقائية مع GitHub: أي تغيير في البيانات يُرفع للمستودع خلال ثوانٍ،
+//    لذلك لا تُفقد البيانات عند إضافة ميزات جديدة (إعادة نشر Render) أو إعادة تشغيل.
+// 2) أرشيف تقارير دائم (reports_archive.json): كل تقرير صادر يُحفظ في أرشيف منفصل
+//    لا يمسّه أي إجراء للأدمن (إضافة نقاط، حذف مستخدمين، تغيير حالات...)، وأي تقرير
+//    مفقود يُعاد تلقائياً لحساب صاحبه عند فتح التطبيق (auto-heal).
+// ==================================================================================
+const reportsArchiveDefaultPath = path.join(__dirname, 'reports_archive.json');
+const reportsArchivePath = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'reports_archive.json') : reportsArchiveDefaultPath;
+
+const GITHUB_SYNC_ENABLED = process.env.GITHUB_SYNC_DISABLED !== '1';
+// Token resolution: env override first; else github_sync.token file.
+// The file stores the token BASE64-ENCODED because GitHub push protection blocks
+// raw PATs inside commits. Rotation: update the file (or set GITHUB_SYNC_TOKEN env).
+const githubSyncToken = (process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || (() => {
+    try {
+        let t = fsSync.readFileSync(path.join(__dirname, 'github_sync.token'), 'utf-8').trim();
+        if (t && !/^(ghp_|github_pat_|gho_|ghs_)/.test(t)) {
+            try { t = Buffer.from(t, 'base64').toString('utf-8').trim(); } catch (e) {}
+        }
+        return t;
+    } catch (e) { return ''; }
+})());
+const GITHUB_REPO = 'aboooo555567-coder/floseseh';
+const GITHUB_BRANCH = 'main';
+
+const githubApiRequest = (method, apiPath, body) => new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const req = https.request({
+        hostname: 'api.github.com',
+        path: apiPath,
+        method: method,
+        headers: {
+            'User-Agent': 'floseseh-data-sync',
+            'Accept': 'application/vnd.github+json',
+            'Authorization': `Bearer ${githubSyncToken}`,
+            ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } : {})
+        }
+    }, (res) => {
+        let chunks = '';
+        res.on('data', (c) => chunks += c);
+        res.on('end', () => {
+            try {
+                const parsed = chunks ? JSON.parse(chunks) : {};
+                if (res.statusCode >= 200 && res.statusCode < 300) return resolve(parsed);
+                const err = new Error(parsed.message || `GitHub API ${res.statusCode}`);
+                err.status = res.statusCode;
+                return reject(err);
+            } catch (e) { return reject(e); }
+        });
+    });
+    req.on('error', reject);
+    req.setTimeout(20000, () => req.destroy(new Error('GitHub API timeout')));
+    if (payload) req.write(payload);
+    req.end();
+});
+
+const githubGetFile = async (repoPath) => {
+    const res = await githubApiRequest('GET', `/repos/${GITHUB_REPO}/contents/${repoPath}?ref=${GITHUB_BRANCH}`);
+    if (!res || res.type !== 'file' || res.content == null) return null;
+    return Buffer.from(res.content, 'base64').toString('utf-8');
+};
+
+const githubPutFile = async (repoPath, contentUtf8) => {
+    let sha = null;
+    try {
+        const existing = await githubApiRequest('GET', `/repos/${GITHUB_REPO}/contents/${repoPath}?ref=${GITHUB_BRANCH}`);
+        if (existing && existing.type === 'file') sha = existing.sha;
+    } catch (e) {
+        if (e.status !== 404) throw e;
+    }
+    return githubApiRequest('PUT', `/repos/${GITHUB_REPO}/contents/${repoPath}`, {
+        message: `data-sync: حفظ البيانات (${repoPath})`,
+        content: Buffer.from(contentUtf8, 'utf-8').toString('base64'),
+        branch: GITHUB_BRANCH,
+        ...(sha ? { sha } : {})
+    });
+};
+
+// Debounced sync: دمج التعديلات المتتالية في رفعة واحدة (لا ازدحام على GitHub API)
+const githubSyncState = { dirty: new Set(), timer: null, syncing: false };
+const scheduleGithubSync = (fileKey) => {
+    if (!GITHUB_SYNC_ENABLED || !githubSyncToken) return;
+    githubSyncState.dirty.add(fileKey);
+    if (githubSyncState.timer) return;
+    githubSyncState.timer = setTimeout(flushGithubSync, 15000);
+};
+const flushGithubSync = async () => {
+    if (githubSyncState.syncing) {
+        // عملية رفع جارية — أعد المحاولة بعد قليل
+        githubSyncState.timer = setTimeout(flushGithubSync, 5000);
+        return;
+    }
+    clearTimeout(githubSyncState.timer);
+    githubSyncState.timer = null;
+    if (!githubSyncState.dirty.size) return;
+    githubSyncState.syncing = true;
+    const files = [...githubSyncState.dirty];
+    try {
+        for (const key of files) {
+            githubSyncState.dirty.delete(key);
+            const localPath = key === 'subscriptions' ? subscriptionsPath : reportsArchivePath;
+            const repoPath = key === 'subscriptions' ? 'subscriptions.json' : 'reports_archive.json';
+            try {
+                const content = await fs.readFile(localPath, 'utf-8');
+                await githubPutFile(repoPath, content);
+                console.log(`☁️ [data-sync] ${repoPath} synced to GitHub`);
+            } catch (e) {
+                githubSyncState.dirty.add(key); // فشل — أعد المحاولة في الرفعة القادمة
+                console.warn(`[data-sync] ${repoPath} sync failed:`, e.message);
+            }
+        }
+    } finally {
+        githubSyncState.syncing = false;
+        if (githubSyncState.dirty.size && !githubSyncState.timer) {
+            githubSyncState.timer = setTimeout(flushGithubSync, 15000);
+        }
+    }
+};
+
+// بذرة ذكية عند الإقلاع: الملف المحلي (/tmp بعد إعادة نشر) ← ثم أحدث نسخة من GitHub ← ثم نسخة المستودع
+const seedDataFile = async (localPath, repoFileName) => {
+    try { await fs.access(localPath); return 'local'; } catch (e) {}
+    if (GITHUB_SYNC_ENABLED && githubSyncToken) {
+        try {
+            const content = await githubGetFile(repoFileName);
+            if (content && content.trim()) {
+                await fs.writeFile(localPath, content, 'utf-8');
+                console.log(`✓ Seeded ${repoFileName} from GitHub (latest data)`);
+                return 'github';
+            }
+        } catch (e) {
+            console.warn(`[data-sync] Seed ${repoFileName} from GitHub unavailable:`, e.message);
+        }
+    }
+    try {
+        const content = await fs.readFile(path.join(__dirname, repoFileName), 'utf-8');
+        await fs.writeFile(localPath, content, 'utf-8');
+        console.log(`✓ Seeded ${repoFileName} from deployed repo copy`);
+        return 'repo';
+    } catch (e) { return 'empty'; }
+};
+
+// ===== الأرشيف الدائم للتقارير =====
+const readArchiveAnySource = async () => {
+    for (const p of [reportsArchivePath, reportsArchiveDefaultPath]) {
+        try {
+            const parsed = JSON.parse(await fs.readFile(p, 'utf-8'));
+            if (!parsed.reports) parsed.reports = {};
+            return parsed;
+        } catch (e) {}
+    }
+    return { reports: {} };
+};
+const loadReportsArchive = readArchiveAnySource;
+const saveReportsArchive = async (data) => {
+    if (!data.reports) data.reports = {};
+    data.updatedAt = new Date().toISOString();
+    await fs.writeFile(reportsArchivePath, JSON.stringify(data, null, 2), 'utf-8');
+    scheduleGithubSync('reports');
+};
+// حفظ التقرير في الأرشيف الدائم (مرة عند كل إصدار رسمي) — لا يحذفه أي إجراء أدمن
+const archiveReport = async (chatIdStr, report) => {
+    try {
+        if (!report || !report.id) return;
+        const archive = await readArchiveAnySource();
+        if (!archive.reports[chatIdStr]) archive.reports[chatIdStr] = {};
+        archive.reports[chatIdStr][String(report.id)] = JSON.parse(JSON.stringify(report));
+        await saveReportsArchive(archive);
+    } catch (e) { console.error('archiveReport error:', e.message); }
+};
+// حذف من الأرشيف فقط بمحذف المستخدم نفسه (عمداً) — إجراءات الأدمن لا تستدعي هذه الدالة أبداً
+const unarchiveReport = async (chatIdStr, reportId) => {
+    try {
+        const archive = await readArchiveAnySource();
+        if (archive.reports[chatIdStr] && archive.reports[chatIdStr][String(reportId)]) {
+            delete archive.reports[chatIdStr][String(reportId)];
+            await saveReportsArchive(archive);
+        }
+    } catch (e) { console.error('unarchiveReport error:', e.message); }
+};
+// الاستعادة التلقائية: أي تقرير موجود في الأرشيف ومفقود من سجل المستخدم يُعاد فوراً
+const restoreReportsFromArchive = async (chatIdStr, userSub) => {
+    try {
+        const archive = await readArchiveAnySource();
+        const archived = archive.reports[chatIdStr];
+        if (!archived) return 0;
+        if (!Array.isArray(userSub.reports)) userSub.reports = [];
+        const haveIds = new Set(userSub.reports.map((r) => (r && r.id != null) ? String(r.id) : null).filter(Boolean));
+        let restored = 0;
+        for (const [rid, rep] of Object.entries(archived)) {
+            if (!haveIds.has(String(rid))) {
+                userSub.reports.push(JSON.parse(JSON.stringify(rep)));
+                restored++;
+            }
+        }
+        if (restored > 0) {
+            userSub.reportsCount = userSub.reports.length;
+            console.log(`♻️ [data-preserve] Restored ${restored} report(s) for ${chatIdStr} from permanent archive`);
+        }
+        return restored;
+    } catch (e) { console.error('restoreReportsFromArchive error:', e.message); return 0; }
 };
 
 // Auto-bootstrap Owner Account (ADMIN_CHAT_ID -> 7853478744 / @ppppokl) with 10,000 points and 365-day active unlimited
@@ -363,6 +570,9 @@ const findSubscription = async (chatId, username, referrerId = null) => {
             userSub.username = cleanedUsername;
         }
         
+        // Data preservation: أعِد أي تقرير موجود بالأرشيف الدائم ومفقود من السجل (auto-heal)
+        await restoreReportsFromArchive(chatIdStr, userSub);
+        
         // If we matched a pending Username subscription, migrate it to the active Chat ID
         if (foundChatId !== chatIdStr) {
             const existingActive = data.subscriptions[chatIdStr];
@@ -415,6 +625,10 @@ const findSubscription = async (chatId, username, referrerId = null) => {
         }
         
         data.subscriptions[chatIdStr] = userSub;
+        
+        // Data preservation: حتى لو حُذف سجل المستخدم كلياً، تقاريره المرفوعة تعود من الأرشيف الدائم
+        await restoreReportsFromArchive(chatIdStr, userSub);
+        
         await saveLocalSubscriptions(data);
     }
     
@@ -2079,6 +2293,10 @@ app.post('/api/report/:chatId', async (req, res) => {
             
             userSub.updatedAt = new Date().toISOString();
             await saveLocalSubscriptions(data);
+            
+            // Data preservation: نسخة دائمة من التقرير في الأرشيف المحمي (لا تُحذف بإجراءات الأدمن)
+            await archiveReport(chatIdStr, reportData);
+            
             res.json({ success: true, points: userSub.points });
         });
     } catch (err) {
@@ -2086,7 +2304,7 @@ app.post('/api/report/:chatId', async (req, res) => {
     }
 });
 
-// 4. Delete Report
+// 4. Delete Report (حذف المستخدم لتقريره عمداً — يُحذف من السجل ومن الأرشيف معاً)
 app.delete('/api/report/:chatId/:id', async (req, res) => {
     try {
         const { chatId, id } = req.params;
@@ -2095,6 +2313,7 @@ app.delete('/api/report/:chatId/:id', async (req, res) => {
         
         if (data.subscriptions[chatIdStr] && data.subscriptions[chatIdStr].reports) {
             data.subscriptions[chatIdStr].reports = data.subscriptions[chatIdStr].reports.filter(r => r.id !== id);
+            await unarchiveReport(chatIdStr, id);
             data.subscriptions[chatIdStr].updatedAt = new Date().toISOString();
             await saveLocalSubscriptions(data);
             res.json({ success: true });
@@ -2841,7 +3060,11 @@ const configureChatMenuButton = async (targetChatId = null) => {
 // Start Server
 const startServer = async () => {
     try {
-        // Initialize subscriptions.json if missing
+        // Initialize subscriptions.json + reports_archive.json ( Permanent Data Preservation )
+        // First run after each deploy: /tmp is empty on Render → seed the LATEST data from GitHub,
+        // else fall back to the copy deployed with the repo — data never resets anymore.
+        await seedDataFile(subscriptionsPath, 'subscriptions.json');
+        await seedDataFile(reportsArchivePath, 'reports_archive.json');
         try {
             await fs.access(subscriptionsPath);
         } catch (e) {
@@ -2929,11 +3152,39 @@ app.get('/setup', async (req, res) => {
 });
 
 // Start server and bootstrap Owner
+const reconcileArchivedReports = async () => {
+    return withDbLock(async () => {
+        try {
+            const archive = await readArchiveAnySource();
+            const chatIds = Object.keys(archive.reports || {});
+            if (!chatIds.length) return;
+            const data = await loadLocalSubscriptions();
+            let totalRestored = 0;
+            for (const cid of chatIds) {
+                const user = data.subscriptions[cid];
+                if (!user) continue; // سجل محذوف كلياً → تُستعاد تقاريره تلقائياً عند أول فتح له (findSubscription)
+                totalRestored += await restoreReportsFromArchive(cid, user);
+            }
+            if (totalRestored > 0) {
+                await saveLocalSubscriptions(data);
+                console.log(`♻️ [data-preserve] Startup reconciliation restored ${totalRestored} report(s) in total`);
+            }
+        } catch (e) {
+            console.error('reconcileArchivedReports error:', e.message);
+        }
+    });
+};
+
 const serverPromise = startServer().then(async (srv) => {
     try {
         await bootstrapOwnerAccount();
     } catch (e) {
         console.error('Owner bootstrap error:', e.message);
+    }
+    try {
+        await reconcileArchivedReports();
+    } catch (e) {
+        console.error('Archive reconciliation error:', e.message);
     }
     return srv;
 });

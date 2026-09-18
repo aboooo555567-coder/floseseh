@@ -9,7 +9,7 @@
     
     
     <!-- Main Stylesheet -->
-    <link rel="stylesheet" href="style.css?v=6000">
+    <link rel="stylesheet" href="style.css?v=6200">
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -251,7 +251,16 @@
                 <h2 id="form-title">إصدار تقرير جديد</h2>
                 <button class="btn-back" onclick="app.navigate('dashboard')">❯</button>
             </header>
-            
+
+            <!-- Trial Mode Banner: بيانات تجريبية ثابتة غير قابلة للتعديل -->
+            <div id="trial-mode-banner" style="display:none; margin:0 16px 10px; padding:12px 14px; border-radius:14px; background:#fff7e0; border:1px solid #f0d998; font-family:'Tajawal',sans-serif; align-items:center; gap:10px;">
+                <div style="flex:1;">
+                    <div style="font-size:14px; font-weight:bold; color:#9a6b00;">🧪 وضع التجريبي — بيانات ثابتة غير قابلة للتعديل</div>
+                    <div style="font-size:12px; color:#b08420; margin-top:2px;">اضغط «إصدار التقرير» في آخر خطوة ليتم إنشاء النموذج التجريبي وإرساله إليك.</div>
+                </div>
+                <button type="button" onclick="app.exitTrialMode(); app.navigate('dashboard');" style="padding:7px 12px; border-radius:10px; border:1px solid #e3c56e; background:#fff; color:#9a6b00; font-weight:bold; font-size:12px; font-family:'Tajawal',sans-serif; cursor:pointer;">إلغاء</button>
+            </div>
+
             <div class="progress-bar-container">
                 <div class="progress-bar" id="form-progress"></div>
             </div>
@@ -739,6 +748,6 @@
     </div>
 
     <!-- Application Logic (Loaded after all DOM elements & modals) -->
-    <script src="app.js?v=6100"></script>
+    <script src="app.js?v=6200"></script>
 </body>
 </html>

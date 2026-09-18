@@ -1016,3 +1016,16 @@ input:focus, select:focus {
 .toast-success { background: #059669; }
 .toast-error { background: #dc2626; }
 .toast-info { background: #0284c7; }
+
+/* ===== Trial Mode: بيانات ثابتة غير قابلة للتعديل ===== */
+.trial-locked {
+    opacity: 0.72 !important;
+    background-color: #f2f5f9 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+#trial-mode-banner {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+}
