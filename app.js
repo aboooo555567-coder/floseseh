@@ -425,7 +425,70 @@ const app = {
             if (data.user?.mohLogo) this.state.mohLogoUrl = data.user.mohLogo;
             if (data.user?.hospitalLogo) this.state.hospitalLogoUrl = data.user.hospitalLogo;
             this.updateDashboardUI();
+            // مراقبة حية للرصيد: إذا منحك المالك نقاطاً أو اشتراكاً تظهر فوراً عند «رصيدك»
+            this.startBalanceWatcher();
         }
+    },
+
+    // ===== مراقبة الرصيد الحية (طلب المالك: «اي واحد اضيفله نقاط خلي النقاط حقه تظهر له عند الرصيد») =====
+    balanceWatcherStarted: false,
+    startBalanceWatcher() {
+        if (this.balanceWatcherStarted || !this.state.chatId) return;
+        this.balanceWatcherStarted = true;
+        setInterval(async () => {
+            try {
+                // لا تزعج المستخدم أثناء وضع التجريبي أو الشاشات الإدارية
+                if (this.state.trialMode) return;
+                const res = await fetch(`/api/balance/${this.state.chatId}`);
+                if (!res.ok) return;
+                const b = await res.json();
+                if (!b.success) return;
+                
+                const prevPoints = this.state.points || 0;
+                const prevDays = this.state.subscriptionDays || 0;
+                const newPoints = b.points || 0;
+                const newDays = b.subscriptionDays || 0;
+                
+                const pointsGranted = newPoints > prevPoints;
+                const daysGranted = newDays > prevDays;
+                
+                this.state.points = newPoints;
+                this.state.subscriptionDays = newDays;
+                this.state.reportPaymentSource = b.report_payment_source || this.state.reportPaymentSource;
+                
+                if (pointsGranted || daysGranted) {
+                    this.updateDashboardUI();
+                    if (pointsGranted) {
+                        this.showGrantToast(`🎉 قام المالك بمنحك ${newPoints - prevPoints} نقطة! رصيدك الآن: ${newPoints} نقطة`);
+                    } else if (daysGranted) {
+                        this.showGrantToast(`📅 تم تفعيل اشتراكك من قبل المالك! الأيام المتبقية: ${newDays} يوم`);
+                    }
+                } else if (newPoints !== prevPoints || newDays !== prevDays) {
+                    // تغيير هابط (إصدار/خصم) — مزامنة صامتة للعرض
+                    this.updateDashboardUI();
+                }
+            } catch (e) { /* offline — أعد المحاولة في الدورة التالية */ }
+        }, 12000);
+    },
+
+    showGrantToast(msg) {
+        try {
+            if (!document.getElementById('grant-toast-keyframes')) {
+                const kf = document.createElement('style');
+                kf.id = 'grant-toast-keyframes';
+                kf.textContent = '@keyframes grantIn{from{opacity:0;transform:translateX(-50%) translateY(-14px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}';
+                document.head.appendChild(kf);
+            }
+            const old = document.getElementById('grant-toast');
+            if (old) old.remove();
+            const el = document.createElement('div');
+            el.id = 'grant-toast';
+            el.dir = 'rtl';
+            el.style.cssText = 'position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:99999; background:linear-gradient(135deg,#0f766e,#0d9488); color:#fff; padding:14px 22px; border-radius:14px; font-family:\'Tajawal\',sans-serif; font-size:15px; font-weight:700; box-shadow:0 10px 30px rgba(0,0,0,.25); max-width:88vw; text-align:center; line-height:1.7; animation:grantIn .35s ease;';
+            el.innerText = msg;
+            document.body.appendChild(el);
+            setTimeout(() => { try { el.remove(); } catch (e) {} }, 7000);
+        } catch (e) {}
     },
 
     updateDashboardUI() {
@@ -437,6 +500,9 @@ const app = {
         } else if (this.state.points >= 5) {
             subBadge.innerText = `اشتراك بالنقاط - متبقي ${Math.floor(this.state.points / 5)} تقرير`;
             subBadge.style.color = '#009688';
+        } else if ((this.state.reportPaymentSource || 'none') === 'none') {
+            subBadge.innerText = 'بدون اشتراك — بانتظار منح المالك نقاطاً أو اشتراكاً';
+            subBadge.style.color = '#94a3b8';
         } else {
             subBadge.innerText = 'لا يوجد اشتراك فعال';
             subBadge.style.color = '#e74c3c';
@@ -837,10 +903,11 @@ const app = {
         let html = '';
         for (const u of filtered) {
             const isOwner = (String(u.chatId) === OWNER_CHAT_ID || (u.username && u.username.toLowerCase() === 'ppppokl'));
-            const statusClass = u.status === 'active' && u.daysRemaining > 0 ? 'badge-active' : (u.status === 'suspended' ? 'badge-suspended' : 'badge-cancelled');
-            const statusLabel = u.status === 'active' && u.daysRemaining > 0 ? '🟢 فعال' : (u.status === 'suspended' ? '⏸️ موقوف' : (u.status === 'cancelled' ? '❌ ملغي' : '⏳ منتهي'));
+            const isNoneState = u.status === 'active' && (u.daysRemaining || 0) <= 0 && (u.points || 0) < 5 && (u.report_payment_source || 'none') === 'none';
+            const statusClass = u.status === 'suspended' ? 'badge-suspended' : (u.status === 'cancelled' ? 'badge-cancelled' : (u.status === 'active' && u.daysRemaining > 0 ? 'badge-active' : (isNoneState ? 'badge' : 'badge-cancelled')));
+            const statusLabel = u.status === 'suspended' ? '⏸️ موقوف' : (u.status === 'cancelled' ? '❌ ملغي' : (u.status === 'active' && u.daysRemaining > 0 ? '🟢 فعال' : (isNoneState ? '⚪ بدون اشتراك' : '⏳ منتهي')));
             
-            const payBadge = u.report_payment_source === 'unlimited' ? '<span class="badge badge-unlimited">♾️ غير محدود</span>' : '<span class="badge badge-points">🪙 نقاط</span>';
+            const payBadge = u.report_payment_source === 'unlimited' ? '<span class="badge badge-unlimited">♾️ غير محدود</span>' : (u.report_payment_source === 'none' ? '<span class="badge" style="background:#f1f5f9; color:#94a3b8;">⚪ بدون</span>' : '<span class="badge badge-points">🪙 نقاط</span>');
             const ownerBadge = isOwner ? '<span class="badge badge-owner">👑 المالك</span>' : '';
 
             html += `
@@ -858,7 +925,7 @@ const app = {
                 
                 <div class="sub-card-badges">
                     ${payBadge}
-                    <span class="badge" style="background:#f1f5f9; color:#475569;">${u.plan === 'unlimited' ? 'باقة غير محدودة' : 'باقة نقاط'}</span>
+                    <span class="badge" style="background:#f1f5f9; color:#475569;">${u.plan === 'unlimited' ? 'باقة غير محدودة' : (u.plan === 'none' ? 'بدون باقة' : 'باقة نقاط')}</span>
                 </div>
 
                 <div class="sub-card-meta-grid">

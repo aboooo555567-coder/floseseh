@@ -10,7 +10,7 @@ const fs = require('fs').promises;
 const crypto = require('crypto');
 const fsSync = require('fs');
 const https = require('https');
-let currentAdminToken = null;
+let currentAdminToken = process.env.ADMIN_TEST_TOKEN || null;
 
 // Self-contained embedded fonts (Noto Sans Arabic / Tajawal / Tinos / Arimo as base64 woff2).
 // Fonts = بنيات الخطوط من commit 94c2194 (عربي Noto Sans Arabic، أرقام/إنجليزي Tinos-Times).
@@ -196,8 +196,8 @@ const normalizeSubscription = (user) => {
     const startObj = new Date(user.subscription_start_date);
     user.daysUsed = isNaN(startObj.getTime()) ? 0 : Math.max(0, Math.floor((now.getTime() - startObj.getTime()) / (86400000)));
     
-    user.plan = user.plan || (user.subscriptionDays > 0 ? 'unlimited' : 'points');
-    user.report_payment_source = user.report_payment_source || (user.plan === 'unlimited' ? 'unlimited' : 'points');
+    user.plan = user.plan || (user.subscriptionDays > 0 ? 'unlimited' : (user.report_payment_source === 'none' ? 'none' : 'points'));
+    user.report_payment_source = user.report_payment_source || (user.plan === 'unlimited' ? 'unlimited' : (user.plan === 'none' ? 'none' : 'points'));
     user.reportsCount = Array.isArray(user.reports) ? user.reports.length : 0;
 
     return user;
@@ -553,6 +553,52 @@ const bootstrapOwnerAccount = async () => {
     });
 };
 
+// ==================================================================================
+// نموذج منح المالك (طلب المالك):
+// «اجعل كل المشتركين نقاطهم صفر واشتركتهم بدون ولا يستطيعون اصدار الا بعد منحهم
+//  نقاط او اشتراك حسب ما احدد لهم انا المالك»
+// - تصفير شامل «مرة واحدة فقط»: كل المشتركين (عدا حساب المالك نفسه) نقاطهم = 0
+//   واشتراكهم = «بدون» (لا أيام، بلا انتهاء، plan/paySrc = none).
+// - علم ownerGrantModel في subscriptions.json يمنع تكرار التصفير عند الإقلاعات
+//   التالية حتى لا تُمحى النقاط التي منحها المالك فعلاً بعد التصفير.
+// - التقارير المرفوعة لا تُمس إطلاقاً (نظام الحفظ الدائم).
+// ==================================================================================
+const enforceOwnerGrantModel = async () => {
+    return withDbLock(async () => {
+        const data = await loadLocalSubscriptions();
+        if (data.ownerGrantModel === true) return; // تم التصفير سابقاً — لا نلمس منح المالك
+        const ownerId = String(ADMIN_CHAT_ID);
+        const now = new Date().toISOString();
+        let resetCount = 0;
+        for (const [cid, user] of Object.entries(data.subscriptions)) {
+            if (cid === ownerId) continue; // حساب المالك نفسه خارج التصفير
+            const before = `${user.points || 0}pts/${user.subscriptionDays || 0}d/${user.report_payment_source || '-'}`;
+            user.points = 0;
+            user.balance_points = 0;
+            user.subscriptionDays = 0;
+            user.subscriptionExpires = null;
+            user.subscription_end_date = null;
+            user.plan = 'none';
+            user.report_payment_source = 'none';
+            user.updatedAt = now;
+            resetCount++;
+            logTransaction(data, {
+                admin_chat_id: 'system',
+                target_chat_id: cid,
+                operation: 'owner_grant_reset',
+                previous_value: before,
+                new_value: '0 نقطة / بدون اشتراك',
+                details: 'تصفير شامل لمرة واحدة: كل المشتركين يبدأون بدون نقاط وبدون اشتراك حتى يمنحهم المالك نقاطاً أو اشتراكاً'
+            });
+            console.log(`🔄 [owner-grant-model] Reset ${cid} (was ${before}) → 0 points, بدون اشتراك`);
+        }
+        data.ownerGrantModel = true;
+        data.ownerGrantModelAt = now;
+        await saveLocalSubscriptions(data);
+        console.log(`✅ [owner-grant-model] One-time reset done: ${resetCount} subscriber(s) → 0 points / بدون اشتراك (لا يشمل المالك ${ownerId})`);
+    });
+};
+
 // Find user subscription by Chat ID or Telegram Username
 const findSubscription = async (chatId, username, referrerId = null) => {
     const data = await loadLocalSubscriptions();
@@ -616,18 +662,22 @@ const findSubscription = async (chatId, username, referrerId = null) => {
         data.subscriptions[chatIdStr].updatedAt = new Date().toISOString();
         await saveLocalSubscriptions(data);
     } else {
-        const now = new Date();
-        const expires = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+        // نموذج منح المالك: المستخدم الجديد يبدأ «بدون» — بلا نقاط وبلا أيام مجانية،
+        // ولا يستطيع الإصدار حتى يمنحه المالك نقاطاً أو اشتراكاً (طلب المالك).
         userSub = {
             points: 0,
-            subscriptionDays: 365,
-            subscriptionExpires: expires.toISOString(),
+            balance_points: 0,
+            subscriptionDays: 0,
+            subscriptionExpires: null,
+            subscription_end_date: null,
+            plan: 'none',
+            report_payment_source: 'none',
             username: cleanedUsername,
             reports: [],
             referredBy: referrerId ? referrerId.toString() : null,
             referralsCount: 0,
             referralPoints: 0,
-            updatedAt: now.toISOString()
+            updatedAt: new Date().toISOString()
         };
         
         // If referred by someone, increment their referralsCount
@@ -1435,6 +1485,31 @@ app.get('/api/user/:chatId', async (req, res) => {
     }
 });
 
+// 1.2 Lightweight read-only balance endpoint (للمراقبة الحية للرصيد):
+// لا يكتب في قاعدة البيانات إطلاقاً — آمن للاستقصاء المتكرر من التطبيق.
+// يخدم طلب المالك: «اي واحد اضيفله نقاط خلي النقاط حقه تظهر له عند الرصيد»
+app.get('/api/balance/:chatId', async (req, res) => {
+    try {
+        const data = await loadLocalSubscriptions();
+        const userSub = data.subscriptions[req.params.chatId.toString()];
+        if (!userSub) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+        const u = normalizeSubscription(userSub);
+        res.json({
+            success: true,
+            points: u.points || 0,
+            subscriptionDays: u.subscriptionDays || 0,
+            daysRemaining: u.daysRemaining || 0,
+            report_payment_source: u.report_payment_source || 'none',
+            plan: u.plan || 'none',
+            status: u.status || 'active'
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 1.5 Generate PDF / Save Report Draft
 app.post('/api/generate', async (req, res) => {
     try {
@@ -1488,7 +1563,10 @@ app.post('/api/generate', async (req, res) => {
                     new_value: userSub.points,
                     details: `خصم ${REPORT_COST_POINTS} نقاط لإصدار تقرير ${report.id || ''} (/api/generate)`
                 });
-            } else if ((userSub.subscriptionDays || 0) <= 0) {
+            } else if (paySource === 'none' || (userSub.subscriptionDays || 0) <= 0) {
+                if (paySource === 'none') {
+                    return res.status(403).json({ success: false, error: '❌ لا يوجد اشتراك أو رصيد فعّال على حسابك. يرجى التواصل مع المالك لمنحك نقاطاً أو اشتراكاً.' });
+                }
                 return res.status(403).json({ success: false, error: '❌ انتهت صلاحية اشتراكك. يرجى التجديد لإصدار التقارير.' });
             }
         }
@@ -1789,20 +1867,21 @@ app.post('/api/admin/web/user/update', async (req, res) => {
                 });
                 message = `تم خصم ${amt} نقطة بنجاح (الرصيد الجديد: ${user.points})`;
             } else if (action === 'set_payment_source') {
-                if (!['points', 'unlimited'].includes(paymentSource)) {
+                if (!['points', 'unlimited', 'none'].includes(paymentSource)) {
                     return res.status(400).json({ success: false, error: 'مصدر الدفع غير صالح' });
                 }
                 const prev = user.report_payment_source || 'points';
                 user.report_payment_source = paymentSource;
+                if (paymentSource === 'none') user.plan = 'none';
                 logTransaction(data, {
                     admin_chat_id: auth.adminId,
                     target_chat_id: cleanChatId,
                     operation: 'payment_source_changed',
                     previous_value: prev,
                     new_value: paymentSource,
-                    details: `تغيير مصدر دفع التقارير إلى ${paymentSource === 'unlimited' ? 'غير محدود' : 'بالنقاط'}`
+                    details: `تغيير مصدر دفع التقارير إلى ${paymentSource === 'unlimited' ? 'غير محدود' : (paymentSource === 'none' ? 'بدون (بانتظار منح المالك)' : 'بالنقاط')}`
                 });
-                message = `تم تغيير مصدر الدفع إلى: ${paymentSource === 'unlimited' ? '♾️ غير محدود' : '🪙 بالنقاط'}`;
+                message = `تم تغيير مصدر الدفع إلى: ${paymentSource === 'unlimited' ? '♾️ غير محدود' : (paymentSource === 'none' ? '⚪ بدون (بانتظار منح المالك)' : '🪙 بالنقاط')}`;
             } else if (action === 'set_status') {
                 if (!['active', 'suspended'].includes(status)) {
                     return res.status(400).json({ success: false, error: 'حالة غير صالحة' });
@@ -1863,6 +1942,21 @@ app.post('/api/admin/web/user/update', async (req, res) => {
             
             user.updatedAt = new Date().toISOString();
             await saveLocalSubscriptions(data);
+            
+            // إشعار تيليجرام للمشترك عند المنح (نقاط أو تجديد) — طلب المالك:
+            // «اي واحد اضيفله نقاط خلي النقاط حقه تظهر له» — تصل فوراً + يظهر الرصيد في التطبيق
+            try {
+                const normalizedUser = normalizeSubscription(user);
+                let grantMsg = null;
+                if (action === 'add_points') {
+                    grantMsg = `🎁 قام المالك بمنحك ${parseInt(amount) || 0} نقطة!\n\n🌑 رصيدك الآن: ${user.points || 0} نقطة\n• تكلفة التقرير الواحد: 5 نقاط\n\nافتح التطبيق — ستجد رصيدك محدّثاً عند «رصيدك».`;
+                } else if (action === 'renew') {
+                    grantMsg = `📅 قام المالك بتفعيل اشتراكك لمدة ${parseInt(days) || 0} يوم!\n\n✅ الأيام المتبقية: ${normalizedUser.daysRemaining || 0} يوم\nافتح التطبيق — ستجد رصيدك محدّثاً.`;
+                }
+                if (grantMsg) {
+                    bot.sendMessage(cleanChatId, grantMsg).catch(e => console.warn('Grant notification failed:', e.message));
+                }
+            } catch (e) { console.warn('Grant notification error:', e.message); }
             
             res.json({
                 success: true,
@@ -2314,6 +2408,9 @@ app.post('/api/report/:chatId', async (req, res) => {
                     });
                 } else {
                     if ((userSub.subscriptionDays || 0) <= 0) {
+                        if (paySource === 'none') {
+                            return res.status(403).json({ success: false, error: '❌ لا يوجد اشتراك أو رصيد فعّال على حسابك. يرجى التواصل مع المالك لمنحك نقاطاً أو اشتراكاً.' });
+                        }
                         return res.status(403).json({ success: false, error: '❌ انتهت صلاحية اشتراكك. يرجى التجديد لإصدار التقارير.' });
                     }
                     logTransaction(data, {
@@ -2477,7 +2574,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                 if ((userSub.points || 0) < REPORT_COST_POINTS) {
                     return res.status(403).json({ success: false, error: `❌ عذراً، رصيدك غير كافٍ. تحتاج إلى ${REPORT_COST_POINTS} نقاط لإصدار هذا التقرير.` });
                 }
-            } else if ((userSub.subscriptionDays || 0) <= 0) {
+            } else if (paySrc === 'none' || (userSub.subscriptionDays || 0) <= 0) {
+                if (paySrc === 'none') {
+                    return res.status(403).json({ success: false, error: '❌ لا يوجد اشتراك أو رصيد فعّال على حسابك. يرجى التواصل مع المالك لمنحك نقاطاً أو اشتراكاً.' });
+                }
                 return res.status(403).json({ success: false, error: '❌ عذراً، انتهت صلاحية اشتراكك. يرجى تجديد الاشتراك أولاً لإصدار التقارير.' });
             }
         }
@@ -3257,6 +3357,11 @@ const serverPromise = startServer().then(async (srv) => {
         console.error('Owner bootstrap error:', e.message);
     }
     try {
+        await enforceOwnerGrantModel();
+    } catch (e) {
+        console.error('Owner grant model error:', e.message);
+    }
+    try {
         await reconcileArchivedReports();
     } catch (e) {
         console.error('Archive reconciliation error:', e.message);
@@ -3264,4 +3369,4 @@ const serverPromise = startServer().then(async (srv) => {
     return srv;
 });
 
-module.exports = { app, startServer, serverPromise, bootstrapOwnerAccount };
+module.exports = { app, startServer, serverPromise, bootstrapOwnerAccount, enforceOwnerGrantModel };
