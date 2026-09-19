@@ -2971,21 +2971,21 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   table { border-spacing: 0; direction: ltr; }
   tr { height: 40px; }
   /* الخطوط من commit 94c2194: عربي = Noto Sans Arabic | إنجليزي/أرقام = Tinos (Times).
-     الجدول مطابق للنماذج المرجعية (سكاليف سابقة/sickLeaves*.pdf) بقياس بكسلي دقيق:
-     تسميات #366fb5 (12px EN / 13px AR)، قيم #2c3e77 (12px)، صف المدة #2c3e77 (12px)،
-     حدود #dedede، حشو 11px 8px، صفوف 40px، حشو رأسي 6px (صف الاسم سطران بنفس الارتفاع كما في النموذج)،
-     أعمدة 153/225/224/123 (عرض الجدول 725px)، تظليل الصفوف الزوجية #f7f7f7،
-     عنوان عربي 21px #306db5 + إنجليزي 16.5px #2c3e77، موضع العنوان top:153px
+     التنسيق النهائي المعتمد من كود seha-sickleave بطلب المالك:
+     حدود الجدول 1.4px solid #cccccc | تسميات #154d79 (12.5px إنجليزي / 13.5px عربي)
+     قيم #0d2847 (12.5px) | صف المدة خلفية #1F3864 | ارتفاع الصف 40px | حشو 5px 6px
+     تظليل الصفوف الزوجية #f7f7f7 | عرض الجدول 724px left:35px أعمدة 150/212/212/150
+     عنوان عربي #1a5b8c حجم 21px + إنجليزي 16.5px بخط Times، موضع العنوان top:153px
      فجوة العنوانين 12px (النموذج: فجوة حبر 14px — كانت 20px زائدة)،
      الفاصل العمودي بين الصورتين: طول طبيعي 191px من أعلى صف الفوتر (النماذج:
      190.9px بالضبط)، مزاح يميناً ليستقر عند x=414.8 (النماذج: 414.83) محاذاً
      خط منتصف الجدول — تموضع مطلق حتى لا يدفع الصف السفلي */
   td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; line-height: 1.2; }
-  .label-en { border: 1px solid #dedede; padding: 6px 8px; font-weight: bold; color: #366fb5; font-size: 12px; width: 153px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
-  .label-ar { border: 1px solid #dedede; padding: 6px 3px; font-weight: bold; color: #366fb5; font-size: 13px; width: 123px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
-  .val { border: 1px solid #dedede; padding: 6px 8px; color: #2c3e77; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
+  .label-en { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 12.5px; width: 150px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
+  .label-ar { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
+  .val { border: 1.4px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: normal; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
   .val[dir="rtl"] { font-family: 'Tinos', 'Noto Sans Arabic', 'Tajawal', serif; }
-  .dur-row td { background-color: #2c3e77 !important; color: white; border: 1px solid #dedede; padding: 6px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Noto Sans Arabic', serif; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.4px solid #cccccc; padding: 5px 6px; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Noto Sans Arabic', serif; }
   .dur-row td.label-ar { font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
   .dur-label { font-weight: bold; }
   tr:nth-child(even) td { background-color: #f7f7f7; }
@@ -3005,23 +3005,23 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   
   <!-- Header: Arabic & English Titles -->
   <div style="position:absolute;top:153px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#306db5;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 12px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+    <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 12px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
     <h2 style="color:#2c3e77;font-size:16.5px;font-weight:bold;font-family:'Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
   <!-- Data Table & Footer Container -->
-  <div style="position:absolute;top:228px;left:40px;width:725px;">
-  <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
+  <div style="position:absolute;top:228px;left:35px;width:724px;">
+  <table style="width:100%;border-collapse:collapse;font-size:12.5px;text-align:center;table-layout:fixed;">
     <tr>
-      <td class="label-en" style="width:153px;">Leave ID</td>
-      <td class="val" colspan="2" style="width:449px; font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
-      <td class="label-ar" style="width:123px;">رمز الإجازة</td>
+      <td class="label-en" style="width:150px;">Leave ID</td>
+      <td class="val" colspan="2" style="width:424px; font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
+      <td class="label-ar" style="width:150px;">رمز الإجازة</td>
     </tr>
     <tr class="dur-row">
-      <td class="dur-label" style="width:153px;">Leave Duration</td>
-      <td style="width:225px;">${d.durationEn || ''}</td>
-      <td dir="rtl" style="width:224px;">${formattedDurationAr}</td>
-      <td class="dur-label" style="width:123px;">مدة الإجازة</td>
+      <td class="dur-label" style="width:150px;">Leave Duration</td>
+      <td style="width:212px;">${d.durationEn || ''}</td>
+      <td dir="rtl" style="width:212px;">${formattedDurationAr}</td>
+      <td class="dur-label" style="width:150px;">مدة الإجازة</td>
     </tr>
     <tr>
       <td class="label-en">Admission Date</td>
@@ -3108,10 +3108,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
 
-      <!-- Vertical divider: natural length 191px (models: 190.9) from footer-row top,
-           shifted right to x=414.8 (models: 414.83) aligning the table middle line.
-           Absolute => does not push the bottom row. -->
-      <div style="position:absolute; top:0; left:374.8px; width:1px; height:191px; background-color:#dddddd;"></div>
+      <!-- Vertical divider: natural length 191px from footer-row top,
+           at x=397 on the page (left:362 within container at 35) aligning the
+           table middle line (35 + 724/2). Absolute => does not push the bottom row. -->
+      <div style="position:absolute; top:0; left:362px; width:1px; height:191px; background-color:#dddddd;"></div>
 
     </div>
 
