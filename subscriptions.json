@@ -395,6 +395,23 @@
       "referralsCount": 0,
       "referralPoints": 0,
       "updatedAt": "2026-09-18T23:00:31.482Z"
+    },
+    "8913876643": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "drpharmacistgg",
+      "name": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-09-19T09:46:06.949Z"
     }
   },
   "transactions": [
