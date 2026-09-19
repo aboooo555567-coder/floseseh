@@ -2932,8 +2932,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // Pre-load images as base64
         // شعار صحة بالأزرق الرسمي #306db5 (نفس أزرق خيارات/زر أعلى صفحة الاستعلامات)
         const sehaLogo = await imgToBase64('الشعارات/seha_logo_blue.png') || await imgToBase64('الشعارات/seha_logo_clean.png') || await imgToBase64('الشعارات/Seha.png');
-        const ksaCalligraphy = await imgToBase64('الشعارات/ksa_emblem_clean.png') || await imgToBase64('الشعارات/ksa_calligraphy.png');
-        const mohLogo = await imgToBase64('الشعارات/moh_logo_clean.png') || await imgToBase64('الشعارات/Saudi_Ministry_of_Health.JPG');
+        const ksaCalligraphy = await imgToBase64('الشعارات/ksa_calligraphy.png') || await imgToBase64('الشعارات/ksa_emblem_clean.png');
+        const mohLogo = await imgToBase64('الشعارات/Saudi_Ministry_of_Health.JPG') || await imgToBase64('الشعارات/moh_logo_clean.png');
         const nhicLogo = await imgToBase64('الشعارات/dfhZfyJM_400x400 (1).jpg');
 
         const d = reportData;
@@ -2942,7 +2942,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             formattedDurationAr = formattedDurationAr.replace(/(\d{2,4}-\d{2}-\d{2,4})/g, '<span dir="ltr">$1</span>');
         }
         const isCompanion = !!(d.relationAr || d.relationEn || d.type === 'companion' || d.type === 'companion_review');
-        const footerMarginTop = '14px';
+        // إزاحة الفوتر صفًا واحدًا (42px) عند ظهور صف صلة القرابة — مطابق للنماذج المرجعية بكسلياً
+        const fShift = (d.relationEn || d.relationAr) ? 42 : 0;
 
         // Generate the inquiry QR code LOCALLY (no external API dependency).
         // The old api.qrserver.com call was slow/unreliable from Render and sometimes
@@ -2950,12 +2951,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         let qrDataUrl = '';
         try {
             const qrTarget = `${WEB_APP_URL}/inquiry?id=${d.leaveId || ''}&nin=${d.nationalId || ''}`;
-            qrDataUrl = await QRCode.toDataURL(qrTarget, { width: 144, margin: 0, errorCorrectionLevel: 'M' });
+            qrDataUrl = await QRCode.toDataURL(qrTarget, { width: 170, margin: 0, errorCorrectionLevel: 'M' });
         } catch (qrErr) {
             addLog(`QR generation failed (non-fatal): ${qrErr.message}`);
         }
 
-        // Build self-contained HTML matching Sehaty platform exactly
+        // Build self-contained HTML — التنسيق المعتمد من مستودع taqreer-murafiq
         const html = `<!DOCTYPE html>
 <html lang="ar" dir="ltr">
 <head>
@@ -2966,176 +2967,124 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   ${EMBEDDED_FONTS_CSS}
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: #fff !important; }
-  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
-  @page { size: 794px 1123px; margin: 0; }
-  table { border-spacing: 0; direction: ltr; }
-  tr { height: 40px; }
-  /* الخطوط من commit 94c2194: عربي = Noto Sans Arabic | إنجليزي/أرقام = Tinos (Times).
-     الجدول مطابق للنماذج المرجعية (سكاليف سابقة/sickLeaves*.pdf) بقياس بكسلي دقيق:
-     تسميات #366fb5 (12px EN / 13px AR)، قيم #2c3e77 (12px)، صف المدة #2c3e77 (12px)،
-     حدود #dedede، حشو 11px 8px، صفوف 40px، حشو رأسي 6px (صف الاسم سطران بنفس الارتفاع كما في النموذج)،
-     أعمدة 153/225/224/123 (عرض الجدول 725px)، تظليل الصفوف الزوجية #f7f7f7،
-     عنوان عربي 21px #306db5 + إنجليزي 16.5px #2c3e77، موضع العنوان top:153px
-     فجوة العنوانين 12px (النموذج: فجوة حبر 14px — كانت 20px زائدة)،
-     الفاصل العمودي بين الصورتين: طول طبيعي 191px من أعلى صف الفوتر (النماذج:
-     190.9px بالضبط)، مزاح يميناً ليستقر عند x=414.8 (النماذج: 414.83) محاذاً
-     خط منتصف الجدول — تموضع مطلق حتى لا يدفع الصف السفلي */
-  td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; line-height: 1.2; }
-  .label-en { border: 1px solid #dedede; padding: 6px 8px; font-weight: bold; color: #366fb5; font-size: 12px; width: 153px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
-  .label-ar { border: 1px solid #dedede; padding: 6px 3px; font-weight: bold; color: #366fb5; font-size: 13px; width: 123px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
-  .val { border: 1px solid #dedede; padding: 6px 8px; color: #2c3e77; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
-  .val[dir="rtl"] { font-family: 'Tinos', 'Noto Sans Arabic', 'Tajawal', serif; }
-  .dur-row td { background-color: #2c3e77 !important; color: white; border: 1px solid #dedede; padding: 6px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Noto Sans Arabic', serif; }
-  .dur-row td.label-ar { font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
-  .dur-label { font-weight: bold; }
-  tr:nth-child(even) td { background-color: #f7f7f7; }
+  body { margin: 0; padding: 0; background: #fff !important; width: 842px; height: 1191px; overflow: hidden; direction: ltr; }
+  /* الورق عند الطباعة: 842×1191 نقطة (مطابق للنماذج) — عبر page.pdf مع scale 4/3 */
+  @page { size: 11.694444in 16.541667in; margin: 0; }
+  /* ============================================================
+     التنسيق المعتمد من مستودع taqreer-murafiq (pdf-template.html، كوميت c423e19
+     «pixel-perfect A4 PDF template matching original samples») بطلب المالك:
+     الخطوط   : إنجليزي/أرقام = Liberation Serif | عربي = Noto Sans Arabic | الرابط = Arimo
+     الألوان  : عنوان عربي #306db5 | عنوان إنجليزي/قيم/صف المدة #2c3e77 | تسميات #366fb5
+                حدود #cccccc | تظليل الصفوف الزوجية #f7f7f7 | الرابط #0000ff | الفاصل #dddddd
+     الأحجام  : سطر المملكة 17.5px | عنوان عربي 22.5px | إنجليزي 18px | خلايا 13.5px
+                تحقق 11.5px | وقت/تاريخ 13px | مستشفى 13/13.5px | ترخيص 10px
+     المسافات : صفحة 842×1191 | الجدول top:241 left:42 عرض 768 (أعمدة 162/238/239/129)
+                صفوف 42px | الشعارات: SVG(41,36) صحة(294,36,262×125) السعودية(548,36,262×107)
+                QR 85×85(188,733) | وزارة الصحة 113×111(590,715) | المركز الوطني 150×71(661,924)
+     الفاصل العمودي والفوتر معايران بكسلياً على النماذج: الفاصل x=440 طول 202 من y=722،
+     وأسماء المستشفيات على محور شعار الوزارة (x=648) كما في النماذج.
+     عند ظهور صف «صلة القرابة» (تقرير المرافق) يُزاح الفوتر كاملاً 42px لأسفل —
+     مطابق للنموذج المرجعي (sickLeaves.pdf) على كل عنصر بفارق صف واحد.
+     التظليل زوجي متصل على الصفوف المرئية (النموذج: المرافق يظلل جهة العمل والمسمى الوظيفي). */
+  .fserif { font-family: 'Liberation Serif', 'Times New Roman', serif; }
+  .farabic { font-family: 'Noto Sans Arabic', 'NotoSansArabic', sans-serif; }
+  .row { display: flex; height: 42px; border-bottom: 1px solid #cccccc; }
+  .row.gray { background-color: #f7f7f7; }
+  .row.blue { background-color: #2c3e77; }
+  .row.blue .c { color: #ffffff; }
+  .c { display: flex; align-items: center; justify-content: center; padding: 0 8px; font-size: 13.5px; line-height: 1.2; }
+  .c + .c { border-left: 1px solid #cccccc; }
+  .row.blue .c + .c { border-left-color: #3d5591; }
+  .lab-en { font-family: 'Liberation Serif', 'Times New Roman', serif; font-weight: bold; color: #366fb5; white-space: nowrap; padding: 0 2px; }
+  .lab-ar { font-family: 'Noto Sans Arabic', 'NotoSansArabic', sans-serif; font-weight: bold; color: #366fb5; white-space: nowrap; padding: 0 2px; }
+  .val-en { font-family: 'Liberation Serif', 'Times New Roman', serif; color: #2c3e77; }
+  .val-ar { font-family: 'Noto Sans Arabic', 'NotoSansArabic', sans-serif; color: #2c3e77; }
+  .row.blue .val-en, .row.blue .val-ar { font-family: 'Liberation Serif', 'Noto Sans Arabic', serif; }
+  .row.blue .val-ar { font-family: 'Noto Sans Arabic', 'Liberation Serif', sans-serif; }
 </style>
-<div style="width:794px;height:1123px;background:#fff;font-family:'Noto Sans Arabic','Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
-  
-  <!-- Header: Seha Logo (left) -->
-  <img src="${sehaLogo}" style="position:absolute;top:32px;left:38px;width:155px;height:auto;">
+<div style="width:842px;height:1191px;background:#fff;position:relative;overflow:hidden;direction:ltr;">
 
-  <!-- Header: Geometric graphic (right) -->
-  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:22px;right:30px;opacity:0.8;">
-    <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- ====== HEADER ====== -->
+  <!-- SVG Graphic (LEFT) -->
+  <svg width="150" height="66" viewBox="0 0 150 66" style="position:absolute; top:36px; left:41px; opacity:0.7;">
+    <path d="M 0,10 L 40,40 L 90,10 L 130,30 L 150,0 M 40,40 L 60,66 L 90,10 M 60,66 L 130,30 M 90,10 L 110,66 L 130,30 M 110,66 L 150,60" stroke="#b0c4de" stroke-width="1.2" fill="none"/>
   </svg>
-  
-  <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:68px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
-  
-  <!-- Header: Arabic & English Titles -->
-  <div style="position:absolute;top:153px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#306db5;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 12px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#2c3e77;font-size:16.5px;font-weight:bold;font-family:'Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
+
+  <!-- Seha Logo (CENTER) -->
+  <img src="${sehaLogo}" alt="Seha" style="position:absolute; top:36px; left:294px; width:262px; height:125px; object-fit:contain; object-position:top;">
+
+  <!-- KSA Calligraphy (RIGHT) -->
+  <img src="${ksaCalligraphy}" alt="KSA" style="position:absolute; top:36px; left:548px; width:262px; height:107px; object-fit:contain; object-position:top;">
+
+  <!-- Kingdom of Saudi Arabia -->
+  <p class="fserif" style="position:absolute; top:110px; left:0; width:842px; text-align:center; font-size:17.5px; color:#000000; font-weight:normal;">Kingdom of Saudi Arabia</p>
+
+  <!-- Arabic Title -->
+  <h1 class="farabic" style="position:absolute; top:135px; left:0; width:842px; text-align:center; font-size:22.5px; font-weight:bold; color:#306db5;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+
+  <!-- English Title -->
+  <h2 class="fserif" style="position:absolute; top:185px; left:0; width:842px; text-align:center; font-size:18px; font-weight:bold; color:#2c3e77;">${d.titleEn || 'Sick Leave Report'}</h2>
+
+  <!-- ====== TABLE ======
+       X=42 إلى 810 (عرض 768) | الأعمدة: تسمية EN 162 | قيمة EN 238 | قيمة AR 239 | تسمية AR 129
+       ارتفاع الصف 42px | يبدأ من Y=241 | التظليل زوجي متصل -->
+  <div style="position:absolute; top:241px; left:42px; width:768px; border-top:1px solid #cccccc;">
+    ${(() => {
+      const rows = [];
+      rows.push({ en: 'Leave ID', ar: 'رمز الإجازة', en2: d.leaveId || '', span: true });
+      rows.push({ blue: true, en: 'Leave Duration', ar: 'مدة الإجازة', en2: d.durationEn || '', ar2: formattedDurationAr, rtl: true });
+      rows.push({ en: 'Admission Date', ar: 'تاريخ الدخول', en2: d.admissionG || '', ar2: d.admissionH || '' });
+      rows.push({ en: 'Discharge Date', ar: 'تاريخ الخروج', en2: d.dischargeG || '', ar2: d.dischargeH || '' });
+      rows.push({ en: 'Issue Date', ar: 'تاريخ إصدار التقرير', en2: d.issueDate || '', span: true });
+      rows.push({ en: d.nameLabelEn || 'Name', ar: d.nameLabelAr || 'الاسم', en2: d.nameEn || '', ar2: d.nameAr || '' });
+      rows.push({ en: 'National ID / Iqama', ar: 'رقم الهوية/الاقامه', en2: d.nationalId || '', span: true });
+      rows.push({ en: 'Nationality', ar: 'الجنسية', en2: d.nationalityEn || 'Saudi Arabia', ar2: d.nationalityAr || 'السعودية' });
+      if (d.relationEn || d.relationAr) rows.push({ en: 'Relation', ar: 'صلة القرابة', en2: d.relationEn || '', ar2: d.relationAr || '' });
+      rows.push({ en: 'Employer', ar: 'جهة العمل', en2: d.employerEn || '', ar2: d.employerAr || '' });
+      rows.push({ en: d.docLabelEn || 'Practitioner Name', ar: d.docLabelAr || 'اسم الممارس', en2: d.doctorEn || '', ar2: d.doctorAr || '' });
+      rows.push({ en: 'Position', ar: 'المسمى الوظيفى', en2: d.positionEn || '', ar2: d.positionAr || '' });
+      return rows.map((r, i) => {
+        const cls = r.blue ? 'blue' : (i % 2 === 1 ? 'gray' : '');
+        const mid = r.span
+          ? `<div class="c val-en" style="width:477px; white-space:nowrap;">${r.en2}</div>`
+          : `<div class="c val-en" style="width:238px;">${r.en2}</div><div class="c val-ar" style="width:239px;"${r.rtl ? ' dir="rtl"' : ''}>${r.ar2 || ''}</div>`;
+        return `<div class="row ${cls}"><div class="c lab-en" style="width:162px;">${r.en}</div>${mid}<div class="c lab-ar" style="width:129px;">${r.ar}</div></div>`;
+      }).join('');
+    })()}
   </div>
 
-  <!-- Data Table & Footer Container -->
-  <div style="position:absolute;top:228px;left:40px;width:725px;">
-  <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
-    <tr>
-      <td class="label-en" style="width:153px;">Leave ID</td>
-      <td class="val" colspan="2" style="width:449px; font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
-      <td class="label-ar" style="width:123px;">رمز الإجازة</td>
-    </tr>
-    <tr class="dur-row">
-      <td class="dur-label" style="width:153px;">Leave Duration</td>
-      <td style="width:225px;">${d.durationEn || ''}</td>
-      <td dir="rtl" style="width:224px;">${formattedDurationAr}</td>
-      <td class="dur-label" style="width:123px;">مدة الإجازة</td>
-    </tr>
-    <tr>
-      <td class="label-en">Admission Date</td>
-      <td class="val">${d.admissionG || ''}</td>
-      <td class="val">${d.admissionH || ''}</td>
-      <td class="label-ar">تاريخ الدخول</td>
-    </tr>
-    <tr>
-      <td class="label-en">Discharge Date</td>
-      <td class="val">${d.dischargeG || ''}</td>
-      <td class="val">${d.dischargeH || ''}</td>
-      <td class="label-ar">تاريخ الخروج</td>
-    </tr>
-    <tr>
-      <td class="label-en">Issue Date</td>
-      <td class="val" colspan="2">${d.issueDate || ''}</td>
-      <td class="label-ar">تاريخ إصدار التقرير</td>
-    </tr>
-    <tr>
-      <td class="label-en">${d.nameLabelEn || 'Name'}</td>
-      <td class="val">${d.nameEn || ''}</td>
-      <td class="val">${d.nameAr || ''}</td>
-      <td class="label-ar">${d.nameLabelAr || 'الاسم'}</td>
-    </tr>
-    <tr>
-      <td class="label-en">National ID / Iqama</td>
-      <td class="val" colspan="2" style="font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.nationalId || ''}</td>
-      <td class="label-ar">رقم الهوية/الاقامه</td>
-    </tr>
-    <tr>
-      <td class="label-en">Nationality</td>
-      <td class="val">${d.nationalityEn || 'Saudi Arabia'}</td>
-      <td class="val">${d.nationalityAr || 'السعودية'}</td>
-      <td class="label-ar">الجنسية</td>
-    </tr>
-    ${(d.relationEn || d.relationAr) ? `<tr>
-      <td class="label-en">Relation</td>
-      <td class="val">${d.relationEn || ''}</td>
-      <td class="val">${d.relationAr || ''}</td>
-      <td class="label-ar">صلة القرابة</td>
-    </tr>` : ''}
-    <tr>
-      <td class="label-en">Employer</td>
-      <td class="val">${d.employerEn || ''}</td>
-      <td class="val">${d.employerAr || ''}</td>
-      <td class="label-ar">جهة العمل</td>
-    </tr>
-    <tr>
-      <td class="label-en">${d.docLabelEn || 'Practitioner Name'}</td>
-      <td class="val">${d.doctorEn || ''}</td>
-      <td class="val">${d.doctorAr || ''}</td>
-      <td class="label-ar">${d.docLabelAr || 'اسم الممارس'}</td>
-    </tr>
-    <tr>
-      <td class="label-en">Position</td>
-      <td class="val">${d.positionEn || ''}</td>
-      <td class="val">${d.positionAr || ''}</td>
-      <td class="label-ar">المسمى الوظيفى</td>
-    </tr>
-  </table>
+  <!-- ====== FOOTER (يُزاح 42px عند صف صلة القرابة) ====== -->
+  <!-- QR Code -->
+  <img src="${qrDataUrl || `https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId || ''}&nin=${d.nationalId || ''}`)}`}" alt="QR" style="position:absolute; top:${733 + fShift}px; left:188px; width:85px; height:85px;">
 
-  <!-- ===== FOOTER ===== -->
-  <div style="margin-top:${footerMarginTop};">
-    
-    <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px; position:relative;">
-      
-      <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 20px -> text starts at 100px) -->
-      <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">`}
-        <p style="font-size:10px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;color:#000;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
-        <p style="font-size:8px;color:#000;text-align:center;margin:0 0 3px 0;font-weight:bold;font-family:'Tinos','Times New Roman',serif;">To check the report please visit Seha's offical website</p>
-        <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
-      </div>
+  <!-- Vertical Divider (النماذج: x=440، طول 202 من أعلى الفوتر) -->
+  <div style="position:absolute; top:${722 + fShift}px; left:440px; width:1px; height:202px; background-color:#dddddd;"></div>
 
-      <!-- Center 1px spacer: preserves exact flex centering of both cells -->
-      <div style="width:1px;"></div>
+  <!-- LEFT: Verification -->
+  <p class="farabic" style="position:absolute; top:${836 + fShift}px; left:75px; width:320px; font-size:11.5px; font-weight:bold; color:#000000; line-height:1.6;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة</p>
+  <p class="farabic" style="position:absolute; top:${860 + fShift}px; left:214px; font-size:11.5px; font-weight:bold; color:#000000;">الرسمي</p>
+  <p class="fserif" style="position:absolute; top:${888 + fShift}px; left:112px; font-size:11.5px; color:#000000;">To check the report please visit Seha's offical website</p>
+  <p style="position:absolute; top:${909 + fShift}px; left:150px; font-family:'Arimo','Liberation Sans',sans-serif; font-size:11.5px; color:#0000ff; text-decoration:underline;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId || ''}&nin=${d.nationalId || ''}" style="color:#0000ff; text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
 
-      <!-- Right: MOH Logo (clean cropped, height: 92px, margin-bottom: 8px -> hospital name starts at 100px) -->
-      <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
-        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:92px;object-fit:contain;margin-bottom:8px;">
-        <h3 style="font-size:11px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
-        <h4 style="font-size:9.5px;font-weight:bold;font-family:'Tinos','Times New Roman',serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
-        ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
-      </div>
+  <!-- Time / Date -->
+  <p class="fserif" style="position:absolute; top:${961 + fShift}px; left:43px; font-size:13px; font-weight:bold; color:#000000;">${d.time || ''}</p>
+  <p class="fserif" style="position:absolute; top:${997 + fShift}px; left:43px; font-size:13px; font-weight:bold; color:#000000;">${d.dayDate || ''}</p>
 
-      <!-- Vertical divider: natural length 191px (models: 190.9) from footer-row top,
-           shifted right to x=414.8 (models: 414.83) aligning the table middle line.
-           Absolute => does not push the bottom row. -->
-      <div style="position:absolute; top:0; left:374.8px; width:1px; height:191px; background-color:#dddddd;"></div>
+  <!-- RIGHT: MOH / Hospital Logo -->
+  <img src="${d.hospitalLogoBase64 || mohLogo}" alt="Hospital" style="position:absolute; top:${715 + fShift}px; left:590px; width:113px; height:111px; object-fit:contain;">
 
-    </div>
+  <!-- Hospital Name Arabic -->
+  <h3 class="farabic" style="position:absolute; top:${832 + fShift}px; left:522px; width:252px; text-align:center; font-size:13px; font-weight:bold; color:#000000;">${d.hospitalAr || ''}</h3>
 
-    <!-- Bottom Footer Row: Time/Date & NHIC Logo (margin-right: -10px aligns NHIC to exact 30px page edge) -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:6px; margin-right:-10px;">
-      
-      <!-- Left: Time / Date -->
-      <div style="font-weight:bold;font-size:11px;color:#000;font-family:'Tinos','Times New Roman',serif;">
-        <p style="margin:0 0 10px 0;">${d.time || ''}</p>
-        <p style="margin:0;">${d.dayDate || ''}</p>
-      </div>
+  <!-- Hospital Name English -->
+  <h4 class="fserif" style="position:absolute; top:${859 + fShift}px; left:522px; width:252px; text-align:center; font-size:13.5px; font-weight:bold; color:#000000;">${d.hospitalEn || ''}</h4>
 
-      <!-- Right: NHIC Logo -->
-      <div style="display:flex; flex-direction:column; align-items:center;">
-        <div style="width: 75px; height: 55px; overflow: hidden; position: relative; margin-bottom: 2px;">
-          <img src="${nhicLogo}" style="width: 75px; height: 75px; position: absolute; top: 0; left: 0; object-fit: cover; object-position: top;">
-        </div>
-        <h4 style="font-size:11.5px; font-weight:bold; font-family:'Noto Sans Arabic','Tajawal',sans-serif; color:#00A99D; margin:0; line-height:1.2; text-align:center;">المركز الوطني للمعلومات الصحية</h4>
-        <h5 style="font-size:7px; font-weight:bold; font-family:'Tinos','Times New Roman',serif; color:#1A365D; margin:2px 0 0 0; line-height:1.2; text-align:center; letter-spacing:0.8px;">NATIONAL HEALTH INFORMATION CENTER</h5>
-      </div>
-      
-    </div>
-    
-  </div>
+  <!-- License Number -->
+  ${d.licenseNumber ? `<p class="farabic" style="position:absolute; top:${880 + fShift}px; left:522px; width:252px; text-align:center; font-size:10px; color:#555;">رقم الترخيص: ${d.licenseNumber}</p>` : ''}
+
+  <!-- NHIC Logo -->
+  <!-- شريط المركز الوطني: الصورة المربعة تُمدد بالكامل في 150×71 كما في النماذج (أيقونة+نص) -->
+  <img src="${nhicLogo}" alt="NHIC" style="position:absolute; top:${924 + fShift}px; left:661px; width:150px; height:71px; object-fit:fill;">
 
   ${isTrial ? `
   <!-- TRIAL WATERMARK: عينة مجانية غير رسمية (نفس نمط add_watermark.js) -->
@@ -3176,6 +3125,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                             await document.fonts.load('700 12px "Noto Sans Arabic"');
                             await document.fonts.load('400 12px Tinos');
                             await document.fonts.load('700 12px Tinos');
+                            await document.fonts.load('400 12px "Liberation Serif"');
+                            await document.fonts.load('700 12px "Liberation Serif"');
                             await document.fonts.ready;
                         });
                         if (waitImages) {
@@ -3191,10 +3142,13 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                             await new Promise(r => setTimeout(r, 150));
                         }
                         addLog(`Generating PDF via Puppeteer (waitUntil=${waitUntil})...`);
+                        // النماذج المرجعية صفحتها 842×1191 «نقطة PDF» (A3) — والقالب لوحته 842×1191 CSS-px.
+                        // Chrome يطبع 1px = 0.75pt لذا: ورق 842pt = 1122.67px + scale 4/3 → كل CSS-px = نقطة واحدة مطابق للنماذج حرفياً.
                         return await page.pdf({
                             printBackground: true,
-                            width: '794px',
-                            height: '1123px',
+                            width: '11.694444in',
+                            height: '16.541667in',
+                            scale: 4 / 3,
                             pageRanges: '1'
                         });
                     } finally {
