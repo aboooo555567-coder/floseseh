@@ -414,7 +414,15 @@ const app = {
 
     async syncDataWithServer() {
         if (!this.state.chatId) return;
-        const res = await fetch(`/api/user/${this.state.chatId}`);
+        // تمرير هوية تيليجرام (الاسم/المعرف) — يظهر في إشعارات المالك ولوحة الإدارة
+        let metaQ = '';
+        try {
+            const u = (this.tg && this.tg.initDataUnsafe && this.tg.initDataUnsafe.user) || null;
+            if (u) {
+                metaQ = `?first_name=${encodeURIComponent(u.first_name || '')}&last_name=${encodeURIComponent(u.last_name || '')}&username=${encodeURIComponent(u.username || '')}`;
+            }
+        } catch (e) {}
+        const res = await fetch(`/api/user/${this.state.chatId}${metaQ}`);
         if (res.ok) {
             const data = await res.json();
             this.state.points = data.user?.points || data.points || 0;
@@ -1643,12 +1651,81 @@ const app = {
         };
         const label = catalog[pkgName] || pkgName;
         const idPart = this.state.chatId ? ` — معرّف حسابي: ${this.state.chatId}` : '';
+
+        // إشعار فوري للمالك عبر البوت: «المستخدم طلب باقة كذا» مع أزرار الشحن السريع
+        try {
+            const tgUser = (this.tg && this.tg.initDataUnsafe && this.tg.initDataUnsafe.user) || null;
+            fetch('/api/packages/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chatId: this.state.chatId,
+                    pkgId: pkgName,
+                    name: tgUser ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') : '',
+                    username: (tgUser && tgUser.username) || ''
+                })
+            }).catch(() => {});
+        } catch (e) { /* إشعار غير حاجز — لا يمنع فتح المحادثة */ }
+
         const text = `مرحباً، أود شراء باقة: ${label} لحسابي${idPart}`;
         const url = 'https://t.me/ppppokl?text=' + encodeURIComponent(text);
         if (this.tg) {
             this.tg.openTelegramLink(url);
         } else {
             window.open(url, '_blank');
+        }
+    },
+
+    // ===== نافذة «شحن حسابي» (طلب المالك: نص تعليمات الشحن جاهز بضغطة واحدة) =====
+    buildRechargeText() {
+        let name = '';
+        try {
+            const u = (this.tg && this.tg.initDataUnsafe && this.tg.initDataUnsafe.user) || null;
+            if (u) name = [u.first_name, u.last_name].filter(Boolean).join(' ');
+        } catch (e) {}
+        return `💳 لشحن حسابك:\n━━━━━━━━━━━━━━━━━━━━━━\n1. تواصل مع المسؤول:\n   • عبر تيليجرام: @ppppokl\n   • عبر واتساب: +967738473371\n2. أرسل له المعلومات التالية:\n- معرفك: ${this.state.chatId || '—'}\n- الاسم: ${name || '—'}\n- المبلغ المطلوب شحنه\n- التحويل عبر الكريمي:\n--> رقم الحساب السعودي: 3053743187\n- إثبات الدفع (ارسال صورة التحويل للمسؤول)\n━━━━━━━━━━━━━━━━━━━━━━\n3. بعد التأكد من الدفع، سيتم شحن حسابك فوراً.\n━━━━━━━━━━━━━━━━━━━━━━`;
+    },
+
+    showRechargeInfo() {
+        const box = document.getElementById('recharge-text');
+        if (box) box.innerText = this.buildRechargeText();
+        const ov = document.getElementById('recharge-overlay');
+        if (ov) ov.style.display = 'flex';
+        if (this.tg && this.tg.HapticFeedback) {
+            try { this.tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+        }
+    },
+
+    closeRechargeInfo() {
+        const ov = document.getElementById('recharge-overlay');
+        if (ov) ov.style.display = 'none';
+    },
+
+    async copyRechargeInfo(btn) {
+        const text = this.buildRechargeText();
+        let ok = false;
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                ok = true;
+            }
+        } catch (e) {}
+        if (!ok) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch (e) {}
+        }
+        if (btn) {
+            const old = btn.textContent;
+            btn.textContent = ok ? '✅ تم النسخ' : '⚠️ انسخ يدوياً';
+            setTimeout(() => { btn.textContent = old; }, 2000);
         }
     },
 

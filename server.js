@@ -91,6 +91,21 @@ const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL |
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=52';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'ppppokl';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '7853478744';
+// لوحة الإدارة (أزرار الإشعارات تنقل المالك مباشرة لشحن نقاط المشترك)
+const ADMIN_PANEL_URL = `${WEB_APP_URL}/index.html?screen=admin`;
+const RECHARGE_WHATSAPP = '+967738473371';
+const RECHARGE_BANK_ACCOUNT = '3053743187';
+// كتالوج الباقات — المصدر الوحيد للحقيقة (المتجر/الإشعارات/الشحن السريع)
+const PKG_CATALOG = {
+    'Points 5':    { points: 5,   days: 0,  price: 5,   label: 'حزمة البداية (5 نقاط)' },
+    'Points 10':   { points: 10,  days: 0,  price: 10,  label: 'حزمة 10 نقاط' },
+    'Points 20':   { points: 20,  days: 0,  price: 15,  label: 'حزمة 20 نقطة' },
+    'Basic':       { points: 30,  days: 0,  price: 20,  label: 'حزمة النقاط الأساسية (30 نقطة)' },
+    'Points 50':   { points: 50,  days: 0,  price: 30,  label: 'حزمة 50 نقطة' },
+    'Recommended': { points: 100, days: 0,  price: 50,  label: 'حزمة النقاط الموصى بها (100 نقطة)' },
+    'Advanced':    { points: 200, days: 0,  price: 80,  label: 'حزمة النقاط المتقدمة (200 نقطة)' },
+    'Month 1':     { points: 0,   days: 30, price: 100, label: 'خطة 30 يوم لامحدودة' }
+};
 
 // Single source of truth for admin authorization (owner = sole controller).
 // Owner is identified by numeric Telegram Chat ID first, username is a secondary convenience.
@@ -643,7 +658,8 @@ const restoreActiveSubscribers = async () => {
 };
 
 // Find user subscription by Chat ID or Telegram Username
-const findSubscription = async (chatId, username, referrerId = null) => {
+const findSubscription = async (chatId, username, referrerId = null, meta = null) => {
+    const metaName = meta ? [meta.first_name, meta.last_name].filter(Boolean).join(' ').trim() : '';
     const data = await loadLocalSubscriptions();
     const chatIdStr = chatId.toString();
     const cleanedUsername = username ? username.replace(/^@/, '').toLowerCase() : null;
@@ -672,6 +688,10 @@ const findSubscription = async (chatId, username, referrerId = null) => {
         userSub = normalizeSubscription(userSub);
         if (cleanedUsername && userSub.username !== cleanedUsername) {
             userSub.username = cleanedUsername;
+        }
+        // تحديث اسم المستخدم من تيليجرام (يظهر في لوحة الإدارة وإشعارات المالك)
+        if (metaName && userSub.name !== metaName) {
+            userSub.name = metaName;
         }
         
         // Data preservation: أعِد أي تقرير موجود بالأرشيف الدائم ومفقود من السجل (auto-heal)
@@ -717,6 +737,7 @@ const findSubscription = async (chatId, username, referrerId = null) => {
             plan: 'points',
             report_payment_source: 'points',
             username: cleanedUsername,
+            name: metaName || null,
             reports: [],
             referredBy: referrerId ? referrerId.toString() : null,
             referralsCount: 0,
@@ -739,6 +760,28 @@ const findSubscription = async (chatId, username, referrerId = null) => {
         await restoreReportsFromArchive(chatIdStr, userSub);
         
         await saveLocalSubscriptions(data);
+
+        // إشعار فوري للمالك: مستخدم جديد دخل التطبيق (طلب المالك: «يظهر لي اشعار بدخوله»)
+        if (chatIdStr !== String(ADMIN_CHAT_ID)) {
+            const shownName = metaName || (cleanedUsername ? '@' + cleanedUsername : 'بدون اسم');
+            const kb = [[
+                { text: '🪙 شحن 5 نقاط', callback_data: `qpkg:${chatIdStr}:Points 5` },
+                { text: '🪙 شحن 10 نقاط', callback_data: `qpkg:${chatIdStr}:Points 10` }
+            ]];
+            const row2 = [];
+            if (cleanedUsername) row2.push({ text: '💬 مراسلة المستخدم', url: `https://t.me/${cleanedUsername}` });
+            row2.push({ text: '🛠 لوحة الإدارة', web_app: { url: ADMIN_PANEL_URL } });
+            kb.push(row2);
+            notifyOwner(
+`👋 مستخدم جديد دخل التطبيق!
+━━━━━━━━━━━━━━━━━━━━━━
+• الاسم: ${shownName}
+• المعرف: ${cleanedUsername ? '@' + cleanedUsername : 'لا يوجد'}
+• ID: ${chatIdStr}
+• الرصيد الحالي: 0 نقطة
+━━━━━━━━━━━━━━━━━━━━━━
+بعد تأكد الدفع يمكنك شحنه مباشرة من الأزرار 👇`, kb);
+        }
     }
     
     return { chatId: chatIdStr, ...userSub };
@@ -849,6 +892,145 @@ bot.on('webhook_error', (error) => {
     console.error('Telegram webhook error:', error.message);
 });
 
+// ===== وضع الاختبار المحلي (توكن وهمي): التقاط رسائل البوت بدل إرسالها لتمكين الاختبار الآلي =====
+const TEST_MODE = TOKEN === 'TEST_TOKEN_LOCAL';
+const TEST_SENT_MESSAGES = [];
+if (TEST_MODE) {
+    bot.sendMessage = async (chatId, text, opts) => {
+        TEST_SENT_MESSAGES.push({ chatId: String(chatId), text: String(text), opts: opts || null, at: new Date().toISOString() });
+        if (TEST_SENT_MESSAGES.length > 300) TEST_SENT_MESSAGES.shift();
+        return { message_id: TEST_SENT_MESSAGES.length, chat: { id: Number(chatId) } };
+    };
+    bot.answerCallbackQuery = async () => true;
+    bot.editMessageText = async () => true;
+}
+
+// ===== إشعارات المالك (طلب المالك: «يظهر لي اشعار بدخوله/طلبه باقة») =====
+const notifyOwner = (text, inlineKeyboard) => {
+    try {
+        const opts = inlineKeyboard ? { reply_markup: { inline_keyboard: inlineKeyboard } } : undefined;
+        return bot.sendMessage(String(ADMIN_CHAT_ID), text, opts).catch(e => console.warn('Owner notification failed:', e.message));
+    } catch (e) {
+        console.warn('Owner notification error:', e.message);
+    }
+};
+
+// نص تعليمات الشحن — زر «شحن حسابي» + أمر /charge في البوت
+const buildRechargeText = (chatId, name) => `💳 لشحن حسابك:
+━━━━━━━━━━━━━━━━━━━━━━
+1. تواصل مع المسؤول:
+   • عبر تيليجرام: @${ADMIN_USERNAME}
+   • عبر واتساب: ${RECHARGE_WHATSAPP}
+2. أرسل له المعلومات التالية:
+- معرفك: ${chatId}
+- الاسم: ${name || ''}
+- المبلغ المطلوب شحنه
+- التحويل عبر الكريمي:
+--> رقم الحساب السعودي: ${RECHARGE_BANK_ACCOUNT}
+- إثبات الدفع (ارسال صورة التحويل للمسؤول)
+━━━━━━━━━━━━━━━━━━━━━━
+3. بعد التأكد من الدفع، سيتم شحن حسابك فوراً.
+━━━━━━━━━━━━━━━━━━━━━━`;
+
+// منع تكرار إشعار طلب الباقة (نفس المستخدم/نفس الباقة خلال 30 ثانية)
+const pkgReqThrottle = new Map();
+const pkgReqKeyboard = (targetId, pkgId, uname) => {
+    const pkg = PKG_CATALOG[pkgId] || { points: 0, days: 0 };
+    const actionLabel = pkg.days > 0 ? `📅 تفعيل ${pkg.days} يوم` : `➕ شحن ${pkg.points} نقاط`;
+    const row2 = [];
+    if (uname) row2.push({ text: '💬 مراسلة المستخدم', url: `https://t.me/${uname}` });
+    row2.push({ text: '🛠 لوحة الإدارة', web_app: { url: ADMIN_PANEL_URL } });
+    return [
+        [{ text: actionLabel, callback_data: `qpkg:${targetId}:${pkgId}` }],
+        row2
+    ];
+};
+
+// الشحن السريع من أزرار إشعارات المالك — نفس منطق شحن اللوحة + إشعار المشترك
+const handleQuickAdd = async (targetChatId, pkgId, sourceLabel = 'زر تيليجرام') => {
+    const pkg = PKG_CATALOG[pkgId];
+    if (!pkg) return { success: false, error: 'باقة غير معروفة' };
+    const key = String(targetChatId || '').trim();
+    let result = null;
+    await withDbLock(async () => {
+        const data = await loadLocalSubscriptions();
+        const user = data.subscriptions[key];
+        if (!user) { result = { success: false, error: 'المستخدم غير موجود في قاعدة البيانات' }; return; }
+        const norm = normalizeSubscription(user);
+        const displayName = norm.name || (norm.username ? '@' + norm.username : key);
+        if (pkg.points > 0) {
+            const prev = norm.points || 0;
+            user.points = prev + pkg.points;
+            user.balance_points = user.points;
+            user.report_payment_source = 'points';
+            user.plan = 'points';
+            logTransaction(data, {
+                target_chat_id: key,
+                operation: 'add_points',
+                amount: pkg.points,
+                previous_value: prev,
+                new_value: user.points,
+                details: `شحن سريع (${sourceLabel}): ${pkg.label}`
+            });
+        }
+        if (pkg.days > 0) {
+            const nowD = new Date();
+            let base = nowD;
+            const prevEnd = user.subscription_end_date || null;
+            if (prevEnd && new Date(prevEnd) > nowD) base = new Date(prevEnd);
+            const newEnd = new Date(base.getTime() + pkg.days * 86400000);
+            user.subscription_end_date = newEnd.toISOString();
+            user.subscriptionExpires = newEnd.toISOString();
+            user.subscriptionDays = getDaysRemaining(newEnd.toISOString());
+            user.status = 'active';
+            user.report_payment_source = 'unlimited';
+            user.plan = 'unlimited';
+            logTransaction(data, {
+                target_chat_id: key,
+                operation: 'subscription_renew',
+                amount: pkg.days,
+                previous_value: prevEnd,
+                new_value: newEnd.toISOString(),
+                details: `تفعيل سريع (${sourceLabel}): ${pkg.label}`
+            });
+        }
+        user.updatedAt = new Date().toISOString();
+        await saveLocalSubscriptions(data);
+
+        // إشعار المشترك بالمنحة فوراً
+        let grantMsg = null;
+        if (pkg.points > 0) {
+            grantMsg = `🎁 قام المالك بمنحك ${pkg.points} نقطة!\n\n🌑 رصيدك الآن: ${user.points} نقطة\n• تكلفة التقرير الواحد: 5 نقاط\n\nافتح التطبيق — ستجد رصيدك محدّثاً عند «رصيدك».`;
+        } else if (pkg.days > 0) {
+            grantMsg = `📅 قام المالك بتفعيل اشتراكك لمدة ${pkg.days} يوم!\n\nافتح التطبيق — ستجد رصيدك محدّثاً.`;
+        }
+        if (grantMsg) bot.sendMessage(key, grantMsg).catch(e => console.warn('Quick-add user notice failed:', e.message));
+
+        result = {
+            success: true,
+            message: pkg.points > 0
+                ? `✅ تم شحن ${pkg.points} نقطة للمستخدم ${displayName} (ID: ${key}) — الرصيد الجديد: ${user.points} نقطة`
+                : `✅ تم تفعيل ${pkg.days} يوم للمستخدم ${displayName} (ID: ${key})`
+        };
+    });
+    return result || { success: false, error: 'خطأ غير متوقع' };
+};
+
+// معالج زر «شحن سريع» في إشعارات المالك (للمالك فقط)
+const processQuickAddCallback = async (query) => {
+    const ownerChatId = query.message.chat.id.toString();
+    const parts = String(query.data || '').split(':');
+    const targetId = parts[1];
+    const pkgId = parts.slice(2).join(':');
+    if (String(query.from?.id) !== String(ADMIN_CHAT_ID)) {
+        await bot.answerCallbackQuery(query.id, { text: 'هذا الإجراء متاح للمالك فقط', show_alert: true }).catch(() => {});
+        return;
+    }
+    await bot.answerCallbackQuery(query.id).catch(() => {});
+    const result = await handleQuickAdd(targetId, pkgId, 'زر تيليجرام (إشعار المالك)');
+    await bot.sendMessage(ownerChatId, result.success ? result.message : `❌ ${result.error}`).catch(() => {});
+};
+
 // Helper: Send User Status Message
 const sendMyStatusMessage = async (chatId, username) => {
     const user = await findSubscription(chatId, username);
@@ -892,7 +1074,7 @@ const handleStartCommand = async (msg) => {
         reply_markup: {
             keyboard: [
                 [{ text: '🛒 متجر الباقات' }, { text: '🔗 كسب نقاط (الإحالات)' }],
-                [{ text: '📊 حالة حسابي' }]
+                [{ text: '💳 شحن حسابي' }, { text: '📊 حالة حسابي' }]
             ],
             resize_keyboard: true
         }
@@ -933,6 +1115,7 @@ ${statusIcon} اشتراكك ${statusText}
                 [{ text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }],
                 [{ text: 'دعوة صديق 🎁', callback_data: 'referrals' }],
                 [{ text: 'باقات الاشتراك 💎', callback_data: 'packages' }],
+                [{ text: '💳 شحن حسابي (طريقة الدفع)', callback_data: 'recharge_info' }],
                 [{ text: 'حالة حسابي 📊', callback_data: 'mystatus' }]
             ]
         }
@@ -945,6 +1128,13 @@ bot.onText(/^\/start(\/verify)?(@\w+)?(\s.*)?$/i, handleStartCommand);
 bot.onText(/\/help/, async (msg) => {
     const chatId = msg.chat.id.toString();
     await bot.sendMessage(chatId, `مرحباً!\nاستخدم /start للبدء.\nإذا كنت مسؤولاً، يمكنك استخدام /addsub @username <days> لتفعيل الاشتراك.`);
+});
+
+// /charge command — نص تعليمات الشحن (طلب المالك: زر «شحن حسابي» يظهر التعليمات)
+bot.onText(/^\/(charge|شحن)/i, async (msg) => {
+    const chatId = msg.chat.id.toString();
+    const nm = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ');
+    await bot.sendMessage(chatId, buildRechargeText(chatId, nm));
 });
 
 // /buy command
@@ -1119,6 +1309,7 @@ bot.on('message', async (msg) => {
     if (/^\/addsub/i.test(msg.text)) return; // Already handled
     if (/^\/help/i.test(msg.text)) return; // Already handled
     if (/^\/buy/i.test(msg.text)) return; // Already handled
+    if (/^\/(charge|شحن)/i.test(msg.text)) return; // Already handled
     
     const chatId = msg.chat.id.toString();
     const username = msg.from?.username || msg.from?.first_name || 'مستخدم';
@@ -1135,6 +1326,12 @@ bot.on('message', async (msg) => {
     
     if (msg.text === '🛒 متجر الباقات') {
         await sendPackagesMessage(chatId);
+        return;
+    }
+    
+    if (msg.text === '💳 شحن حسابي') {
+        const nm = [msg.from?.first_name, msg.from?.last_name].filter(Boolean).join(' ');
+        await bot.sendMessage(chatId, buildRechargeText(chatId, nm));
         return;
     }
     
@@ -1444,6 +1641,14 @@ bot.on('callback_query', async (query) => {
     } else if (query.data === 'mystatus') {
         await sendMyStatusMessage(chatId, username);
         await bot.answerCallbackQuery(query.id);
+    } else if (query.data === 'recharge_info') {
+        // زر «شحن حسابي» — نص تعليمات الشحن معبأ بمعرف واسم الضاغط
+        const nm = [query.from?.first_name, query.from?.last_name].filter(Boolean).join(' ');
+        await bot.sendMessage(chatId, buildRechargeText(chatId, nm));
+        await bot.answerCallbackQuery(query.id);
+    } else if (query.data && query.data.startsWith('qpkg:')) {
+        // أزرار الشحن السريع في إشعارات المالك (طلب باقة/مستخدم جديد)
+        await processQuickAddCallback(query);
     }
 });
 
@@ -1530,7 +1735,12 @@ app.get('/api/user/:chatId', async (req, res) => {
     try {
         const { chatId } = req.params;
         const username = req.query.username;
-        const user = await findSubscription(chatId, username);
+        // بيانات هوية تيليجرام تُمرر من التطبيق (للاسم في الإشعارات ولوحة الإدارة)
+        const meta = {
+            first_name: req.query.first_name || '',
+            last_name: req.query.last_name || ''
+        };
+        const user = await findSubscription(chatId, username, null, meta);
         res.json({ success: true, user, reports: user.reports || [] });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -1561,6 +1771,76 @@ app.get('/api/balance/:chatId', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+// 1.4 طلب باقة من التطبيق → إشعار فوري للمالك مع أزرار الشحن السريع (طلب المالك:
+// «اذا طلب باقه معينه يظهر لي رساله بلبوت تقلي المستخدم طلب باقه كذا ويظهرو ازرار الاضافه»)
+app.post('/api/packages/request', express.json(), async (req, res) => {
+    try {
+        const { chatId, pkgId, name, username } = req.body || {};
+        const pkg = PKG_CATALOG[pkgId];
+        const cleanId = String(chatId || '').trim();
+        if (!pkg) return res.status(400).json({ success: false, error: 'باقة غير معروفة' });
+        if (!cleanId || !/^\d+$/.test(cleanId)) return res.status(400).json({ success: false, error: 'Chat ID غير صالح' });
+        if (cleanId === String(ADMIN_CHAT_ID)) return res.json({ success: true, skipped: true });
+
+        // منع التكرار: نفس الطلب خلال 30 ثانية يُتجاهل بهدوء (حماية من الضغط المتكرر)
+        const tKey = `${cleanId}:${pkgId}`;
+        const now = Date.now();
+        const last = pkgReqThrottle.get(tKey) || 0;
+        if (now - last < 30000) return res.json({ success: true, throttled: true });
+        pkgReqThrottle.set(tKey, now);
+        if (pkgReqThrottle.size > 500) {
+            for (const [k, v] of pkgReqThrottle) { if (now - v > 300000) pkgReqThrottle.delete(k); }
+        }
+
+        // إثراء الرسالة ببيانات المستخدم من قاعدة البيانات
+        const data = await loadLocalSubscriptions();
+        const u = normalizeSubscription(data.subscriptions[cleanId] || {});
+        const displayName = (name || '').trim() || u.name || (u.username ? '@' + u.username : 'بدون اسم');
+        const uname = (username || '').trim() || u.username || null;
+
+        notifyOwner(
+`🛒 طلب باقة جديدة!
+━━━━━━━━━━━━━━━━━━━━━━
+• المستخدم: ${displayName}
+• المعرف: ${uname ? '@' + uname : 'لا يوجد'}
+• ID: ${cleanId}
+• الباقة: ${pkg.label}
+• السعر: ${pkg.price} ريال سعودي
+━━━━━━━━━━━━━━━━━━━━━━
+بعد تأكد الدفع اضغط للشحن الفوري 👇`,
+            pkgReqKeyboard(cleanId, pkgId, uname)
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// نقاط نهاية الاختبار المحلي فقط (توكن وهمي TEST_TOKEN_LOCAL) — لا تُفعّل في الإنتاج
+if (TEST_MODE) {
+    app.get('/api/test/notifications', (req, res) => {
+        res.json({ success: true, count: TEST_SENT_MESSAGES.length, messages: TEST_SENT_MESSAGES });
+    });
+    app.post('/api/test/reset-notifications', (req, res) => {
+        TEST_SENT_MESSAGES.length = 0;
+        res.json({ success: true });
+    });
+    // محاكاة ضغط المالك على زر الشحن السريع في إشعار تيليجرام
+    app.post('/api/test/callback', express.json(), async (req, res) => {
+        try {
+            const { data, fromId } = req.body || {};
+            const fid = parseInt(fromId) || parseInt(ADMIN_CHAT_ID);
+            await processQuickAddCallback({
+                id: 'testcb-' + Date.now(),
+                data,
+                from: { id: fid, username: 'test_owner', first_name: 'Owner' },
+                message: { chat: { id: fid } }
+            });
+            res.json({ success: true });
+        } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+    });
+}
 
 // 1.5 Generate PDF / Save Report Draft
 app.post('/api/generate', async (req, res) => {
