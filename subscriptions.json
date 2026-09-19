@@ -397,8 +397,8 @@
       "updatedAt": "2026-09-18T23:00:31.482Z"
     },
     "8913876643": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -411,10 +411,25 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-19T09:46:06.949Z"
+      "updatedAt": "2026-09-19T09:46:47.664Z",
+      "subscription_start_date": "2026-09-19T09:46:06.949Z",
+      "daysRemaining": 0,
+      "daysUsed": 0,
+      "reportsCount": 0
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789811207664_hmptnw",
+      "timestamp": "2026-09-19T09:46:47.664Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8913876643",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
     {
       "id": "tx_1789775138666_qv658q",
       "timestamp": "2026-09-18T23:45:38.666Z",
