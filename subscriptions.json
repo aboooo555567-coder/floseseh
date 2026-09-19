@@ -137,13 +137,43 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "GSL26091983812",
+          "patientName": "",
+          "type": "companion_review",
+          "issueDate": "2026-09-19",
+          "data": {
+            "admission_date": "2026-09-19",
+            "discharge_date": "2026-09-19",
+            "duration": "1",
+            "issue_date": "2026-09-19",
+            "issue_time": "05:42",
+            "national_id": "زثتثتثوتث",
+            "patient_name_ar": "احمد فيصل عبدالغني حسن ",
+            "patient_name_en": "احمد فيصل عبدالغني حسن ",
+            "nationality": "أذربيجاني",
+            "employer": "",
+            "escort_name_ar": "",
+            "escort_name_en": "خثنثتثتقتقتقت",
+            "relation_ar": "نثزثوثو",
+            "relation_en": "نتزثزثزث",
+            "doctor_name_ar": "تساوي زيزي",
+            "doctor_name_en": "بظينيني",
+            "job_title_ar": "ينينيطبيب عام",
+            "job_title_en": "زثزثزثزثGeneral",
+            "hospital_ar": "مستشفى القوات المسلحة بالهدا",
+            "hospital_en": "Al-Hada Armed Forces Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-19T15:51:35.981Z",
-      "reportsCount": 2,
+      "updatedAt": "2026-09-19T15:52:48.469Z",
+      "reportsCount": 3,
       "daysRemaining": 362,
       "daysUsed": 4
     },
