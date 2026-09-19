@@ -118,24 +118,55 @@
       "daysUsed": 4
     },
     "8337606751": {
-      "points": 50,
-      "balance_points": 50,
+      "points": 45,
+      "balance_points": 45,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
       "plan": "points",
       "report_payment_source": "points",
       "username": "basmmma2",
-      "reports": [],
+      "reports": [
+        {
+          "id": "GSL26091914857",
+          "patientName": "تنسيقات ",
+          "type": "companion_review",
+          "issueDate": "2026-09-19",
+          "data": {
+            "admission_date": "2026-09-19",
+            "discharge_date": "2026-09-19",
+            "duration": "1",
+            "issue_date": "2026-09-19",
+            "issue_time": "02:17",
+            "national_id": "12345",
+            "patient_name_ar": "اكمل ",
+            "patient_name_en": "ALHODHOD ALGREEH",
+            "nationality": "السعودية",
+            "employer": "والله ",
+            "escort_name_ar": "تنسيقات ",
+            "escort_name_en": "ALHODHOD ALGREEH",
+            "relation_ar": "اخ",
+            "relation_en": "اخ",
+            "doctor_name_ar": "معاكي بسمه ",
+            "doctor_name_en": "تزعل من وين ",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى نجران العام",
+            "hospital_en": "Najran General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
+        }
+      ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-19T15:33:07.911Z",
+      "updatedAt": "2026-09-19T15:35:31.666Z",
       "status": "active",
       "subscription_start_date": "2026-09-18T21:24:32.889Z",
       "daysRemaining": 0,
       "daysUsed": 0,
-      "reportsCount": 0,
+      "reportsCount": 1,
       "name": "أ/بسمه"
     },
     "5275574402": {
@@ -420,6 +451,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789832131310_2bhuw1",
+      "timestamp": "2026-09-19T15:35:31.310Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8337606751",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "50",
+      "new_value": "45",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26091914857 (generate-native-pdf)"
+    },
     {
       "id": "tx_1789811207664_hmptnw",
       "timestamp": "2026-09-19T09:46:47.664Z",
