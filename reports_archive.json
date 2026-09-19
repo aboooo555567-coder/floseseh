@@ -212,6 +212,36 @@
           "hospital_type": "gov",
           "license_number": ""
         }
+      },
+      "GSL26091970014": {
+        "id": "GSL26091970014",
+        "patientName": "احمد فيصل عبدالغني حسن ",
+        "type": "sickleave",
+        "issueDate": "2026-09-19",
+        "data": {
+          "admission_date": "2026-09-19",
+          "discharge_date": "2026-09-19",
+          "duration": "1",
+          "issue_date": "2026-09-19",
+          "issue_time": "15:21",
+          "national_id": "12345",
+          "patient_name_ar": "احمد فيصل عبدالغني حسن ",
+          "patient_name_en": "ALHODHOD ALGREEH",
+          "nationality": "السعودية",
+          "employer": "تشتي ",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "احمد فيصل عبدالغني حسن ",
+          "doctor_name_en": "احمد فيصل عبدالغني حسن ",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى نجران العام",
+          "hospital_en": "Najran General Hospital",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
       }
     },
     "5729445246": {
@@ -309,5 +339,5 @@
       }
     }
   },
-  "updatedAt": "2026-09-19T15:52:48.470Z"
+  "updatedAt": "2026-09-19T15:55:20.956Z"
 }
