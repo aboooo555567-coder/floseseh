@@ -304,6 +304,36 @@
           "hospital_type": "gov",
           "license_number": ""
         }
+      },
+      "PSL26091776044": {
+        "id": "PSL26091776044",
+        "patientName": "الهيثم حسن شيخين صرفي",
+        "type": "sickleave",
+        "issueDate": "2026-09-17",
+        "data": {
+          "admission_date": "2026-09-17",
+          "discharge_date": "2026-09-20",
+          "duration": "4",
+          "issue_date": "2026-09-17",
+          "issue_time": "09:30",
+          "national_id": "1116987213",
+          "patient_name_ar": "الهيثم حسن شيخين صرفي",
+          "patient_name_en": "AL-HAITHAM HASSAN SHEIKHAIN SARFI",
+          "nationality": "السعودية",
+          "employer": "حرس الحدود",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "محمد ناصر علي الشهراني ",
+          "doctor_name_en": "MOHAMMED NASSER ALI AL-SHAHRANI",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى جازان العام",
+          "hospital_en": "Jazan General Hospital",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
       }
     },
     "8337606751": {
@@ -339,5 +369,5 @@
       }
     }
   },
-  "updatedAt": "2026-09-19T15:55:20.956Z"
+  "updatedAt": "2026-09-19T16:50:33.575Z"
 }
