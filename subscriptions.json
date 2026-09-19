@@ -401,8 +401,8 @@
       "daysUsed": 0
     },
     "5729445246": {
-      "points": 20,
-      "balance_points": 20,
+      "points": 15,
+      "balance_points": 15,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -470,16 +470,46 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "PSL26091776044",
+          "patientName": "الهيثم حسن شيخين صرفي",
+          "type": "sickleave",
+          "issueDate": "2026-09-17",
+          "data": {
+            "admission_date": "2026-09-17",
+            "discharge_date": "2026-09-20",
+            "duration": "4",
+            "issue_date": "2026-09-17",
+            "issue_time": "09:30",
+            "national_id": "1116987213",
+            "patient_name_ar": "الهيثم حسن شيخين صرفي",
+            "patient_name_en": "AL-HAITHAM HASSAN SHEIKHAIN SARFI",
+            "nationality": "السعودية",
+            "employer": "حرس الحدود",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "محمد ناصر علي الشهراني ",
+            "doctor_name_en": "MOHAMMED NASSER ALI AL-SHAHRANI",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى جازان العام",
+            "hospital_en": "Jazan General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-19T16:41:07.877Z",
+      "updatedAt": "2026-09-19T16:50:33.574Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
       "daysUsed": 0,
-      "reportsCount": 2,
+      "reportsCount": 3,
       "name": "『』"
     },
     "7872802641": {
@@ -541,6 +571,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789836632859_9bw9mn",
+      "timestamp": "2026-09-19T16:50:32.859Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "5729445246",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "20",
+      "new_value": "15",
+      "details": "خصم 5 نقاط عند إصدار التقرير PSL26091776044 (generate-native-pdf)"
+    },
     {
       "id": "tx_1789832131310_2bhuw1",
       "timestamp": "2026-09-19T15:35:31.310Z",
