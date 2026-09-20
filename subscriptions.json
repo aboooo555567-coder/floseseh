@@ -361,8 +361,8 @@
       "daysUsed": 5
     },
     "8337606751": {
-      "points": 40,
-      "balance_points": 40,
+      "points": 35,
+      "balance_points": 35,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -432,17 +432,50 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "GSL26092006133",
+          "patientName": "احمد محمد احمد ",
+          "type": "sickleave",
+          "issueDate": "2026-09-20",
+          "data": {
+            "admission_date": "2026-09-20",
+            "discharge_date": "2026-09-22",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "3",
+            "issue_date": "2026-09-20",
+            "issue_time": "06:25",
+            "national_id": "12345",
+            "patient_name_ar": "احمد محمد احمد ",
+            "patient_name_en": "AHMED MOHAMMED AHMED ",
+            "nationality": "السعودية",
+            "employer": "طالب",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "احمد المريش",
+            "doctor_name_en": "AHMED  ALMORISH ",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الملك خالد بنجران",
+            "hospital_en": "King Khalid Hospital, Najran",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-20T15:44:47.313Z",
+      "updatedAt": "2026-09-20T15:46:24.416Z",
       "status": "active",
       "subscription_start_date": "2026-09-18T21:24:32.889Z",
       "daysRemaining": 0,
       "daysUsed": 1,
-      "reportsCount": 2,
+      "reportsCount": 3,
       "name": "أ/بسمه"
     },
     "5275574402": {
@@ -899,6 +932,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789919184062_r0esuz",
+      "timestamp": "2026-09-20T15:46:24.062Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8337606751",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "40",
+      "new_value": "35",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26092006133 (generate-native-pdf)"
+    },
     {
       "id": "tx_1789918601954_97cva0",
       "timestamp": "2026-09-20T15:36:41.954Z",
