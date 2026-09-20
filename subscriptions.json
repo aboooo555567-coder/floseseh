@@ -355,7 +355,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-20T15:58:40.249Z",
+      "updatedAt": "2026-09-20T19:26:01.940Z",
       "reportsCount": 9,
       "daysRemaining": 361,
       "daysUsed": 5
@@ -621,8 +621,8 @@
       "name": "الملكه👑👑👑"
     },
     "5729445246": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 10,
+      "balance_points": 10,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -815,7 +815,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-20T18:40:17.372Z",
+      "updatedAt": "2026-09-20T19:26:00.617Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
       "daysUsed": 1,
@@ -933,6 +933,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789932360617_9he24s",
+      "timestamp": "2026-09-20T19:26:00.617Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "5729445246",
+      "operation": "add_points",
+      "amount": 10,
+      "previous_value": "0",
+      "new_value": "10",
+      "details": "إضافة 10 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
     {
       "id": "tx_1789919184062_r0esuz",
       "timestamp": "2026-09-20T15:46:24.062Z",
