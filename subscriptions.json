@@ -317,13 +317,46 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "GSL26092026609",
+          "patientName": "احمد محمد احمد محمد ",
+          "type": "sickleave",
+          "issueDate": "2026-09-20",
+          "data": {
+            "admission_date": "2026-09-20",
+            "discharge_date": "2026-09-25",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-09-20",
+            "file_discharge_date": "2026-09-20",
+            "duration": "6",
+            "issue_date": "2026-09-20",
+            "issue_time": "06:00",
+            "national_id": "1234",
+            "patient_name_ar": "احمد محمد احمد محمد ",
+            "patient_name_en": "AHMED MOHAMMED AHMED MOHAMMED ",
+            "nationality": "السعودية",
+            "employer": "طالب",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "محمد باشا",
+            "doctor_name_en": "MOHAMMED BASHA",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى نجران العام",
+            "hospital_en": "Najran General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-20T14:27:37.888Z",
-      "reportsCount": 8,
+      "updatedAt": "2026-09-20T14:30:36.070Z",
+      "reportsCount": 9,
       "daysRemaining": 361,
       "daysUsed": 5
     },
