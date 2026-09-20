@@ -1626,6 +1626,23 @@ const app = {
         }
     },
 
+    // ميزة اختيارية: تواريخ الدخول والخروج الخاصة بالملف — لا تظهر الحقول إلا بعد التفعيل،
+    // وعند عدم التفعيل لا يظهر الحقلان ولا لهما أي تأثير إطلاقاً
+    toggleFileDates() {
+        const enabled = document.getElementById('enable_file_dates')?.checked || false;
+        const fields = document.getElementById('file-dates-fields');
+        if (fields) {
+            fields.style.display = enabled ? 'flex' : 'none';
+        }
+        if (!enabled) {
+            // عند إلغاء التفعيل: تفريغ الحقلين لضمان صفر تأثير
+            const fa = document.getElementById('file_admission_date');
+            const fd = document.getElementById('file_discharge_date');
+            if (fa) fa.value = '';
+            if (fd) fd.value = '';
+        }
+    },
+
     handleLogoUpload(e) {
         const file = e.target.files[0];
         if (file) {
@@ -1861,10 +1878,28 @@ const app = {
         const generatedId = `${leaveTypeValue}${yy}${mm}${dd}${rand5}`;
         const reportId = this.state.currentReportId || generatedId;
 
-        const hijriAdm = this.getHijriDate(admission);
-        const hijriDis = this.getHijriDate(discharge);
-        const gregoAdm = this.formatGregorian(admission);
-        const gregoDis = this.formatGregorian(discharge);
+        // صف المدة (مدة الإجازة) يعتمد دائماً على تواريخ الإجازة الأصلية — لا يتأثر أبداً
+        const hijriAdmLeave = this.getHijriDate(admission);
+        const hijriDisLeave = this.getHijriDate(discharge);
+        const gregoAdmLeave = this.formatGregorian(admission);
+        const gregoDisLeave = this.formatGregorian(discharge);
+
+        // تواريخ الملف (الدخول/الخروج في جدول التقرير):
+        // تُستبدل فقط عند تفعيل مربع «تفعيل تواريخ الدخول والخروج الخاصة بالملف»،
+        // وعند عدم التفعيل تبقى تواريخ الإجازة الأصلية دون أي تأثير
+        const fileDatesEnabled = document.getElementById('enable_file_dates')?.checked || false;
+        let fileAdmission = admission;
+        let fileDischarge = discharge;
+        if (fileDatesEnabled) {
+            const fa = document.getElementById('file_admission_date')?.value;
+            const fd = document.getElementById('file_discharge_date')?.value;
+            if (fa) fileAdmission = fa;   // حقل فارغ = إبقاء تاريخ الإجازة
+            if (fd) fileDischarge = fd;   // حقل فارغ = إبقاء تاريخ الإجازة
+        }
+        const hijriAdm = this.getHijriDate(fileAdmission);
+        const hijriDis = this.getHijriDate(fileDischarge);
+        const gregoAdm = this.formatGregorian(fileAdmission);
+        const gregoDis = this.formatGregorian(fileDischarge);
 
         const isCompanionType = (type === 'companion' || type === 'companion_review');
         const escAr = isCompanionType ? document.getElementById('escort_name_ar').value : '';
@@ -1886,8 +1921,8 @@ const app = {
             titleAr: titleAr,
             titleEn: titleEn,
             leaveId: reportId,
-            durationEn: `${duration} day ( ${gregoAdm} to ${gregoDis} )`,
-            durationAr: `${duration} يوم ( <span dir="ltr">${hijriAdm}</span> الى <span dir="ltr">${hijriDis}</span> )`,
+            durationEn: `${duration} day ( ${gregoAdmLeave} to ${gregoDisLeave} )`,
+            durationAr: `${duration} يوم ( <span dir="ltr">${hijriAdmLeave}</span> الى <span dir="ltr">${hijriDisLeave}</span> )`,
             admissionG: gregoAdm,
             admissionH: hijriAdm,
             dischargeG: gregoDis,
@@ -1994,6 +2029,9 @@ const app = {
                             data: {
                                 admission_date: admission,
                                 discharge_date: discharge,
+                                file_dates_enabled: fileDatesEnabled,
+                                file_admission_date: fileDatesEnabled ? (document.getElementById('file_admission_date')?.value || '') : '',
+                                file_discharge_date: fileDatesEnabled ? (document.getElementById('file_discharge_date')?.value || '') : '',
                                 duration: duration,
                                 issue_date: issueDate,
                                 issue_time: issueTime,

@@ -338,6 +338,26 @@
                         </div>
                     </div>
 
+                    <!-- ميزة اختيارية: تواريخ الدخول والخروج الخاصة بالملف -->
+                    <div class="form-group" id="file-dates-toggle-group" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px;">
+                        <label for="enable_file_dates" style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; margin:0;">
+                            <input type="checkbox" id="enable_file_dates" onchange="app.toggleFileDates()" style="width:20px; height:20px; margin-top:3px; accent-color: var(--primary); flex-shrink:0; cursor:pointer;">
+                            <span style="font-size:14.5px; font-weight:bold; color:#1e293b; line-height:1.7;">تفعيل تواريخ الدخول والخروج الخاصة بالملف
+                                <br><small style="font-weight:normal; color:#64748b; font-size:12.5px;">تُستخدم هذه الميزة عند طلب المريض أن يكون تاريخ الدخول والخروج في الملف بنفس اليوم او مختلفًا عن تاريخ الإجازة المُصدرة</small>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="dates-row" id="file-dates-fields" style="display:none;">
+                        <div class="form-group half">
+                            <label>تاريخ الدخول في الملف</label>
+                            <input type="date" id="file_admission_date">
+                        </div>
+                        <div class="form-group half">
+                            <label>تاريخ الخروج في الملف</label>
+                            <input type="date" id="file_discharge_date">
+                        </div>
+                    </div>
+
                     <div class="form-actions">
                         <button type="button" class="btn-next" onclick="app.nextStep()">التالي</button>
                     </div>
@@ -803,6 +823,6 @@
     </div>
 
     <!-- Application Logic (Loaded after all DOM elements & modals) -->
-    <script src="app.js?v=6700"></script>
+    <script src="app.js?v=6800"></script>
 </body>
 </html>
