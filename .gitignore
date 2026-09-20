@@ -3,5 +3,15 @@ database.sqlite
 *.log
 .cache/
 temp_scratch_backup/
-  
- 
+
+# ==== SECRETS — تُحفظ محلياً فقط ولا تُرفع للمستودع أبداً ====
+secrets.env
+.env
+.env.*
+*.token
+!.token.example
+github_sync.token
+.secrets
+ssh_keys/
+*.pem
+*.key

@@ -181,7 +181,7 @@ npm start
 
 For Render environment:
 ```
-TELEGRAM_BOT_TOKEN = ***REDACTED-BOT-TOKEN***
+TELEGRAM_BOT_TOKEN = <TELEGRAM_BOT_TOKEN-HERE: from @BotFather — set on Render env, never commit>
 WEB_APP_URL = https://seha-sickleave-app.onrender.com
 ADMIN_USERNAME = zakmmm_1211_bot
 PORT = 3000

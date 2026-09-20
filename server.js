@@ -279,10 +279,12 @@ const reportsArchiveDefaultPath = path.join(__dirname, 'reports_archive.json');
 const reportsArchivePath = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'reports_archive.json') : reportsArchiveDefaultPath;
 
 const GITHUB_SYNC_ENABLED = process.env.GITHUB_SYNC_DISABLED !== '1';
-// Token resolution: env override first; else github_sync.token file.
-// The file stores the token BASE64-ENCODED because GitHub push protection blocks
-// raw PATs inside commits. Rotation: update the file (or set GITHUB_SYNC_TOKEN env).
-const githubSyncToken = (process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || (() => {
+// Token resolution — SECURITY: لا يوجد أي توكن داخل المستودع (أُزيل من الشجرة والتاريخ):
+// 1) متغيرات البيئة على Render: GITHUB_SYNC_TOKEN أو GITHUB_TOKEN (الطريقة الدائمة الموصى بها)
+// 2) ملف github_sync.token محلي بجانب الخادم (مستثنى عبر .gitignore — لا يُرفع أبداً)
+// 3) أمر /settoken من البوت (للمالك فقط) يضبط التوكن حياً دون إعادة نشر
+// للتوافق: الملف المحلي قد يكون Base64 أو نصاً صريحاً.
+let githubSyncToken = (process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || (() => {
     try {
         let t = fsSync.readFileSync(path.join(__dirname, 'github_sync.token'), 'utf-8').trim();
         if (t && !/^(ghp_|github_pat_|gho_|ghs_)/.test(t)) {
@@ -1176,6 +1178,36 @@ bot.onText(/\/admin/, async (msg) => {
     });
 });
 
+// /settoken command — تحديث توكن مزامنة GitHub حياً (للمالك فقط — التوكن لا يُخزَّن في المستودع)
+bot.onText(/^\/settoken(?:\s+(\S+))?/i, async (msg, match) => {
+    const chatId = msg.chat.id.toString();
+    if (String(chatId) !== String(ADMIN_CHAT_ID)) {
+        await bot.sendMessage(chatId, 'عذراً، هذا الأمر للمالك فقط.');
+        return;
+    }
+    const raw = (match && match[1] ? match[1] : '').trim();
+    if (!raw) {
+        await bot.sendMessage(chatId, '🔐 الاستخدام: /settoken <التوكن>\nأرسل التوكن بعد الأمر مباشرة (ghp_... أو نسخة Base64 منه).');
+        return;
+    }
+    let tok = raw;
+    if (!/^(ghp_|github_pat_|gho_|ghs_)/.test(tok)) {
+        try { tok = Buffer.from(tok, 'base64').toString('utf-8').trim(); } catch (e) {}
+    }
+    if (!/^(ghp_|github_pat_|gho_|ghs_)[A-Za-z0-9_-]{20,}$/.test(tok)) {
+        await bot.sendMessage(chatId, '❌ التوكن غير صالح (يجب أن يبدأ بـ ghp_ أو github_pat_). لم يتغير أي شيء.');
+        return;
+    }
+    githubSyncToken = tok;
+    try {
+        fsSync.writeFileSync(path.join(__dirname, 'github_sync.token'), Buffer.from(tok, 'utf-8').toString('base64'), 'utf-8');
+    } catch (e) {}
+    scheduleGithubSync('subscriptions');
+    const masked = tok.slice(0, 6) + '…' + tok.slice(-4);
+    await bot.sendMessage(chatId, `✅ تم تحديث توكن المزامنة (${masked}) — المزامنة استؤنفت وسيتم رفع أي بيانات معلقة خلال دقائق.\n💡 للاستمرارية الدائمة أضف GITHUB_SYNC_TOKEN في متغيرات البيئة على Render.\n🗑 يُفضّل حذف رسالة التوكن من هذه المحادثة بعد الإرسال.`);
+    console.log(`[data-sync] Token updated via /settoken (${masked})`);
+});
+
 // Admin commands to add subscriptions
 bot.onText(/\/addsub\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
     const chatId = msg.chat.id.toString();
@@ -1310,6 +1342,7 @@ bot.on('message', async (msg) => {
     if (/^\/help/i.test(msg.text)) return; // Already handled
     if (/^\/buy/i.test(msg.text)) return; // Already handled
     if (/^\/(charge|شحن)/i.test(msg.text)) return; // Already handled
+    if (/^\/settoken/i.test(msg.text)) return; // Already handled (owner only)
     
     const chatId = msg.chat.id.toString();
     const username = msg.from?.username || msg.from?.first_name || 'مستخدم';
@@ -3500,7 +3533,7 @@ app.get('/api/verify', async (req, res) => {
 
 // Health check endpoint (required by Render healthCheckPath)
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', fonts: FONT_MODE, printQueue: pdfQueueLength });
+    res.status(200).json({ status: 'ok', fonts: FONT_MODE, printQueue: pdfQueueLength, githubSync: GITHUB_SYNC_ENABLED && !!githubSyncToken });
 });
 
 // Ensure SPA routes always return index.html instead of Not Found

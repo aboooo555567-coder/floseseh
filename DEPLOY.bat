@@ -110,7 +110,7 @@ echo    - Build Command: npm install
 echo    - Start Command: node server.js
 echo    - Plan: Free
 echo 6. Add Environment Variables:
-echo    TELEGRAM_BOT_TOKEN = ***REDACTED-BOT-TOKEN***
+echo    TELEGRAM_BOT_TOKEN = <TELEGRAM_BOT_TOKEN-HERE: from @BotFather — set on Render env, never commit>
 echo    WEB_APP_URL = https://seha-sickleave-app.onrender.com
 echo    ADMIN_USERNAME = zakmmm_1211
 echo    TELEGRAM_CHANNEL_ID = -1002184109677

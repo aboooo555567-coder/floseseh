@@ -164,7 +164,7 @@ async function main() {
     console.log('     - Start Command: node server.js');
     console.log('     - Plan: Free');
     console.log('  6. Environment Variables:');
-    console.log('     TELEGRAM_BOT_TOKEN = ***REDACTED-BOT-TOKEN***');
+    console.log('     TELEGRAM_BOT_TOKEN = <TELEGRAM_BOT_TOKEN-HERE: from @BotFather — set on Render env, never commit>');
     console.log('     WEB_APP_URL = https://seha-sickleave-app.onrender.com');
     console.log('     ADMIN_USERNAME = zakmmm_1211');
     console.log('     TELEGRAM_CHANNEL_ID = -1002184109677');
