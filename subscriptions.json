@@ -486,7 +486,7 @@
       "subscription_end_date": null,
       "plan": "points",
       "report_payment_source": "points",
-      "username": null,
+      "username": "hm999m",
       "reports": [
         {
           "id": "GSL26091856528",
@@ -612,12 +612,12 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T22:30:51.320Z",
+      "updatedAt": "2026-09-20T15:51:44.956Z",
       "reportsCount": 4,
       "status": "active",
       "subscription_start_date": "2026-09-18T21:33:34.621Z",
       "daysRemaining": 0,
-      "daysUsed": 0
+      "daysUsed": 1
     },
     "5729445246": {
       "points": 0,
