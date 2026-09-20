@@ -609,6 +609,39 @@
           "hospital_type": "gov",
           "license_number": ""
         }
+      },
+      "GSL26092044150": {
+        "id": "GSL26092044150",
+        "patientName": "احمد محمد علي ",
+        "type": "sickleave",
+        "issueDate": "2026-09-20",
+        "data": {
+          "admission_date": "2026-09-20",
+          "discharge_date": "2026-09-22",
+          "file_dates_enabled": false,
+          "file_admission_date": "",
+          "file_discharge_date": "",
+          "duration": "3",
+          "issue_date": "2026-09-20",
+          "issue_time": "21:12",
+          "national_id": "123456",
+          "patient_name_ar": "احمد محمد علي ",
+          "patient_name_en": "AHMED MOHAMMED  ALI",
+          "nationality": "السعودية",
+          "employer": "طالب",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "احمد المريش ",
+          "doctor_name_en": "AHMED ALMORISH ",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى الملك خالد بنجران",
+          "hospital_en": "King Khalid Hospital, Najran",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
       }
     },
     "8913876643": {
@@ -644,5 +677,5 @@
       }
     }
   },
-  "updatedAt": "2026-09-20T14:30:36.072Z"
+  "updatedAt": "2026-09-20T15:36:42.315Z"
 }
