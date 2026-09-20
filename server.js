@@ -1072,12 +1072,18 @@ const handleStartCommand = async (msg) => {
     configureChatMenuButton(chatId).catch(err => console.warn('Menu button configure notice:', err.message));
 
     // Message 1: Quick Access Reply Keyboard Configuration with direct WebApp button
+    // «📘 دليل الاستخدام» للجميع + «📢 رسالة للجميع» تظهر في لوحة المالك فقط
+    // (لوحة الرد خاصة بكل محادثة في تيليجرام — لذا الزر الإداري لا يراه أحد غير المالك)
+    const ownerQuickKeyboard = [
+        [{ text: '🛒 متجر الباقات' }, { text: '🔗 كسب نقاط (الإحالات)' }, { text: '📘 دليل الاستخدام' }],
+        [{ text: '💳 شحن حسابي' }, { text: '📊 حالة حسابي' }]
+    ];
+    if (isBotAdmin(chatId, msg.from?.username)) {
+        ownerQuickKeyboard[1].push({ text: '📢 رسالة للجميع' });
+    }
     await bot.sendMessage(chatId, `⚡ تم تفعيل قائمة الوصول السريع أسفل الشاشة!`, {
         reply_markup: {
-            keyboard: [
-                [{ text: '🛒 متجر الباقات' }, { text: '🔗 كسب نقاط (الإحالات)' }],
-                [{ text: '💳 شحن حسابي' }, { text: '📊 حالة حسابي' }]
-            ],
+            keyboard: ownerQuickKeyboard,
             resize_keyboard: true
         }
     });
@@ -1333,6 +1339,93 @@ bot.onText(/\/mysub/, async (msg) => {
 });
 
 // Bottom Keyboard & Message Handlers
+// ==== البث الجماعي — زر «📢 رسالة للجميع» (يظهر في لوحة المالك فقط) ====
+// جلسة لكل محادثة: كتابة الرسالة → معاينة + تأكيد → إرسال لكل من فتح البوت (سجلات subscriptions)
+const broadcastSessions = new Map(); // chatId -> { stage: 'awaiting_message'|'awaiting_confirm', text, recipients, at }
+const BROADCAST_SESSION_TTL = 15 * 60 * 1000; // انتهاء الجلسة بعد 15 دقيقة دون إكمال
+const BROADCAST_BATCH = 20; // ضمن حد تيليجرام (~30 رسالة/ثانية)
+
+const listBroadcastRecipients = async () => {
+    const data = await loadLocalSubscriptions();
+    return Object.keys(data.subscriptions || {}).filter(id => /^\d+$/.test(String(id)));
+};
+
+const startBroadcastSession = async (chatId) => {
+    broadcastSessions.set(chatId, { stage: 'awaiting_message', at: Date.now() });
+    await bot.sendMessage(chatId,
+`📢 هذه القائمة خاصة بك (المالك) — رسالة جماعية لجميع المشتركين.
+
+✍️ اكتب الآن نص الرسالة التي تريد إرسالها، وستظهر لك معاينة للتأكيد قبل الإرسال.
+
+• للإلغاء في أي وقت: أرسل /cancel
+• تصل الرسالة كما هي (نص فقط) لكل من لديه البوت.`);
+};
+
+const handleBroadcastSessionMessage = async (msg) => {
+    const chatId = msg.chat.id.toString();
+    const session = broadcastSessions.get(chatId);
+    if (!session) return false;
+    if (/^\/cancel(?!sub)/i.test(msg.text)) {
+        broadcastSessions.delete(chatId);
+        await bot.sendMessage(chatId, '❌ تم إلغاء الرسالة الجماعية. لم يُرسل أي شيء.');
+        return true;
+    }
+    if (Date.now() - session.at > BROADCAST_SESSION_TTL) {
+        broadcastSessions.delete(chatId);
+        await bot.sendMessage(chatId, '⌛ انتهت مدة جلسة الرسالة الجماعية دون إكمال — اضغط الزر من جديد للبدء.');
+        return true;
+    }
+    if (session.stage === 'awaiting_message') {
+        const text = (msg.text || '').trim();
+        if (!text) return true; // تجاهل الفارغ
+        if (text.length > 3800) {
+            await bot.sendMessage(chatId, `⚠️ الرسالة طويلة جداً (${text.length} حرف). الحد المسموح 3800 حرف — أعد إرسالها أقصر.`);
+            return true;
+        }
+        const recipients = await listBroadcastRecipients();
+        session.text = text;
+        session.recipients = recipients;
+        session.stage = 'awaiting_confirm';
+        session.at = Date.now();
+        await bot.sendMessage(chatId,
+`📨 معاينة رسالتك:
+━━━━━━━━━━━━━━━━━━━━━━
+${text}
+━━━━━━━━━━━━━━━━━━━━━━
+👥 سيتم إرسالها إلى ${recipients.length} مشترك مسجل في البوت.
+⚠️ لا يمكن التراجع بعد الإرسال.`, {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: `✅ إرسال الآن (${recipients.length})`, callback_data: 'broadcast_confirm' }],
+                    [{ text: '❌ إلغاء', callback_data: 'broadcast_cancel' }]
+                ]
+            }
+        });
+        return true;
+    }
+    if (session.stage === 'awaiting_confirm') {
+        await bot.sendMessage(chatId, '⏳ لديك رسالة جماعية بانتظار التأكيد — استخدم زرَّي التأكيد/الإلغاء في الرسالة السابقة، أو أرسل /cancel لإلغائها.');
+        return true;
+    }
+    return false;
+};
+
+const runBroadcast = async (ownerChatId, text, recipients) => {
+    let sent = 0, failed = 0;
+    for (let i = 0; i < recipients.length; i += BROADCAST_BATCH) {
+        const batch = recipients.slice(i, i + BROADCAST_BATCH);
+        const results = await Promise.allSettled(batch.map(id => bot.sendMessage(id, text)));
+        results.forEach(r => r.status === 'fulfilled' ? sent++ : failed++);
+        if (i + BROADCAST_BATCH < recipients.length) await new Promise(r => setTimeout(r, 1100));
+    }
+    broadcastSessions.delete(ownerChatId);
+    await bot.sendMessage(ownerChatId,
+`✅ اكتمل الإرسال الجماعي.
+• وصلت الرسالة إلى: ${sent} مشترك
+• تعذّر الإرسال: ${failed}${failed > 0 ? ' (حسابات حظرت البوت أو غير مفعلة)' : ''}`);
+    return { sent, failed };
+};
+
 bot.on('message', async (msg) => {
     if (!msg.text) return;
     if (/^\/start/i.test(msg.text)) return; // Already handled
@@ -1346,6 +1439,23 @@ bot.on('message', async (msg) => {
     
     const chatId = msg.chat.id.toString();
     const username = msg.from?.username || msg.from?.first_name || 'مستخدم';
+    
+    // /broadcast — بديل بالأوامر لزر «📢 رسالة للجميع» (للمالك فقط)
+    if (/^\/broadcast$/i.test(msg.text)) {
+        if (!isBotAdmin(chatId, msg.from?.username)) return;
+        await startBroadcastSession(chatId);
+        return;
+    }
+    
+    // جلسة البث الجماعي النشطة — تلتقط رسالة المالك قبل أي معالجة أخرى
+    if (broadcastSessions.has(chatId)) {
+        if (isBotAdmin(chatId, msg.from?.username)) {
+            const consumed = await handleBroadcastSessionMessage(msg);
+            if (consumed) return;
+        } else {
+            broadcastSessions.delete(chatId); // نظافة: جلسة لمالك مختلف أو معطلة
+        }
+    }
     
     if (msg.text === '📊 حالة حسابي') {
         await sendMyStatusMessage(chatId, username);
@@ -1368,11 +1478,28 @@ bot.on('message', async (msg) => {
         return;
     }
     
+    if (msg.text === '📘 دليل الاستخدام') {
+        await sendUsageGuideMessage(chatId);
+        return;
+    }
+    
+    if (msg.text === '📢 رسالة للجميع') {
+        // زر البث الجماعي — لا يظهر في لوحة أحد غير المالك، والتحقق هنا حماية إضافية
+        if (!isBotAdmin(chatId, msg.from?.username)) return;
+        await startBroadcastSession(chatId);
+        return;
+    }
+    
     console.log(`Telegram bot message received: "${msg.text}" from ${msg.from?.username || msg.from?.first_name}`);
 });
 
 bot.on('photo', async (msg) => {
     const chatId = msg.chat.id.toString();
+    // أثناء جلسة البث الجماعي: النص فقط مدعوم في هذه النسخة
+    if (broadcastSessions.has(chatId) && isBotAdmin(chatId, msg.from?.username)) {
+        await bot.sendMessage(chatId, '⚠️ الرسالة الجماعية في هذه النسخة نصّية فقط — أرسل نص الرسالة أو /cancel للإلغاء.');
+        return;
+    }
     const photo = msg.photo[msg.photo.length - 1]; // get highest resolution
     const fileId = photo.file_id;
     
@@ -1615,6 +1742,54 @@ ${referralLink}
     });
 };
 
+// Helper: دليل الاستخدام — زر «📘 دليل الاستخدام» (مقسم لقسمين: الاستخدام وإصدار التقارير + شحن الباقات والنقاط)
+const sendUsageGuideMessage = async (chatId) => {
+    const guideMsg = `📘 دليل استخدام منصة صحة
+━━━━━━━━━━━━━━━━━━━━━━
+📖 القسم الأول: كيفية الاستخدام وإصدار التقارير
+━━━━━━━━━━━━━━━━━━━━━━
+1️⃣ افتح التطبيق من زر Open بالأعلى أو من قائمة البوت.
+2️⃣ عبّئ بيانات التقرير خطوة بخطوة:
+   • اسم المريض والجهة (المستشفى / المركز الصحي)
+   • التشخيص ومدة الإجازة (تاريخ البداية والنهاية)
+   • بيانات الطبيب المعالج والتاريخ الهجري والميلادي
+3️⃣ اختر نوع التقرير: إجازة مرضية / تقرير مشهد / تقرير مرافق.
+4️⃣ اضغط «إصدار التقرير» — تُخصم 5 نقاط لكل تقرير رسمي.
+5️⃣ يصلك ملف PDF جاهزاً في المحادثة فوراً — حمّله وأرسله لمن يلزم.
+   • زر 🧪 تجريبي: نموذج مجاني مرة واحدة بعلامة مائية وغير رسمي.
+━━━━━━━━━━━━━━━━━━━━━━
+💰 القسم الثاني: كيفية شحن الباقات والنقاط
+━━━━━━━━━━━━━━━━━━━━━━
+• تكلفة التقرير الواحد 5 نقاط، والنقاط المكتسبة من الإحالات تُستخدم للإصدار المجاني.
+
+الطريقة الأولى — طلب النقاط من مالك البوت مباشرة:
+   • تيليجرام: @${ADMIN_USERNAME}
+   • واتساب: ${RECHARGE_WHATSAPP}
+   • أرسل: معرفك (${chatId}) + اسمك + اسم الباقة المطلوبة.
+
+الطريقة الثانية — الإيداع / التحويل للحساب:
+   • حوّل المبلغ على حساب الكريمي: ${RECHARGE_BANK_ACCOUNT}
+   • أرسل صورة إثبات التحويل للمالك ليُشحن حسابك فوراً.
+
+⭐ الباقات المتوفرة (النقاط بدون تاريخ انتهاء):
+   • 5 نقاط = 5 ريال | 10 نقاط = 10 ريال | 20 نقطة = 15 ريال
+   • 30 نقطة = 20 ريال | 50 نقطة = 30 ريال
+   • 100 نقطة = 50 ريال | 200 نقطة = 80 ريال
+   • خطة 30 يوم غير محدودة = 100 ريال`;
+
+    await bot.sendMessage(chatId, guideMsg, {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: 'Open — فتح التطبيق', web_app: { url: WEB_APP_URL_CACHED } }],
+                [
+                    { text: '🛒 متجر الباقات', callback_data: 'packages' },
+                    { text: '💳 تعليمات الشحن', callback_data: 'recharge_info' }
+                ]
+            ]
+        }
+    });
+};
+
 // Helper: Send Packages Store Menu
 const sendPackagesMessage = async (chatId) => {
     const packagesMsg = `🛒 متجر الباقات والاشتراكات لإنشاء التقارير
@@ -1682,6 +1857,20 @@ bot.on('callback_query', async (query) => {
     } else if (query.data && query.data.startsWith('qpkg:')) {
         // أزرار الشحن السريع في إشعارات المالك (طلب باقة/مستخدم جديد)
         await processQuickAddCallback(query);
+    } else if (query.data === 'broadcast_confirm' || query.data === 'broadcast_cancel') {
+        // أزرار تأكيد/إلغاء البث الجماعي — للمالك فقط
+        await bot.answerCallbackQuery(query.id);
+        if (!isBotAdmin(chatId, query.from?.username)) return;
+        const session = broadcastSessions.get(chatId);
+        if (query.data === 'broadcast_cancel') {
+            broadcastSessions.delete(chatId);
+            await bot.sendMessage(chatId, '❌ تم إلغاء الرسالة الجماعية. لم يُرسل أي شيء.');
+        } else if (session && session.stage === 'awaiting_confirm' && session.text) {
+            await bot.sendMessage(chatId, '⏳ جارٍ إرسال الرسالة إلى جميع المشتركين...');
+            await runBroadcast(chatId, session.text, session.recipients);
+        } else {
+            await bot.sendMessage(chatId, '⚠️ لا توجد رسالة جماعية معلّقة — اضغط «📢 رسالة للجميع» للبدء.');
+        }
     }
 });
 
@@ -1869,6 +2058,41 @@ if (TEST_MODE) {
                 data,
                 from: { id: fid, username: 'test_owner', first_name: 'Owner' },
                 message: { chat: { id: fid } }
+            });
+            res.json({ success: true });
+        } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+    });
+    // محاكاة رسالة نصية من مستخدم (أزرار لوحة الرد / جلسة البث الجماعي)
+    // عبر bot.processUpdate — المسار الكامل نفسه الذي يمشي عليه التحديث الحقيقي من تيليجرام (onText + on('message'))
+    app.post('/api/test/message', express.json(), async (req, res) => {
+        try {
+            const { text, fromId, username, firstName } = req.body || {};
+            const fid = parseInt(fromId) || parseInt(ADMIN_CHAT_ID);
+            bot.processUpdate({
+                update_id: Date.now() % 1000000000,
+                message: {
+                    message_id: Date.now() % 1000000,
+                    text: String(text || ''),
+                    chat: { id: fid },
+                    from: { id: fid, username: username || null, first_name: firstName || 'Tester' }
+                }
+            });
+            res.json({ success: true });
+        } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+    });
+    // محاكاة ضغط زر inline (callback_query) عبر المسار الكامل
+    app.post('/api/test/callback-query', express.json(), async (req, res) => {
+        try {
+            const { data, fromId } = req.body || {};
+            const fid = parseInt(fromId) || parseInt(ADMIN_CHAT_ID);
+            bot.processUpdate({
+                update_id: Date.now() % 1000000000,
+                callback_query: {
+                    id: 'testcbq-' + Date.now(),
+                    data,
+                    from: { id: fid, username: 'test_owner', first_name: 'Owner' },
+                    message: { chat: { id: fid }, message_id: 1 }
+                }
             });
             res.json({ success: true });
         } catch (err) { res.status(500).json({ success: false, error: err.message }); }
