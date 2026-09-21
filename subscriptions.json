@@ -479,8 +479,8 @@
       "name": "أ/بسمه"
     },
     "5275574402": {
-      "points": 5,
-      "balance_points": 5,
+      "points": 0,
+      "balance_points": 0,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -607,13 +607,46 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "GSL26091810329",
+          "patientName": "تبب",
+          "type": "sickleave",
+          "issueDate": "2026-09-18",
+          "data": {
+            "admission_date": "2026-09-18",
+            "discharge_date": "2026-09-18",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-09-21",
+            "file_discharge_date": "2026-09-21",
+            "duration": "1",
+            "issue_date": "2026-09-18",
+            "issue_time": "05:36",
+            "national_id": "وو",
+            "patient_name_ar": "تبب",
+            "patient_name_en": "بب",
+            "nationality": "ببالسعودية",
+            "employer": "بب",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "ببب",
+            "doctor_name_en": "ب",
+            "job_title_ar": "ببطبيب عام",
+            "job_title_en": "ببGeneral",
+            "hospital_ar": "مستشفى الملك خالد بنجران",
+            "hospital_en": "King Khalid Hospital, Najran",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-21T13:24:04.845Z",
-      "reportsCount": 4,
+      "updatedAt": "2026-09-21T13:24:42.514Z",
+      "reportsCount": 5,
       "status": "active",
       "subscription_start_date": "2026-09-18T21:33:34.621Z",
       "daysRemaining": 0,
@@ -933,6 +966,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789997082057_4o1usl",
+      "timestamp": "2026-09-21T13:24:42.057Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "5275574402",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "0",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26091810329 (generate-native-pdf)"
+    },
     {
       "id": "tx_1789932360617_9he24s",
       "timestamp": "2026-09-20T19:26:00.617Z",
