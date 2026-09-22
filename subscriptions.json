@@ -383,13 +383,46 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "GSL26091945804",
+          "patientName": "و وة",
+          "type": "sickleave",
+          "issueDate": "2026-09-19",
+          "data": {
+            "admission_date": "2026-09-19",
+            "discharge_date": "2026-09-19",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-09-19",
+            "issue_time": "15:15",
+            "national_id": "1234",
+            "patient_name_ar": "و وة",
+            "patient_name_en": "ت",
+            "nationality": "السعودية",
+            "employer": "",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "عتت",
+            "doctor_name_en": "توو",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى نجران العام",
+            "hospital_en": "Najran General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-22T16:55:14.451Z",
-      "reportsCount": 10,
+      "updatedAt": "2026-09-22T16:55:51.208Z",
+      "reportsCount": 11,
       "daysRemaining": 359,
       "daysUsed": 7
     },
