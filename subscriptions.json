@@ -21,8 +21,8 @@
       "reportsCount": 0
     },
     "870994544": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -35,7 +35,11 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-23T18:46:41.214Z"
+      "updatedAt": "2026-09-23T18:53:56.306Z",
+      "subscription_start_date": "2026-09-23T18:46:41.214Z",
+      "daysRemaining": 0,
+      "daysUsed": 0,
+      "reportsCount": 0
     },
     "6316398194": {
       "username": "zakaria_2025",
@@ -1070,6 +1074,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1790189636306_282twe",
+      "timestamp": "2026-09-23T18:53:56.306Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "870994544",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
     {
       "id": "tx_1790095310321_wiv5fb",
       "timestamp": "2026-09-22T16:41:50.321Z",
