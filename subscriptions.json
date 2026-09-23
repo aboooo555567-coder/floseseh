@@ -1108,7 +1108,28 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-23T19:45:01.555Z"
+      "updatedAt": "2026-09-23T19:45:41.403Z",
+      "subscription_start_date": "2026-09-23T19:45:01.555Z",
+      "daysRemaining": 0,
+      "daysUsed": 0,
+      "reportsCount": 0
+    },
+    "8081309179": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "omar",
+      "name": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-09-23T19:45:31.863Z"
     }
   },
   "transactions": [
