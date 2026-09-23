@@ -20,6 +20,23 @@
       "report_payment_source": "points",
       "reportsCount": 0
     },
+    "840992514": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "zd",
+      "name": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-09-23T18:57:16.513Z"
+    },
     "870994544": {
       "points": 5,
       "balance_points": 5,
@@ -442,7 +459,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-23T18:25:25.462Z",
+      "updatedAt": "2026-09-23T18:57:08.096Z",
       "reportsCount": 11,
       "daysRemaining": 358,
       "daysUsed": 8
