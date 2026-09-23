@@ -1130,6 +1130,23 @@
       "referralsCount": 0,
       "referralPoints": 0,
       "updatedAt": "2026-09-23T19:45:31.863Z"
+    },
+    "5218771613": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "hsjdkdndbj",
+      "name": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-09-23T21:08:28.981Z"
     }
   },
   "transactions": [
