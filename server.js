@@ -899,10 +899,18 @@ const TEST_MODE = TOKEN === 'TEST_TOKEN_LOCAL';
 const TEST_SENT_MESSAGES = [];
 if (TEST_MODE) {
     bot.sendMessage = async (chatId, text, opts) => {
-        TEST_SENT_MESSAGES.push({ chatId: String(chatId), text: String(text), opts: opts || null, at: new Date().toISOString() });
+        TEST_SENT_MESSAGES.push({ chatId: String(chatId), kind: 'text', text: String(text), opts: opts || null, at: new Date().toISOString() });
         if (TEST_SENT_MESSAGES.length > 300) TEST_SENT_MESSAGES.shift();
         return { message_id: TEST_SENT_MESSAGES.length, chat: { id: Number(chatId) } };
     };
+    const stubMedia = (kind) => async (chatId, fileId, opts) => {
+        TEST_SENT_MESSAGES.push({ chatId: String(chatId), kind, fileId: String(fileId), text: String((opts && opts.caption) || ''), opts: opts || null, at: new Date().toISOString() });
+        if (TEST_SENT_MESSAGES.length > 300) TEST_SENT_MESSAGES.shift();
+        return { message_id: TEST_SENT_MESSAGES.length, chat: { id: Number(chatId) } };
+    };
+    bot.sendPhoto = stubMedia('photo');
+    bot.sendVideo = stubMedia('video');
+    bot.sendDocument = stubMedia('document');
     bot.answerCallbackQuery = async () => true;
     bot.editMessageText = async () => true;
 }
@@ -1355,10 +1363,46 @@ const startBroadcastSession = async (chatId) => {
     await bot.sendMessage(chatId,
 `📢 هذه القائمة خاصة بك (المالك) — رسالة جماعية لجميع المشتركين.
 
-✍️ اكتب الآن نص الرسالة التي تريد إرسالها، وستظهر لك معاينة للتأكيد قبل الإرسال.
+✍️ أرسل الآن رسالتك:
+• نصاً فقط، أو
+• 📷 صورة / 🎬 فيديو / 📎 ملفاً مع نص مرافق اختياري.
+
+ستظهر لك معاينة للتأكيد قبل الإرسال.
 
 • للإلغاء في أي وقت: أرسل /cancel
-• تصل الرسالة كما هي (نص فقط) لكل من لديه البوت.`);
+• يمكنك تعديل النص المرافق بإرسال نص جديد قبل التأكيد.`);
+};
+
+// معاينة موحّدة (نص أو وسائط) + أزرار التأكيد/الإلغاء
+const sendBroadcastPreview = async (chatId, session, note = '') => {
+    if (!session.recipients) session.recipients = await listBroadcastRecipients();
+    const n = session.recipients.length;
+    const confirmKeyboard = { reply_markup: { inline_keyboard: [
+        [{ text: `✅ إرسال الآن (${n})`, callback_data: 'broadcast_confirm' }],
+        [{ text: '❌ إلغاء', callback_data: 'broadcast_cancel' }]
+    ] } };
+    const kindLabel = session.type === 'photo' ? '📷 صورة' : session.type === 'video' ? '🎬 فيديو' : session.type === 'document' ? '📎 ملف' : '📝 نص';
+    if (session.type === 'photo' || session.type === 'video' || session.type === 'document') {
+        const longCaption = session.text && session.text.length > 1024;
+        const cap = longCaption ? '' : session.text;
+        const capNote = longCaption ? '\n⚠️ النص المرافق أطول من 1024 حرف — سيُرسل كرسالة نصية منفصلة بعد الوسائط.' : (session.text ? '' : '\n• بدون نص مرافق');
+        if (session.type === 'photo') await bot.sendPhoto(chatId, session.fileId, { caption: cap });
+        else if (session.type === 'video') await bot.sendVideo(chatId, session.fileId, { caption: cap });
+        else await bot.sendDocument(chatId, session.fileId, { caption: cap });
+        await bot.sendMessage(chatId,
+`📨 معاينة رسالتك ${note}:
+• النوع: ${kindLabel}${capNote}
+👥 سيتم إرسالها إلى ${n} مشترك مسجل في البوت.
+⚠️ لا يمكن التراجع بعد الإرسال.`, confirmKeyboard);
+    } else {
+        await bot.sendMessage(chatId,
+`📨 معاينة رسالتك:
+━━━━━━━━━━━━━━━━━━━━━━
+${session.text}
+━━━━━━━━━━━━━━━━━━━━━━
+👥 سيتم إرسالها إلى ${n} مشترك مسجل في البوت.
+⚠️ لا يمكن التراجع بعد الإرسال.`, confirmKeyboard);
+    }
 };
 
 const handleBroadcastSessionMessage = async (msg) => {
@@ -1382,40 +1426,86 @@ const handleBroadcastSessionMessage = async (msg) => {
             await bot.sendMessage(chatId, `⚠️ الرسالة طويلة جداً (${text.length} حرف). الحد المسموح 3800 حرف — أعد إرسالها أقصر.`);
             return true;
         }
-        const recipients = await listBroadcastRecipients();
+        session.type = 'text';
         session.text = text;
-        session.recipients = recipients;
         session.stage = 'awaiting_confirm';
         session.at = Date.now();
-        await bot.sendMessage(chatId,
-`📨 معاينة رسالتك:
-━━━━━━━━━━━━━━━━━━━━━━
-${text}
-━━━━━━━━━━━━━━━━━━━━━━
-👥 سيتم إرسالها إلى ${recipients.length} مشترك مسجل في البوت.
-⚠️ لا يمكن التراجع بعد الإرسال.`, {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: `✅ إرسال الآن (${recipients.length})`, callback_data: 'broadcast_confirm' }],
-                    [{ text: '❌ إلغاء', callback_data: 'broadcast_cancel' }]
-                ]
-            }
-        });
+        await sendBroadcastPreview(chatId, session);
         return true;
     }
     if (session.stage === 'awaiting_confirm') {
+        // جلسة وسائط + نص جديد من المالك = تحديث النص المرافق
+        if ((session.type === 'photo' || session.type === 'video' || session.type === 'document') && session.fileId) {
+            session.text = (msg.text || '').trim();
+            session.at = Date.now();
+            await sendBroadcastPreview(chatId, session, '— تم تحديث النص المرافق');
+            return true;
+        }
         await bot.sendMessage(chatId, '⏳ لديك رسالة جماعية بانتظار التأكيد — استخدم زرَّي التأكيد/الإلغاء في الرسالة السابقة، أو أرسل /cancel لإلغائها.');
         return true;
     }
     return false;
 };
 
-const runBroadcast = async (ownerChatId, text, recipients) => {
+// التقاط الوسائط (صورة/فيديو/ملف) أثناء جلسة البث — النص المرافق اختياري (msg.caption)
+const handleBroadcastSessionMedia = async (msg, kind) => {
+    const chatId = msg.chat.id.toString();
+    const session = broadcastSessions.get(chatId);
+    if (!session) return false;
+    if (/^\/cancel(?!sub)/i.test((msg.caption || '').trim())) {
+        broadcastSessions.delete(chatId);
+        await bot.sendMessage(chatId, '❌ تم إلغاء الرسالة الجماعية. لم يُرسل أي شيء.');
+        return true;
+    }
+    if (Date.now() - session.at > BROADCAST_SESSION_TTL) {
+        broadcastSessions.delete(chatId);
+        await bot.sendMessage(chatId, '⌛ انتهت مدة جلسة الرسالة الجماعية دون إكمال — اضغط الزر من جديد للبدء.');
+        return true;
+    }
+    let fileId = null;
+    if (kind === 'photo') fileId = Array.isArray(msg.photo) ? ((msg.photo[msg.photo.length - 1] || {}).file_id || null) : null;
+    else if (kind === 'video') fileId = (msg.video && msg.video.file_id) || null;
+    else if (kind === 'document') fileId = (msg.document && msg.document.file_id) || null;
+    if (!fileId) {
+        await bot.sendMessage(chatId, '⚠️ تعذّر قراءة الملف المرفق — أعد إرساله أو أرسل نصاً أو /cancel.');
+        return true;
+    }
+    session.type = kind;
+    session.fileId = fileId;
+    session.text = (msg.caption || '').trim();
+    session.stage = 'awaiting_confirm';
+    session.at = Date.now();
+    await sendBroadcastPreview(chatId, session, kind === 'photo' ? '(تم استلام الصورة)' : kind === 'video' ? '(تم استلام الفيديو)' : '(تم استلام الملف)');
+    return true;
+};
+
+// إرسال محتوى الجلسة لمشترك واحد (نص / صورة / فيديو / ملف)
+const sendBroadcastOne = async (chatId, session) => {
+    const isMedia = session.type === 'photo' || session.type === 'video' || session.type === 'document';
+    const longCaption = isMedia && session.text && session.text.length > 1024;
+    const caption = longCaption ? undefined : (session.text || undefined);
+    let delivered = false;
+    try {
+        if (session.type === 'photo') { await bot.sendPhoto(chatId, session.fileId, { caption }); delivered = true; }
+        else if (session.type === 'video') { await bot.sendVideo(chatId, session.fileId, { caption }); delivered = true; }
+        else if (session.type === 'document') { await bot.sendDocument(chatId, session.fileId, { caption }); delivered = true; }
+        else { await bot.sendMessage(chatId, session.text); delivered = true; }
+    } catch (e) {
+        return false;
+    }
+    // النص الطويل مع الوسائط يُرسل كرسالة منفصلة (حد توضيح الوسائط 1024 حرف)
+    if (longCaption) {
+        try { await bot.sendMessage(chatId, session.text); } catch (e) {}
+    }
+    return delivered;
+};
+
+const runBroadcast = async (ownerChatId, session, recipients) => {
     let sent = 0, failed = 0;
     for (let i = 0; i < recipients.length; i += BROADCAST_BATCH) {
         const batch = recipients.slice(i, i + BROADCAST_BATCH);
-        const results = await Promise.allSettled(batch.map(id => bot.sendMessage(id, text)));
-        results.forEach(r => r.status === 'fulfilled' ? sent++ : failed++);
+        const results = await Promise.allSettled(batch.map(id => sendBroadcastOne(id, session)));
+        results.forEach(r => (r.status === 'fulfilled' && r.value === true) ? sent++ : failed++);
         if (i + BROADCAST_BATCH < recipients.length) await new Promise(r => setTimeout(r, 1100));
     }
     broadcastSessions.delete(ownerChatId);
@@ -1495,9 +1585,9 @@ bot.on('message', async (msg) => {
 
 bot.on('photo', async (msg) => {
     const chatId = msg.chat.id.toString();
-    // أثناء جلسة البث الجماعي: النص فقط مدعوم في هذه النسخة
+    // أثناء جلسة البث الجماعي: الصورة تُلتقط كمحتوى للرسالة (مع توضيح اختياري)
     if (broadcastSessions.has(chatId) && isBotAdmin(chatId, msg.from?.username)) {
-        await bot.sendMessage(chatId, '⚠️ الرسالة الجماعية في هذه النسخة نصّية فقط — أرسل نص الرسالة أو /cancel للإلغاء.');
+        await handleBroadcastSessionMedia(msg, 'photo');
         return;
     }
     const photo = msg.photo[msg.photo.length - 1]; // get highest resolution
@@ -1512,6 +1602,21 @@ bot.on('photo', async (msg) => {
     };
     
     await bot.sendMessage(chatId, "ماذا تريد أن تفعل بهذه الصورة؟", { reply_markup: inlineKeyboard });
+});
+
+// الفيديو والملفات أثناء جلسة البث الجماعي (خارج الجلسة لا معالجة لهما — كما كان سابقاً)
+bot.on('video', async (msg) => {
+    const chatId = msg.chat.id.toString();
+    if (broadcastSessions.has(chatId) && isBotAdmin(chatId, msg.from?.username)) {
+        await handleBroadcastSessionMedia(msg, 'video');
+    }
+});
+
+bot.on('document', async (msg) => {
+    const chatId = msg.chat.id.toString();
+    if (broadcastSessions.has(chatId) && isBotAdmin(chatId, msg.from?.username)) {
+        await handleBroadcastSessionMedia(msg, 'document');
+    }
 });
 
 bot.on('callback_query', async (query) => {
@@ -1865,9 +1970,9 @@ bot.on('callback_query', async (query) => {
         if (query.data === 'broadcast_cancel') {
             broadcastSessions.delete(chatId);
             await bot.sendMessage(chatId, '❌ تم إلغاء الرسالة الجماعية. لم يُرسل أي شيء.');
-        } else if (session && session.stage === 'awaiting_confirm' && session.text) {
+        } else if (session && session.stage === 'awaiting_confirm' && (session.text || session.fileId)) {
             await bot.sendMessage(chatId, '⏳ جارٍ إرسال الرسالة إلى جميع المشتركين...');
-            await runBroadcast(chatId, session.text, session.recipients);
+            await runBroadcast(chatId, session, session.recipients);
         } else {
             await bot.sendMessage(chatId, '⚠️ لا توجد رسالة جماعية معلّقة — اضغط «📢 رسالة للجميع» للبدء.');
         }
@@ -2094,6 +2199,25 @@ if (TEST_MODE) {
                     message: { chat: { id: fid }, message_id: 1 }
                 }
             });
+            res.json({ success: true });
+        } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+    });
+    // محاكاة إرسال وسائط (صورة/فيديو/ملف) — لتدفق البث الجماعي بالوسائط
+    app.post('/api/test/media', express.json(), async (req, res) => {
+        try {
+            const { kind, fileId, caption, fromId, username, firstName } = req.body || {};
+            const fid = parseInt(fromId) || parseInt(ADMIN_CHAT_ID);
+            const message = {
+                message_id: Date.now() % 1000000,
+                caption: caption || undefined,
+                chat: { id: fid },
+                from: { id: fid, username: username || null, first_name: firstName || 'Tester' }
+            };
+            if (kind === 'photo') message.photo = [{ file_id: 'small_' + (fileId || 'p') }, { file_id: fileId || 'test_photo_id' }];
+            else if (kind === 'video') message.video = { file_id: fileId || 'test_video_id', duration: 10 };
+            else if (kind === 'document') message.document = { file_id: fileId || 'test_doc_id', file_name: 'broadcast.pdf' };
+            else return res.status(400).json({ success: false, error: 'kind must be photo|video|document' });
+            bot.processUpdate({ update_id: Date.now() % 1000000000, message });
             res.json({ success: true });
         } catch (err) { res.status(500).json({ success: false, error: err.message }); }
     });
