@@ -1115,8 +1115,8 @@
       "reportsCount": 0
     },
     "8081309179": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1129,11 +1129,15 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-23T19:45:31.863Z"
+      "updatedAt": "2026-09-24T04:23:20.199Z",
+      "subscription_start_date": "2026-09-23T19:45:31.863Z",
+      "daysRemaining": 0,
+      "daysUsed": 0,
+      "reportsCount": 0
     },
     "5218771613": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1146,7 +1150,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-23T21:10:35.269Z",
+      "updatedAt": "2026-09-24T04:23:09.901Z",
       "subscription_start_date": "2026-09-23T21:08:28.981Z",
       "daysRemaining": 0,
       "daysUsed": 0,
@@ -1154,6 +1158,28 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1790223800199_3l07fj",
+      "timestamp": "2026-09-24T04:23:20.199Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8081309179",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
+    {
+      "id": "tx_1790223789901_x90eav",
+      "timestamp": "2026-09-24T04:23:09.901Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "5218771613",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
     {
       "id": "tx_1790189852921_qblwaf",
       "timestamp": "2026-09-23T18:57:32.921Z",
