@@ -1115,8 +1115,8 @@
       "reportsCount": 0
     },
     "8801299876": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1129,10 +1129,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-23T19:45:41.403Z",
+      "updatedAt": "2026-09-24T20:12:27.550Z",
       "subscription_start_date": "2026-09-23T19:45:01.555Z",
       "daysRemaining": 0,
-      "daysUsed": 0,
+      "daysUsed": 1,
       "reportsCount": 0
     },
     "8081309179": {
@@ -1179,6 +1179,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1790280747550_i0xs0r",
+      "timestamp": "2026-09-24T20:12:27.550Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8801299876",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "إضافة 5 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
     {
       "id": "tx_1790267884029_es68wd",
       "timestamp": "2026-09-24T16:38:04.029Z",
