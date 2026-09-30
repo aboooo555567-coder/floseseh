@@ -1199,8 +1199,8 @@
       "reportsCount": 0
     },
     "6064468264": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 10,
+      "balance_points": 10,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1213,10 +1213,25 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-29T22:43:09.968Z"
+      "updatedAt": "2026-09-30T01:01:36.599Z",
+      "subscription_start_date": "2026-09-29T22:43:09.968Z",
+      "daysRemaining": 0,
+      "daysUsed": 0,
+      "reportsCount": 0
     }
   },
   "transactions": [
+    {
+      "id": "tx_1790730096599_zs15e1",
+      "timestamp": "2026-09-30T01:01:36.599Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "6064468264",
+      "operation": "add_points",
+      "amount": 10,
+      "previous_value": "0",
+      "new_value": "10",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة 10 نقاط"
+    },
     {
       "id": "tx_1790282993219_4kys5y",
       "timestamp": "2026-09-24T20:49:53.219Z",
