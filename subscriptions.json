@@ -1220,8 +1220,8 @@
       "reportsCount": 0
     },
     "8538927582": {
-      "points": 10,
-      "balance_points": 10,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1272,12 +1272,45 @@
             "hospital_ar": "مستشفى قلوة العام",
             "hospital_en": "Qilwah General Hospital"
           }
+        },
+        {
+          "id": "GSL26100176015",
+          "patientName": "سنا احمد ربيع",
+          "type": "companion_review",
+          "issueDate": "2026-10-01",
+          "data": {
+            "admission_date": "2026-10-01",
+            "discharge_date": "2026-10-01",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-10-01",
+            "file_discharge_date": "2026-10-01",
+            "duration": "1",
+            "issue_date": "2026-10-01",
+            "issue_time": "22:00",
+            "national_id": "1144067830",
+            "patient_name_ar": "سنا احمد ربيع",
+            "patient_name_en": "SANAA AHMED RABIE",
+            "nationality": "السعودية",
+            "employer": "اخرى",
+            "escort_name_ar": "سنا احمد ربيع",
+            "escort_name_en": "SANAA AHMED RABIE",
+            "relation_ar": "اخت ",
+            "relation_en": "Sister",
+            "doctor_name_ar": "فاطمة محمد الشهراني ",
+            "doctor_name_en": "FATIMA MOHAMMED ALSHAHRANI",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى قلوة العام",
+            "hospital_en": "Qilwah General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-02T13:09:45.753Z",
+      "updatedAt": "2026-10-02T13:11:38.766Z",
       "subscription_start_date": "2026-10-02T11:17:46.056Z",
       "daysRemaining": 0,
       "daysUsed": 0,
@@ -1285,6 +1318,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1790946698766_pnws8g",
+      "timestamp": "2026-10-02T13:11:38.766Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8538927582",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "10",
+      "new_value": "5",
+      "details": "خصم 5 نقاط لإصدار تقرير GSL26100176015"
+    },
     {
       "id": "tx_1790946299622_nmd0ug",
       "timestamp": "2026-10-02T13:04:59.622Z",
