@@ -1220,8 +1220,8 @@
       "reportsCount": 0
     },
     "8538927582": {
-      "points": 15,
-      "balance_points": 15,
+      "points": 10,
+      "balance_points": 10,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1251,19 +1251,51 @@
             "hospital_ar": "مستشفى قلوة العام",
             "hospital_en": "Qilwah General Hospital"
           }
+        },
+        {
+          "id": "PSL26100140067",
+          "patientName": "ليندا احمد ربيع",
+          "type": "companion_review",
+          "issueDate": "01-10-2026",
+          "data": {
+            "duration": "1",
+            "issue_date": "01-10-2026",
+            "national_id": "1144067830",
+            "patient_name_ar": "ليندا احمد ربيع",
+            "patient_name_en": " LINDA AHMED RABIE",
+            "escort_name_ar": "ليندا احمد ربيع",
+            "escort_name_en": " LINDA AHMED RABIE",
+            "relation_ar": "اخت ",
+            "relation_en": "Sister",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى قلوة العام",
+            "hospital_en": "Qilwah General Hospital"
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-02T12:58:42.325Z",
+      "updatedAt": "2026-10-02T13:04:59.622Z",
       "subscription_start_date": "2026-10-02T11:17:46.056Z",
       "daysRemaining": 0,
       "daysUsed": 0,
-      "reportsCount": 1
+      "reportsCount": 2
     }
   },
   "transactions": [
+    {
+      "id": "tx_1790946299622_nmd0ug",
+      "timestamp": "2026-10-02T13:04:59.622Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8538927582",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "15",
+      "new_value": "10",
+      "details": "خصم 5 نقاط عند إصدار التقرير PSL26100140067 (generate-native-pdf)"
+    },
     {
       "id": "tx_1790945922325_cjtapg",
       "timestamp": "2026-10-02T12:58:42.325Z",
