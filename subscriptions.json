@@ -479,13 +479,34 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "GSL26100240727",
+          "patientName": "الوتس مش عارف والله ",
+          "type": "companion_review",
+          "issueDate": "02-10-2026",
+          "data": {
+            "duration": "1",
+            "issue_date": "02-10-2026",
+            "national_id": "545484848",
+            "patient_name_ar": "الوتس مش عارف والله ",
+            "patient_name_en": "ALHODHOD ALGREEH",
+            "escort_name_ar": "",
+            "escort_name_en": "ALHODHOD ALGREEH",
+            "relation_ar": "اخ",
+            "relation_en": "تخ",
+            "job_title_ar": "بيطبيب عام",
+            "job_title_en": "يGeneral",
+            "hospital_ar": "ث",
+            "hospital_en": "يي"
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-02T13:09:12.814Z",
-      "reportsCount": 11,
+      "updatedAt": "2026-10-02T15:32:03.137Z",
+      "reportsCount": 12,
       "daysRemaining": 349,
       "daysUsed": 17
     },
