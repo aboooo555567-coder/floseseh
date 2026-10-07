@@ -83,6 +83,23 @@
       "daysUsed": 0,
       "reportsCount": 0
     },
+    "2085854805": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "alamery133",
+      "name": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-10-07T19:40:29.607Z"
+    },
     "6316398194": {
       "username": "zakaria_2025",
       "name": "Zakaria Mohammed",
@@ -1378,6 +1395,23 @@
       "daysRemaining": 0,
       "daysUsed": 0,
       "reportsCount": 4
+    },
+    "8865996316": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "hossam_775",
+      "name": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-10-07T20:05:01.962Z"
     }
   },
   "transactions": [
