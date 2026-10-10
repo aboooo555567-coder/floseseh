@@ -825,8 +825,8 @@
       "name": "الملكه👑👑👑"
     },
     "5729445246": {
-      "points": 5,
-      "balance_points": 5,
+      "points": 0,
+      "balance_points": 0,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1035,16 +1035,49 @@
             "hospital_ar": "مستشفى قلوة العام",
             "hospital_en": "Qilwah General Hospital"
           }
+        },
+        {
+          "id": "GSL26101196941",
+          "patientName": "مريم عبد الحفيظ عبد الرحمن سعيد",
+          "type": "sickleave",
+          "issueDate": "2026-10-11",
+          "data": {
+            "admission_date": "2026-10-11",
+            "discharge_date": "2026-10-11",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-10-11",
+            "file_discharge_date": "2026-10-11",
+            "duration": "1",
+            "issue_date": "2026-10-11",
+            "issue_time": "22:20",
+            "national_id": "1137786628",
+            "patient_name_ar": "مريم عبد الحفيظ عبد الرحمن سعيد",
+            "patient_name_en": "MARIAM ABDELHAFEEZ ABDELRAHMAN SAEED",
+            "nationality": "السعودية",
+            "employer": "",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "سارة محمد الشهراني ",
+            "doctor_name_en": "SARA MOHAMMED AL-SHARANI",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الملك فهد العام",
+            "hospital_en": "​King Fahd General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-07T16:23:22.220Z",
+      "updatedAt": "2026-10-10T19:50:01.402Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
-      "daysUsed": 18,
-      "reportsCount": 7,
+      "daysUsed": 21,
+      "reportsCount": 8,
       "name": "『』"
     },
     "7872802641": {
@@ -1423,6 +1456,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1791661800932_rm5tba",
+      "timestamp": "2026-10-10T19:50:00.932Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "5729445246",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "0",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26101196941 (generate-native-pdf)"
+    },
     {
       "id": "tx_1791464917839_vzravx",
       "timestamp": "2026-10-08T13:08:37.839Z",
