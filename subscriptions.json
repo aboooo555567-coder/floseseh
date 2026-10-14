@@ -1073,7 +1073,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-14T05:36:35.042Z",
+      "updatedAt": "2026-10-14T05:35:47.200Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
       "daysUsed": 25,
@@ -1453,6 +1453,23 @@
       "daysRemaining": 0,
       "daysUsed": 0,
       "reportsCount": 0
+    },
+    "6951920560": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "• 𝕬.𝕰 ،",
+      "name": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-10-14T05:37:18.091Z"
     }
   },
   "transactions": [
