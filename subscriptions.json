@@ -157,7 +157,7 @@
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 338,
+      "subscriptionDays": 337,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-15T23:59:59.999Z",
       "subscriptionExpires": "2027-09-15T23:59:59.999Z",
@@ -526,10 +526,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-13T15:25:36.924Z",
+      "updatedAt": "2026-10-14T13:04:47.535Z",
       "reportsCount": 12,
-      "daysRemaining": 338,
-      "daysUsed": 28
+      "daysRemaining": 337,
+      "daysUsed": 29
     },
     "8337606751": {
       "points": 35,
@@ -1472,8 +1472,8 @@
       "updatedAt": "2026-10-14T05:37:18.091Z"
     },
     "6918133603": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1486,10 +1486,25 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-14T05:44:33.954Z"
+      "updatedAt": "2026-10-14T13:05:35.650Z",
+      "subscription_start_date": "2026-10-14T05:44:33.954Z",
+      "daysRemaining": 0,
+      "daysUsed": 0,
+      "reportsCount": 0
     }
   },
   "transactions": [
+    {
+      "id": "tx_1791983135650_oce8v3",
+      "timestamp": "2026-10-14T13:05:35.650Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "6918133603",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
     {
       "id": "tx_1791864002427_3jycbe",
       "timestamp": "2026-10-13T04:00:02.427Z",
