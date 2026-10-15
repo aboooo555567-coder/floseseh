@@ -87,6 +87,9 @@
                     <div class="fab-menu-item" onclick="app.startForm('companion_review')">
                         <span>مشهد مراجعة لمرافق</span> <span>📋</span>
                     </div>
+                    <div class="fab-menu-item" onclick="app.startForm('visit_review')">
+                        <span>مشهد مراجعة</span> <span>🩺</span>
+                    </div>
                 </div>
             </div>
             <div class="overlay" id="fab-overlay" onclick="app.toggleFab()"></div>
@@ -162,7 +165,7 @@
 
                 <!-- Search & Filters -->
                 <div class="admin-search-container">
-                    <input type="text" id="admin-user-search-input" placeholder="🔍 بحث برقم Chat ID أو اسم المستخدم..." oninput="app.handleAdminSearch(this.value)">
+                    <input type="text" id="admin-user-search-input" placeholder="🔍 بحث بالاسم أو المعرف (Username) أو رقم Chat ID..." oninput="app.handleAdminSearch(this.value)">
                 </div>
 
                 <div class="admin-filter-tabs">
@@ -170,6 +173,21 @@
                     <button class="admin-filter-tab" data-filter="active" onclick="app.setAdminFilter('active', this)">🟢 فعال</button>
                     <button class="admin-filter-tab" data-filter="suspended" onclick="app.setAdminFilter('suspended', this)">⏸️ موقوف</button>
                     <button class="admin-filter-tab" data-filter="cancelled" onclick="app.setAdminFilter('cancelled', this)">❌ ملغي</button>
+                </div>
+
+                <!-- Sort Bar: ترتيب المشتركين -->
+                <div class="admin-sort-bar" style="display:flex; align-items:center; gap:10px; margin:-6px 0 14px 0;">
+                    <label for="admin-sort-select" style="font-size:0.82rem; font-weight:700; color:#475569; white-space:nowrap;">↕️ ترتيب حسب:</label>
+                    <select id="admin-sort-select" onchange="app.setAdminSort(this.value)" style="flex:1; padding:9px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#ffffff; font-family:'Tajawal',sans-serif; font-size:0.85rem; font-weight:700; color:#334155; outline:none; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                        <option value="default">الترتيب الافتراضي</option>
+                        <option value="status">الحالة (الفعال أولاً)</option>
+                        <option value="newest">تاريخ الانضمام (الأحدث)</option>
+                        <option value="oldest">تاريخ الانضمام (الأقدم)</option>
+                        <option value="activity">النشاط (الأكثر تقارير)</option>
+                        <option value="points">النقاط (الأعلى رصيداً)</option>
+                        <option value="days">الأيام المتبقية (الأعلى)</option>
+                        <option value="name">الاسم (أبجدياً)</option>
+                    </select>
                 </div>
 
                 <!-- Subscribers List -->
@@ -322,7 +340,29 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <!-- حقول مشهد المراجعة: وقت الدخول/الخروج + نوع الزيارة (تظهر لهذا النوع فقط) -->
+                    <div id="visit-review-fields" style="display:none;">
+                        <div class="dates-row">
+                            <div class="form-group half">
+                                <label>وقت الدخول</label>
+                                <input type="time" id="admission_time" value="07:25">
+                            </div>
+                            <div class="form-group half">
+                                <label>وقت الخروج</label>
+                                <input type="time" id="discharge_time" value="08:35">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>نوع الزيارة</label>
+                            <select id="visit_type_ar" style="border-color: var(--primary); border-radius: 12px; padding: 16px; font-weight: bold; font-size: 16px;">
+                                <option value="طوارئ">طوارئ</option>
+                                <option value="عيادة">عيادة</option>
+                                <option value="مراجعة">مراجعة</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="duration-group">
                         <label>مدة الإجازة (بالأيام)</label>
                         <input type="number" id="duration" value="1" min="1" required>
                     </div>
@@ -823,6 +863,6 @@
     </div>
 
     <!-- Application Logic (Loaded after all DOM elements & modals) -->
-    <script src="app.js?v=6800"></script>
+    <script src="app.js?v=6900"></script>
 </body>
 </html>

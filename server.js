@@ -1858,7 +1858,7 @@ const sendUsageGuideMessage = async (chatId) => {
    • اسم المريض والجهة (المستشفى / المركز الصحي)
    • التشخيص ومدة الإجازة (تاريخ البداية والنهاية)
    • بيانات الطبيب المعالج والتاريخ الهجري والميلادي
-3️⃣ اختر نوع التقرير: إجازة مرضية / تقرير مشهد / تقرير مرافق.
+3️⃣ اختر نوع التقرير: إجازة مرضية / تقرير مشهد / تقرير مرافق / مشهد مراجعة.
 4️⃣ اضغط «إصدار التقرير» — تُخصم 5 نقاط لكل تقرير رسمي.
 5️⃣ يصلك ملف PDF جاهزاً في المحادثة فوراً — حمّله وأرسله لمن يلزم.
    • زر 🧪 تجريبي: نموذج مجاني مرة واحدة بعلامة مائية وغير رسمي.
@@ -3336,63 +3336,81 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             addLog(`QR generation failed (non-fatal): ${qrErr.message}`);
         }
 
-        // Build self-contained HTML matching Sehaty platform exactly
-        const html = `<!DOCTYPE html>
-<html lang="ar" dir="ltr">
-<head>
-<meta charset="UTF-8">
-</head>
-<body>
-<style>
-  ${EMBEDDED_FONTS_CSS}
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  html { background: #fff !important; }
-  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
-  @page { size: 794px 1123px; margin: 0; }
-  table { border-spacing: 0; direction: ltr; }
-  tr { height: 40px; }
-  /* الخطوط من commit 94c2194: عربي = Noto Sans Arabic | إنجليزي/أرقام = Tinos (Times).
-     التنسيق النهائي المعتمد من كود seha-sickleave بطلب المالك:
-     حدود الجدول 1.4px solid #cccccc | تسميات #154d79 (12.5px إنجليزي / 13.5px عربي)
-     قيم #0d2847 (12.5px) | صف المدة خلفية #1F3864 | ارتفاع الصف 40px | حشو 5px 6px
-     تظليل الصفوف الزوجية #f7f7f7 | عرض الجدول 724px left:35px أعمدة 150/212/212/150
-     عنوان عربي #1a5b8c حجم 21px + إنجليزي 16.5px بخط Times، موضع العنوان top:153px
-     فجوة العنوانين 12px (النموذج: فجوة حبر 14px — كانت 20px زائدة)،
-     الفاصل العمودي بين الصورتين: طول طبيعي 191px من أعلى صف الفوتر (النماذج:
-     190.9px بالضبط)، مزاح يميناً ليستقر عند x=414.8 (النماذج: 414.83) محاذاً
-     خط منتصف الجدول — تموضع مطلق حتى لا يدفع الصف السفلي */
-  td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; line-height: 1.2; }
-  .label-en { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 12.5px; width: 150px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
-  .label-ar { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
-  .val { border: 1.4px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: normal; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
-  .val[dir="rtl"] { font-family: 'Tinos', 'Noto Sans Arabic', 'Tajawal', serif; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.4px solid #cccccc; padding: 5px 6px; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Noto Sans Arabic', serif; }
-  .dur-row td.label-ar { font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
-  .dur-label { font-weight: bold; }
-  tr:nth-child(even) td { background-color: #f7f7f7; }
-</style>
-<div style="width:794px;height:1123px;background:#fff;font-family:'Noto Sans Arabic','Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
-  
-  <!-- Header: Seha Logo (left) -->
-  <img src="${sehaLogo}" style="position:absolute;top:32px;left:38px;width:155px;height:auto;">
-
-  <!-- Header: Geometric graphic (right) -->
-  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:22px;right:30px;opacity:0.8;">
-    <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
-  </svg>
-  
-  <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:68px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
-  
-  <!-- Header: Arabic & English Titles -->
-  <div style="position:absolute;top:153px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 12px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#2c3e77;font-size:16.5px;font-weight:bold;font-family:'Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
-  </div>
-
-  <!-- Data Table & Footer Container -->
-  <div style="position:absolute;top:228px;left:35px;width:724px;">
-  <table style="width:100%;border-collapse:collapse;font-size:12.5px;text-align:center;table-layout:fixed;">
+        // نوع «مشهد مراجعة» (Statement of Visit): بنية صفوف مختلفة عن الإجازة المرضية —
+        // رمز الإجازة ← صفوف داكنة (الدخول/الخروج/فترة الانتظار) ← تاريخ الإصدار ← بيانات المريض ← نوع الزيارة
+        // نفس تنسيقات الاستعلام تماماً (نفس الألوان والأعمدة والخطوط والفوتر)
+        const isVisitReview = d.type === 'visit_review';
+        const tableRows = isVisitReview ? `
+    <tr>
+      <td class="label-en" style="width:150px;">Leave ID</td>
+      <td class="val" colspan="2" style="width:424px; font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
+      <td class="label-ar" style="width:150px;">رمز الإجازة</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Admission Date</td>
+      <td style="width:212px;">${d.admissionG || ''}</td>
+      <td dir="rtl" style="width:212px;">${d.admissionH || ''}</td>
+      <td class="dur-label" style="width:150px;">تاريخ الدخول</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Discharge Date</td>
+      <td style="width:212px;">${d.dischargeG || ''}</td>
+      <td dir="rtl" style="width:212px;">${d.dischargeH || ''}</td>
+      <td class="dur-label" style="width:150px;">تاريخ الخروج</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Waiting Period</td>
+      <td style="width:212px;">${d.waitingEn || ''}</td>
+      <td dir="rtl" style="width:212px;">${d.waitingAr || ''}</td>
+      <td class="dur-label" style="width:150px;">فترة الانتظار</td>
+    </tr>
+    <tr>
+      <td class="label-en">Issue Date</td>
+      <td class="val" colspan="2">${d.issueDate || ''}</td>
+      <td class="label-ar">تاريخ إصدار التقرير</td>
+    </tr>
+    <tr>
+      <td class="label-en">${d.nameLabelEn || 'Name'}</td>
+      <td class="val">${d.nameEn || ''}</td>
+      <td class="val">${d.nameAr || ''}</td>
+      <td class="label-ar">${d.nameLabelAr || 'الاسم'}</td>
+    </tr>
+    <tr>
+      <td class="label-en">National ID / Iqama</td>
+      <td class="val" colspan="2" style="font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.nationalId || ''}</td>
+      <td class="label-ar">رقم الهوية/الاقامه</td>
+    </tr>
+    <tr>
+      <td class="label-en">Nationality</td>
+      <td class="val">${d.nationalityEn || 'Saudi Arabia'}</td>
+      <td class="val">${d.nationalityAr || 'السعودية'}</td>
+      <td class="label-ar">الجنسية</td>
+    </tr>
+    <tr>
+      <td class="label-en">Employer</td>
+      <td class="val">${d.employerEn || ''}</td>
+      <td class="val">${d.employerAr || ''}</td>
+      <td class="label-ar">جهة العمل</td>
+    </tr>
+    <tr>
+      <td class="label-en">${d.docLabelEn || 'Physician Name'}</td>
+      <td class="val">${d.doctorEn || ''}</td>
+      <td class="val">${d.doctorAr || ''}</td>
+      <td class="label-ar">${d.docLabelAr || 'اسم الطبيب المعالج'}</td>
+    </tr>
+    <tr>
+      <td class="label-en">Position</td>
+      <td class="val">${d.positionEn || ''}</td>
+      <td class="val">${d.positionAr || ''}</td>
+      <td class="label-ar">المسمى الوظيفى</td>
+    </tr>
+    <tr>
+      <td class="label-en">Visit Type</td>
+      <td class="val">${d.visitTypeEn || ''}</td>
+      <td class="val">${d.visitTypeAr || ''}</td>
+      <td class="label-ar">نوع الزيارة</td>
+    </tr>
+  ` : `
     <tr>
       <td class="label-en" style="width:150px;">Leave ID</td>
       <td class="val" colspan="2" style="width:424px; font-family: 'Tinos', 'Times New Roman', serif; white-space: nowrap;">${d.leaveId || ''}</td>
@@ -3462,6 +3480,66 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <td class="val">${d.positionAr || ''}</td>
       <td class="label-ar">المسمى الوظيفى</td>
     </tr>
+  `;
+
+        // Build self-contained HTML matching Sehaty platform exactly
+        const html = `<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<style>
+  ${EMBEDDED_FONTS_CSS}
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: #fff !important; }
+  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
+  @page { size: 794px 1123px; margin: 0; }
+  table { border-spacing: 0; direction: ltr; }
+  tr { height: 40px; }
+  /* الخطوط من commit 94c2194: عربي = Noto Sans Arabic | إنجليزي/أرقام = Tinos (Times).
+     التنسيق النهائي المعتمد من كود seha-sickleave بطلب المالك:
+     حدود الجدول 1.4px solid #cccccc | تسميات #154d79 (12.5px إنجليزي / 13.5px عربي)
+     قيم #0d2847 (12.5px) | صف المدة خلفية #1F3864 | ارتفاع الصف 40px | حشو 5px 6px
+     تظليل الصفوف الزوجية #f7f7f7 | عرض الجدول 724px left:35px أعمدة 150/212/212/150
+     عنوان عربي #1a5b8c حجم 21px + إنجليزي 16.5px بخط Times، موضع العنوان top:153px
+     فجوة العنوانين 12px (النموذج: فجوة حبر 14px — كانت 20px زائدة)،
+     الفاصل العمودي بين الصورتين: طول طبيعي 191px من أعلى صف الفوتر (النماذج:
+     190.9px بالضبط)، مزاح يميناً ليستقر عند x=414.8 (النماذج: 414.83) محاذاً
+     خط منتصف الجدول — تموضع مطلق حتى لا يدفع الصف السفلي */
+  td { font-family: 'Noto Sans Arabic', 'Tajawal', 'Arial', sans-serif; line-height: 1.2; }
+  .label-en { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 12.5px; width: 150px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', serif; }
+  .label-ar { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; text-align: center !important; vertical-align: middle !important; font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
+  .val { border: 1.4px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: normal; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Times New Roman', 'Noto Sans Arabic', serif; }
+  .val[dir="rtl"] { font-family: 'Tinos', 'Noto Sans Arabic', 'Tajawal', serif; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.4px solid #cccccc; padding: 5px 6px; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; font-family: 'Tinos', 'Noto Sans Arabic', serif; }
+  .dur-row td.label-ar { font-family: 'Noto Sans Arabic', 'Tajawal', sans-serif; }
+  .dur-label { font-weight: bold; }
+  tr:nth-child(even) td { background-color: #f7f7f7; }
+</style>
+<div style="width:794px;height:1123px;background:#fff;font-family:'Noto Sans Arabic','Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
+  
+  <!-- Header: Seha Logo (left) -->
+  <img src="${sehaLogo}" style="position:absolute;top:32px;left:38px;width:155px;height:auto;">
+
+  <!-- Header: Geometric graphic (right) -->
+  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:22px;right:30px;opacity:0.8;">
+    <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>
+  
+  <!-- Header: KSA Calligraphy (center) -->
+  <img src="${ksaCalligraphy}" style="position:absolute;top:68px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
+  
+  <!-- Header: Arabic & English Titles -->
+  <div style="position:absolute;top:153px;left:0;width:794px;text-align:center;">
+    <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;margin:0 0 12px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+    <h2 style="color:#2c3e77;font-size:16.5px;font-weight:bold;font-family:'Tinos','Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
+  </div>
+
+  <!-- Data Table & Footer Container -->
+  <div style="position:absolute;top:228px;left:35px;width:724px;">
+  <table style="width:100%;border-collapse:collapse;font-size:12.5px;text-align:center;table-layout:fixed;">
+${tableRows}
   </table>
 
   <!-- ===== FOOTER ===== -->
@@ -3610,7 +3688,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             : (d.titleAr ? `📄 ${d.titleAr} الخاص بك` : '📄 تقرير الإجازة المرضية الخاص بك');
         const docFileName = isTrial
             ? 'Trial_Sample.pdf'
-            : (filename || (d.type === 'companion' ? 'Patient_Companion_Report.pdf' : (d.type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : 'sickLeaves.pdf')));
+            : (filename || (d.type === 'companion' ? 'Patient_Companion_Report.pdf' : (d.type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : (d.type === 'visit_review' ? 'Statement_of_Visit.pdf' : 'sickLeaves.pdf'))));
 
         // Local-test hook: with the sentinel test token we skip the actual Telegram
         // upload but keep ALL other logic (report persistence, point deduction) intact.

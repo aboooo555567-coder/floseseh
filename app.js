@@ -545,7 +545,7 @@ const app = {
                 card.innerHTML = `
                     <div class="report-info">
                         <h4>${r.patientName}</h4>
-                        <p>${r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : 'إجازة مرضية')} • ${r.issueDate}</p>
+                        <p>${r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : (r.type === 'visit_review' ? 'مشهد مراجعة' : 'إجازة مرضية'))} • ${r.issueDate}</p>
                     </div>
                     <div class="report-actions">
                         <button onclick="app.copyReportId('${r.id}')" title="نسخ رقم التقرير">📋</button>
@@ -570,6 +570,7 @@ const app = {
         stats: {},
         activeFilter: 'all',
         searchQuery: '',
+        sortBy: 'default',
         selectedUser: null,
         addDurationDays: 30,
         addPlan: 'unlimited',
@@ -881,6 +882,32 @@ const app = {
         setVal('stat-unlimited-users', s.unlimitedSubscribers);
     },
 
+    // تطبيع النص العربي للبحث: توحيد الهمزات والتاء المربوطة والألف المقصورة وحذف التشكيل
+    normalizeArabicText(s) {
+        return String(s || '')
+            .toLowerCase()
+            .replace(/[\u064B-\u0652\u0670]/g, '')  // التشكيل
+            .replace(/[أإآٱ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/ى/g, 'ي')
+            .replace(/ـ/g, '');
+    },
+
+    // ترتيب المشتركين حسب اختيار الإدارة من قائمة «ترتيب حسب»
+    setAdminSort(sortBy) {
+        this.adminState.sortBy = sortBy || 'default';
+        this.renderAdminUsers();
+    },
+
+    // ترتيب الحالة: فعال أولاً ثم بدون اشتراك/منتهي ثم موقوف ثم ملغي
+    adminStatusRank(u) {
+        if (u.status === 'suspended') return 1;
+        if (u.status === 'cancelled') return 0;
+        const isActiveNow = u.status === 'active' && ((u.daysRemaining || 0) > 0 || u.report_payment_source === 'points');
+        if (isActiveNow) return 3;
+        return 2; // بدون اشتراك / منتهي
+    },
+
     renderAdminUsers() {
         const listEl = document.getElementById('admin-subscribers-list');
         if (!listEl) return;
@@ -896,14 +923,36 @@ const app = {
             filtered = filtered.filter(u => u.status === 'cancelled' || u.daysRemaining <= 0);
         }
 
-        // Filter by Search Query
+        // Filter by Search Query — بالاسم أو المعرف (Username) أو رقم Chat ID مع تطبيع عربي
         if (this.adminState.searchQuery) {
-            const q = this.adminState.searchQuery.toLowerCase().trim();
+            const q = this.normalizeArabicText(this.adminState.searchQuery).trim();
             filtered = filtered.filter(u => 
-                String(u.chatId).toLowerCase().includes(q) ||
-                String(u.username || '').toLowerCase().includes(q) ||
-                String(u.name || '').toLowerCase().includes(q)
+                this.normalizeArabicText(String(u.chatId)).includes(q) ||
+                this.normalizeArabicText(String(u.username || '')).includes(q) ||
+                this.normalizeArabicText(String(u.name || '')).includes(q)
             );
+        }
+
+        // Sort — حسب اختيار الإدارة (الافتراضي: نفس ترتيب الخادم)
+        const sortBy = this.adminState.sortBy || 'default';
+        const joinedAt = (u) => {
+            const t = Date.parse(u.subscription_start_date || u.updatedAt || '');
+            return isNaN(t) ? 0 : t;
+        };
+        if (sortBy === 'name') {
+            filtered.sort((a, b) => this.normalizeArabicText(a.name || '').localeCompare(this.normalizeArabicText(b.name || ''), 'ar'));
+        } else if (sortBy === 'status') {
+            filtered.sort((a, b) => (this.adminStatusRank(b) - this.adminStatusRank(a)) || ((b.daysRemaining || 0) - (a.daysRemaining || 0)) || ((b.points || 0) - (a.points || 0)));
+        } else if (sortBy === 'newest') {
+            filtered.sort((a, b) => joinedAt(b) - joinedAt(a));
+        } else if (sortBy === 'oldest') {
+            filtered.sort((a, b) => joinedAt(a) - joinedAt(b));
+        } else if (sortBy === 'activity') {
+            filtered.sort((a, b) => (b.reportsCount || 0) - (a.reportsCount || 0) || joinedAt(a) - joinedAt(b));
+        } else if (sortBy === 'points') {
+            filtered.sort((a, b) => (b.points || 0) - (a.points || 0));
+        } else if (sortBy === 'days') {
+            filtered.sort((a, b) => (b.daysRemaining || 0) - (a.daysRemaining || 0));
         }
 
         if (filtered.length === 0) {
@@ -922,6 +971,13 @@ const app = {
             
             const payBadge = u.report_payment_source === 'unlimited' ? '<span class="badge badge-unlimited">♾️ غير محدود</span>' : (u.report_payment_source === 'none' ? '<span class="badge" style="background:#f1f5f9; color:#94a3b8;">⚪ بدون</span>' : '<span class="badge badge-points">🪙 نقاط</span>');
             const ownerBadge = isOwner ? '<span class="badge badge-owner">👑 المالك</span>' : '';
+            // تاريخ انضمام المشترك (يظهر في سطر المعرف) — يفيد عند الترتيب بتاريخ الانضمام
+            const joinedTs = Date.parse(u.subscription_start_date || '');
+            let joinedLabel = '';
+            if (!isNaN(joinedTs)) {
+                const j = new Date(joinedTs);
+                joinedLabel = ` • انضم: ${String(j.getDate()).padStart(2, '0')}-${String(j.getMonth() + 1).padStart(2, '0')}-${j.getFullYear()}`;
+            }
 
             html += `
             <div class="admin-subscriber-card ${isOwner ? 'is-owner' : ''}" id="user-card-${u.chatId}">
@@ -931,7 +987,7 @@ const app = {
                             <span>${u.name || (u.username ? '@' + u.username : 'مشترك')}</span>
                             ${ownerBadge}
                         </div>
-                        <div class="sub-card-cid">ID: ${u.chatId} ${u.username ? '(@' + u.username + ')' : ''}</div>
+                        <div class="sub-card-cid">ID: ${u.chatId} ${u.username ? '(@' + u.username + ')' : ''}${joinedLabel}</div>
                     </div>
                     <span class="badge ${statusClass}">${statusLabel}</span>
                 </div>
@@ -1349,7 +1405,7 @@ const app = {
                                 <span style="font-family:monospace; color:#0d9488;">${r.id || '-'}</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; margin-top:4px;">
-                                <span>نوع: ${r.type === 'companion' ? 'مرافقة' : (r.type === 'companion_review' ? 'مشهد مرافق' : 'إجازة مرضية')}</span>
+                                <span>نوع: ${r.type === 'companion' ? 'مرافقة' : (r.type === 'companion_review' ? 'مشهد مرافق' : (r.type === 'visit_review' ? 'مشهد مراجعة' : 'إجازة مرضية'))}</span>
                                 <span>التاريخ: ${r.issueDate || '-'}</span>
                             </div>
                         </div>`;
@@ -1433,13 +1489,35 @@ const app = {
         if (type === 'sickleave') title = 'إصدار تقرير إجازة مرضية';
         else if (type === 'companion') title = 'إصدار تقرير مرافقة مريض';
         else if (type === 'companion_review') title = 'إصدار مشهد مراجعة لمرافق';
+        else if (type === 'visit_review') title = 'إصدار مشهد مراجعة';
         document.getElementById('form-title').innerText = title;
         
         const typeSelect = document.getElementById('leave_type');
         typeSelect.innerHTML = '<option value="GSL">GSL</option><option value="PSL">PSL</option>';
         
         const isCompanionType = (type === 'companion' || type === 'companion_review');
+        const isVisitReview = (type === 'visit_review');
         document.getElementById('escort-fields').style.display = isCompanionType ? 'block' : 'none';
+        
+        // حقول مشهد المراجعة (وقت الدخول/الخروج + نوع الزيارة) — تظهر لهذا النوع فقط
+        const visitFields = document.getElementById('visit-review-fields');
+        if (visitFields) visitFields.style.display = isVisitReview ? 'block' : 'none';
+        ['admission_time', 'discharge_time'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.required = isVisitReview;
+        });
+        
+        // مشهد المراجعة بلا مدة إجازة وبلا تواريخ ملف — الاستعلام يعرض الدخول/الخروج مباشرة
+        const durationGroup = document.getElementById('duration-group');
+        if (durationGroup) durationGroup.style.display = isVisitReview ? 'none' : 'block';
+        const durationInput = document.getElementById('duration');
+        if (durationInput) durationInput.required = !isVisitReview;
+        const fileDatesToggle = document.getElementById('file-dates-toggle-group');
+        if (fileDatesToggle) fileDatesToggle.style.display = isVisitReview ? 'none' : 'block';
+        const fileDatesFields = document.getElementById('file-dates-fields');
+        if (fileDatesFields) fileDatesFields.style.display = 'none';
+        const fileDatesChk = document.getElementById('enable_file_dates');
+        if (fileDatesChk) fileDatesChk.checked = false;
         
         // Dynamically move National ID field based on type
         const idGroup = document.getElementById('national-id-group');
@@ -1469,6 +1547,17 @@ const app = {
         let randHours = Math.floor(Math.random() * 24).toString().padStart(2, '0');
         let randMinutes = Math.floor(Math.random() * 60).toString().padStart(2, '0');
         document.getElementById('issue_time').value = `${randHours}:${randMinutes}`;
+        
+        // مشهد المراجعة: وقت دخول عشوائي وخروج بعده بساعة إلى ثلاث ساعات
+        if (isVisitReview) {
+            const admH = Math.floor(Math.random() * 22);
+            const admM = Math.floor(Math.random() * 60);
+            const disTotal = Math.min(admH * 60 + admM + 60 + Math.floor(Math.random() * 121), 23 * 60 + 59);
+            const pad = (n) => String(n).padStart(2, '0');
+            document.getElementById('admission_time').value = `${pad(admH)}:${pad(admM)}`;
+            document.getElementById('discharge_time').value = `${pad(Math.floor(disTotal / 60))}:${pad(disTotal % 60)}`;
+            document.getElementById('visit_type_ar').value = 'طوارئ';
+        }
     },
 
     syncHospitalEn() {
@@ -1793,6 +1882,37 @@ const app = {
         return `${hours}:${minutes} ${ampm}`;
     },
 
+    // صيغة 12 ساعة بصفر بادئ للساعات — لمشهد المراجعة (07:25 PM)
+    formatTime12En(timeStr) {
+        if(!timeStr) return '';
+        let [h, m] = timeStr.split(':');
+        h = parseInt(h, 10);
+        if (isNaN(h)) return timeStr;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12; if (h === 0) h = 12;
+        return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
+    },
+
+    formatTime12Ar(timeStr) {
+        if(!timeStr) return '';
+        let [h, m] = timeStr.split(':');
+        h = parseInt(h, 10);
+        if (isNaN(h)) return timeStr;
+        const period = h >= 12 ? 'مساءً' : 'صباحاً';
+        h = h % 12; if (h === 0) h = 12;
+        return `${String(h).padStart(2, '0')}:${m} ${period}`;
+    },
+
+    // فترة الانتظار بالساعات (الفارق بين وقت الدخول والخروج) — الدقائق -- كالنموذج المرجعي
+    computeWaitingHours(admTime, disTime) {
+        try {
+            const toMin = (t) => { const [h, m] = String(t).split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+            let diff = toMin(disTime) - toMin(admTime);
+            if (diff < 0) diff = 0;
+            return String(Math.floor(diff / 60)).padStart(2, '0');
+        } catch { return '01'; }
+    },
+
     formatDateLabel(dateStr) {
         const d = new Date(dateStr);
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -1915,6 +2035,30 @@ const app = {
         } else if (type === 'companion_review') {
             titleAr = 'مشهد مراجعة لمرافق';
             titleEn = 'Companion Attendance Certificate';
+        } else if (type === 'visit_review') {
+            titleAr = 'مشهد مراجعة';
+            titleEn = 'Statement of Visit';
+        }
+
+        // مشهد المراجعة: وقتا الدخول والخروج + نوع الزيارة + فترة الانتظار (ساعات، الدقائق -- كالنموذج المرجعي)
+        const isVisitReview = (type === 'visit_review');
+        let admissionGVal = gregoAdm, admissionHVal = hijriAdm;
+        let dischargeGVal = gregoDis, dischargeHVal = hijriDis;
+        let waitingEn = '', waitingAr = '', visitTypeEn = '', visitTypeAr = '';
+        let admissionTimeVal = '', dischargeTimeVal = '';
+        if (isVisitReview) {
+            admissionTimeVal = document.getElementById('admission_time').value || '07:25';
+            dischargeTimeVal = document.getElementById('discharge_time').value || '08:35';
+            visitTypeAr = document.getElementById('visit_type_ar').value || 'طوارئ';
+            const visitTypeMap = { 'طوارئ': 'Emergency', 'عيادة': 'Outpatient Clinic', 'مراجعة': 'Follow-up' };
+            visitTypeEn = visitTypeMap[visitTypeAr] || 'Emergency';
+            admissionGVal = `${gregoAdm} - ${this.formatTime12En(admissionTimeVal)}`;
+            admissionHVal = `${hijriAdm} - ${this.formatTime12Ar(admissionTimeVal)}`;
+            dischargeGVal = `${gregoDis} - ${this.formatTime12En(dischargeTimeVal)}`;
+            dischargeHVal = `${hijriDis} - ${this.formatTime12Ar(dischargeTimeVal)}`;
+            const waitHours = this.computeWaitingHours(admissionTimeVal, dischargeTimeVal);
+            waitingEn = `${waitHours} hours and -- mins`;
+            waitingAr = `${waitHours} ساعة و -- دقيقة`;
         }
 
         const reportDataPayload = {
@@ -1923,10 +2067,14 @@ const app = {
             leaveId: reportId,
             durationEn: `${duration} day ( ${gregoAdmLeave} to ${gregoDisLeave} )`,
             durationAr: `${duration} يوم ( <span dir="ltr">${hijriAdmLeave}</span> الى <span dir="ltr">${hijriDisLeave}</span> )`,
-            admissionG: gregoAdm,
-            admissionH: hijriAdm,
-            dischargeG: gregoDis,
-            dischargeH: hijriDis,
+            admissionG: admissionGVal,
+            admissionH: admissionHVal,
+            dischargeG: dischargeGVal,
+            dischargeH: dischargeHVal,
+            waitingEn: waitingEn,
+            waitingAr: waitingAr,
+            visitTypeEn: visitTypeEn,
+            visitTypeAr: visitTypeAr,
             issueDate: this.formatGregorian(issueDate),
             nameLabelEn: isCompanionType ? 'Companion Name' : 'Name',
             nameLabelAr: isCompanionType ? 'اسم المرافق' : 'الاسم',
@@ -1938,9 +2086,9 @@ const app = {
             relationEn: isCompanionType ? relEn : '',
             relationAr: isCompanionType ? relAr : '',
             employerEn: "",
-            employerAr: employer || 'غير محدد',
-            docLabelEn: isCompanionType ? 'Physician Name' : 'Practitioner Name',
-            docLabelAr: isCompanionType ? 'اسم الطبيب المعالج' : 'اسم الممارس',
+            employerAr: employer || (isVisitReview ? 'إلى من يهمه الأمر' : 'غير محدد'),
+            docLabelEn: (isCompanionType || isVisitReview) ? 'Physician Name' : 'Practitioner Name',
+            docLabelAr: (isCompanionType || isVisitReview) ? 'اسم الطبيب المعالج' : 'اسم الممارس',
             doctorEn: docNameEn.toUpperCase(),
             doctorAr: docNameAr,
             positionEn: jobEn,
@@ -1971,7 +2119,7 @@ const app = {
                 body: JSON.stringify({
                     chatId: app.state.chatId,
                     reportData: reportDataPayload,
-                    filename: 'sickLeaves.pdf',
+                    filename: type === 'visit_review' ? 'Statement_of_Visit.pdf' : 'sickLeaves.pdf',
                     reportId: reportId,
                     trial: isTrial
                 })
@@ -2029,6 +2177,10 @@ const app = {
                             data: {
                                 admission_date: admission,
                                 discharge_date: discharge,
+                                admission_time: admissionTimeVal,
+                                discharge_time: dischargeTimeVal,
+                                visit_type: visitTypeAr,
+                                visit_type_ar: visitTypeAr, // بنفس معرف حقل النموذج ليعمل تعبئة التعديل تلقائياً
                                 file_dates_enabled: fileDatesEnabled,
                                 file_admission_date: fileDatesEnabled ? (document.getElementById('file_admission_date')?.value || '') : '',
                                 file_discharge_date: fileDatesEnabled ? (document.getElementById('file_discharge_date')?.value || '') : '',
