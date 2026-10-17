@@ -1623,6 +1623,23 @@
       "daysRemaining": 0,
       "daysUsed": 0,
       "reportsCount": 0
+    },
+    "8007541541": {
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 0,
+      "subscriptionExpires": null,
+      "subscription_end_date": null,
+      "status": "active",
+      "plan": "points",
+      "report_payment_source": "points",
+      "username": "wdggjyewfgh",
+      "name": null,
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-10-17T11:27:33.750Z"
     }
   },
   "transactions": [
