@@ -783,6 +783,43 @@
           "hospital_type": "gov",
           "license_number": ""
         }
+      },
+      "PSL26101110645": {
+        "id": "PSL26101110645",
+        "patientName": "ناصر احمد الزهراني ",
+        "type": "sickleave",
+        "issueDate": "2026-10-11",
+        "data": {
+          "admission_date": "2026-10-11",
+          "discharge_date": "2026-10-13",
+          "admission_time": "",
+          "discharge_time": "",
+          "visit_type": "",
+          "visit_type_ar": "",
+          "file_dates_enabled": true,
+          "file_admission_date": "2026-10-11",
+          "file_discharge_date": "2026-10-13",
+          "duration": "3",
+          "issue_date": "2026-10-11",
+          "issue_time": "18:00",
+          "national_id": "1109708832",
+          "patient_name_ar": "ناصر احمد الزهراني ",
+          "patient_name_en": "NASSER AHMED AL-ZAHRANI",
+          "nationality": "السعودية",
+          "employer": "اخرى",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "أبرار محمد الشهراني",
+          "doctor_name_en": "ABRAR MOHAMMED AL-SHAHRANI",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى الملك خالد ومركز الأمير سلطان للخدمات الصحية بالخرج",
+          "hospital_en": "King Khalid Hospital and Prince Sultan Health Services Center, Al-Kharj",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
       }
     },
     "8337606751": {
@@ -951,5 +988,5 @@
       }
     }
   },
-  "updatedAt": "2026-10-16T16:20:18.063Z"
+  "updatedAt": "2026-10-17T10:16:49.545Z"
 }
