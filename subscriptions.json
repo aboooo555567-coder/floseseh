@@ -883,8 +883,8 @@
       "name": "الملكه👑👑👑"
     },
     "5729445246": {
-      "points": 5,
-      "balance_points": 5,
+      "points": 0,
+      "balance_points": 0,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1163,16 +1163,53 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "PSL26101110645",
+          "patientName": "ناصر احمد الزهراني ",
+          "type": "sickleave",
+          "issueDate": "2026-10-11",
+          "data": {
+            "admission_date": "2026-10-11",
+            "discharge_date": "2026-10-13",
+            "admission_time": "",
+            "discharge_time": "",
+            "visit_type": "",
+            "visit_type_ar": "",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-10-11",
+            "file_discharge_date": "2026-10-13",
+            "duration": "3",
+            "issue_date": "2026-10-11",
+            "issue_time": "18:00",
+            "national_id": "1109708832",
+            "patient_name_ar": "ناصر احمد الزهراني ",
+            "patient_name_en": "NASSER AHMED AL-ZAHRANI",
+            "nationality": "السعودية",
+            "employer": "اخرى",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "أبرار محمد الشهراني",
+            "doctor_name_en": "ABRAR MOHAMMED AL-SHAHRANI",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الملك خالد ومركز الأمير سلطان للخدمات الصحية بالخرج",
+            "hospital_en": "King Khalid Hospital and Prince Sultan Health Services Center, Al-Kharj",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-17T10:04:32.743Z",
+      "updatedAt": "2026-10-17T10:16:49.543Z",
       "subscription_start_date": "2026-09-18T22:43:29.878Z",
       "daysRemaining": 0,
       "daysUsed": 28,
-      "reportsCount": 9,
+      "reportsCount": 10,
       "name": "『』"
     },
     "7872802641": {
@@ -1589,6 +1626,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1792232209201_v4uv4k",
+      "timestamp": "2026-10-17T10:16:49.201Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "5729445246",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "0",
+      "details": "خصم 5 نقاط عند إصدار التقرير PSL26101110645 (generate-native-pdf)"
+    },
     {
       "id": "tx_1792167617752_p04r56",
       "timestamp": "2026-10-16T16:20:17.752Z",
