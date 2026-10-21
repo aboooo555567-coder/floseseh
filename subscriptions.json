@@ -1448,8 +1448,8 @@
       "reportsCount": 0
     },
     "8538927582": {
-      "points": 70,
-      "balance_points": 70,
+      "points": 65,
+      "balance_points": 65,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1554,16 +1554,53 @@
             "hospital_ar": "مستشفى قلوة العام",
             "hospital_en": "Qilwah General Hospital"
           }
+        },
+        {
+          "id": "PSL26102151102",
+          "patientName": "مريم عبد الحفيظ عبد الرحمن سعيد",
+          "type": "sickleave",
+          "issueDate": "2026-10-21",
+          "data": {
+            "admission_date": "2026-10-21",
+            "discharge_date": "2026-10-21",
+            "admission_time": "",
+            "discharge_time": "",
+            "visit_type": "",
+            "visit_type_ar": "",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-10-21",
+            "file_discharge_date": "2026-10-21",
+            "duration": "1",
+            "issue_date": "2026-10-21",
+            "issue_time": "08:30",
+            "national_id": "1137786628",
+            "patient_name_ar": "مريم عبد الحفيظ عبد الرحمن سعيد",
+            "patient_name_en": "MARYAM ABDULHAFIZ ABDULRAHMAN SAEED",
+            "nationality": "السعودية",
+            "employer": "اخرى",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "سميرة محمد علي الشهري ",
+            "doctor_name_en": "SAMIRAH MOHAMMED ALI AL-SHEHRI",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الملك فهد العام بجدة",
+            "hospital_en": "King Abdullah Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-21T13:51:35.370Z",
+      "updatedAt": "2026-10-21T14:04:59.560Z",
       "subscription_start_date": "2026-10-02T11:17:46.056Z",
       "daysRemaining": 0,
       "daysUsed": 19,
-      "reportsCount": 4
+      "reportsCount": 5
     },
     "8865996316": {
       "points": 5,
@@ -1647,6 +1684,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1792591499002_bvkemg",
+      "timestamp": "2026-10-21T14:04:59.002Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8538927582",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "70",
+      "new_value": "65",
+      "details": "خصم 5 نقاط عند إصدار التقرير PSL26102151102 (generate-native-pdf)"
+    },
     {
       "id": "tx_1792504003139_t3p75i",
       "timestamp": "2026-10-20T13:46:43.139Z",
