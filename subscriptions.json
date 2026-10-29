@@ -1448,8 +1448,8 @@
       "reportsCount": 0
     },
     "8538927582": {
-      "points": 65,
-      "balance_points": 65,
+      "points": 60,
+      "balance_points": 60,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1591,16 +1591,53 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "PSL26102979863",
+          "patientName": "عمر حمد سعود الحربي ",
+          "type": "sickleave",
+          "issueDate": "2026-10-29",
+          "data": {
+            "admission_date": "2026-10-29",
+            "discharge_date": "2026-10-29",
+            "admission_time": "",
+            "discharge_time": "",
+            "visit_type": "",
+            "visit_type_ar": "",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-10-29",
+            "file_discharge_date": "2026-10-29",
+            "duration": "1",
+            "issue_date": "2026-10-29",
+            "issue_time": "06:40",
+            "national_id": "1136825195",
+            "patient_name_ar": "عمر حمد سعود الحربي ",
+            "patient_name_en": "OMAR HAMAD SAUD AL-HARBI",
+            "nationality": "السعودية",
+            "employer": "جامعة حائل",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "متعب فهد العتيبي ",
+            "doctor_name_en": "MUTAIB FAHD AL-OTAIBI",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى حائل العام",
+            "hospital_en": "Hail General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-10-29T03:34:43.684Z",
+      "updatedAt": "2026-10-29T03:43:14.018Z",
       "subscription_start_date": "2026-10-02T11:17:46.056Z",
       "daysRemaining": 0,
       "daysUsed": 26,
-      "reportsCount": 5
+      "reportsCount": 6
     },
     "8865996316": {
       "points": 5,
@@ -1684,6 +1721,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1793245393735_66lewt",
+      "timestamp": "2026-10-29T03:43:13.735Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8538927582",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "65",
+      "new_value": "60",
+      "details": "خصم 5 نقاط عند إصدار التقرير PSL26102979863 (generate-native-pdf)"
+    },
     {
       "id": "tx_1792591499002_bvkemg",
       "timestamp": "2026-10-21T14:04:59.002Z",
