@@ -1246,7 +1246,11 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T23:00:31.482Z"
+      "updatedAt": "2026-10-30T15:31:28.900Z",
+      "subscription_start_date": "2026-09-18T23:00:31.482Z",
+      "daysRemaining": 0,
+      "daysUsed": 41,
+      "reportsCount": 0
     },
     "8913876643": {
       "points": 0,
