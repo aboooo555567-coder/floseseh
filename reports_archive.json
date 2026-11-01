@@ -1059,8 +1059,45 @@
           "hospital_type": "gov",
           "license_number": ""
         }
+      },
+      "GSL26091465773": {
+        "id": "GSL26091465773",
+        "patientName": "سعد سعيد سعد الشهراني ",
+        "type": "sickleave",
+        "issueDate": "2026-09-14",
+        "data": {
+          "admission_date": "2026-09-14",
+          "discharge_date": "2026-09-14",
+          "admission_time": "",
+          "discharge_time": "",
+          "visit_type": "",
+          "visit_type_ar": "",
+          "file_dates_enabled": true,
+          "file_admission_date": "2026-09-14",
+          "file_discharge_date": "2026-09-14",
+          "duration": "1",
+          "issue_date": "2026-09-14",
+          "issue_time": "21:20",
+          "national_id": "1139141533",
+          "patient_name_ar": "سعد سعيد سعد الشهراني ",
+          "patient_name_en": "SAAD SAEED SAAD AL-SHAHRANI",
+          "nationality": "السعودية",
+          "employer": "تقنية",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "حازم محمد الجهني ",
+          "doctor_name_en": "HAZEM MOHAMMED AL-JUHANI",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى الحياة خميس مشيط",
+          "hospital_en": "Al-Hayat Hospital - Khamis Mushait",
+          "hospital_type": "gov",
+          "license_number": ""
+        }
       }
     }
   },
-  "updatedAt": "2026-10-29T03:43:14.029Z"
+  "updatedAt": "2026-11-01T14:31:04.607Z"
 }
