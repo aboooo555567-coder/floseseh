@@ -1452,8 +1452,8 @@
       "reportsCount": 0
     },
     "8538927582": {
-      "points": 50,
-      "balance_points": 50,
+      "points": 45,
+      "balance_points": 45,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1672,16 +1672,37 @@
             "hospital_ar": "مستشفى الحياة – خميس مشيط",
             "hospital_en": "Al-Hayat Hospital - Khamis Mushait"
           }
+        },
+        {
+          "id": "PSL26090805279",
+          "patientName": "سعد سعيد سعد الشهراني ",
+          "type": "sickleave",
+          "issueDate": "08-09-2026",
+          "data": {
+            "duration": "1",
+            "issue_date": "08-09-2026",
+            "national_id": "1139141533",
+            "patient_name_ar": "سعد سعيد سعد الشهراني ",
+            "patient_name_en": "SAAD SAEED SAAD AL-SHAHRANI",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الحياة خميس مشيط",
+            "hospital_en": "Al-Hayat Hospital - Khamis Mushait"
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-01T14:20:15.232Z",
+      "updatedAt": "2026-11-01T14:27:08.774Z",
       "subscription_start_date": "2026-10-02T11:17:46.056Z",
       "daysRemaining": 0,
       "daysUsed": 30,
-      "reportsCount": 8
+      "reportsCount": 9
     },
     "8865996316": {
       "points": 5,
@@ -1765,6 +1786,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1793543228774_zc3h39",
+      "timestamp": "2026-11-01T14:27:08.774Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8538927582",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "50",
+      "new_value": "45",
+      "details": "خصم 5 نقاط عند إصدار التقرير PSL26090805279 (generate-native-pdf)"
+    },
     {
       "id": "tx_1793542815232_8pabs8",
       "timestamp": "2026-11-01T14:20:15.232Z",
