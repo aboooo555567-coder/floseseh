@@ -1452,8 +1452,8 @@
       "reportsCount": 0
     },
     "8538927582": {
-      "points": 45,
-      "balance_points": 45,
+      "points": 40,
+      "balance_points": 40,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1693,16 +1693,53 @@
             "hospital_ar": "مستشفى الحياة خميس مشيط",
             "hospital_en": "Al-Hayat Hospital - Khamis Mushait"
           }
+        },
+        {
+          "id": "GSL26091465773",
+          "patientName": "سعد سعيد سعد الشهراني ",
+          "type": "sickleave",
+          "issueDate": "2026-09-14",
+          "data": {
+            "admission_date": "2026-09-14",
+            "discharge_date": "2026-09-14",
+            "admission_time": "",
+            "discharge_time": "",
+            "visit_type": "",
+            "visit_type_ar": "",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-09-14",
+            "file_discharge_date": "2026-09-14",
+            "duration": "1",
+            "issue_date": "2026-09-14",
+            "issue_time": "21:20",
+            "national_id": "1139141533",
+            "patient_name_ar": "سعد سعيد سعد الشهراني ",
+            "patient_name_en": "SAAD SAEED SAAD AL-SHAHRANI",
+            "nationality": "السعودية",
+            "employer": "تقنية",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "حازم محمد الجهني ",
+            "doctor_name_en": "HAZEM MOHAMMED AL-JUHANI",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الحياة خميس مشيط",
+            "hospital_en": "Al-Hayat Hospital - Khamis Mushait",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-01T14:28:44.557Z",
+      "updatedAt": "2026-11-01T14:31:04.605Z",
       "subscription_start_date": "2026-10-02T11:17:46.056Z",
       "daysRemaining": 0,
       "daysUsed": 30,
-      "reportsCount": 9
+      "reportsCount": 10
     },
     "8865996316": {
       "points": 5,
@@ -1786,6 +1823,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1793543464308_sa3x60",
+      "timestamp": "2026-11-01T14:31:04.308Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8538927582",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "45",
+      "new_value": "40",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26091465773 (generate-native-pdf)"
+    },
     {
       "id": "tx_1793543228774_zc3h39",
       "timestamp": "2026-11-01T14:27:08.774Z",
