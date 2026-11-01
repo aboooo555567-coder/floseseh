@@ -1452,8 +1452,8 @@
       "reportsCount": 0
     },
     "8538927582": {
-      "points": 35,
-      "balance_points": 35,
+      "points": 30,
+      "balance_points": 30,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1767,16 +1767,53 @@
             "hospital_type": "gov",
             "license_number": ""
           }
+        },
+        {
+          "id": "GSL26101325541",
+          "patientName": "سعد سعيد سعد الشهراني ",
+          "type": "sickleave",
+          "issueDate": "2026-10-13",
+          "data": {
+            "admission_date": "2026-10-13",
+            "discharge_date": "2026-10-13",
+            "admission_time": "",
+            "discharge_time": "",
+            "visit_type": "",
+            "visit_type_ar": "",
+            "file_dates_enabled": true,
+            "file_admission_date": "2026-10-13",
+            "file_discharge_date": "2026-10-13",
+            "duration": "1",
+            "issue_date": "2026-10-13",
+            "issue_time": "09:35",
+            "national_id": "1139141533",
+            "patient_name_ar": "سعد سعيد سعد الشهراني ",
+            "patient_name_en": "SAAD SAEED SAAD AL-SHAHRANI",
+            "nationality": "السعودية",
+            "employer": "تقنية",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "بندر صالح محمد الحربي",
+            "doctor_name_en": "​BANDAR SALEH MOHAMMAD AL-HARBI",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى خميس مشيط العام",
+            "hospital_en": "Khamis Mushait General Hospital",
+            "hospital_type": "gov",
+            "license_number": ""
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-01T14:36:56.719Z",
+      "updatedAt": "2026-11-01T14:39:59.803Z",
       "subscription_start_date": "2026-10-02T11:17:46.056Z",
       "daysRemaining": 0,
       "daysUsed": 30,
-      "reportsCount": 11
+      "reportsCount": 12
     },
     "8865996316": {
       "points": 5,
@@ -1860,6 +1897,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1793543999503_pabvtu",
+      "timestamp": "2026-11-01T14:39:59.503Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8538927582",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "35",
+      "new_value": "30",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26101325541 (generate-native-pdf)"
+    },
     {
       "id": "tx_1793543816423_1jy6bw",
       "timestamp": "2026-11-01T14:36:56.423Z",
