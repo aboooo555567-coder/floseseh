@@ -584,7 +584,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-02T14:37:14.275Z",
+      "updatedAt": "2026-11-02T14:38:21.226Z",
       "reportsCount": 13,
       "daysRemaining": 318,
       "daysUsed": 48
@@ -1347,8 +1347,8 @@
       "reportsCount": 0
     },
     "8801299876": {
-      "points": 5,
-      "balance_points": 5,
+      "points": 15,
+      "balance_points": 15,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1361,7 +1361,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-02T14:34:56.672Z",
+      "updatedAt": "2026-11-02T14:38:06.647Z",
       "subscription_start_date": "2026-09-23T19:45:01.555Z",
       "daysRemaining": 0,
       "daysUsed": 39,
@@ -1955,6 +1955,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1793630286647_luaslj",
+      "timestamp": "2026-11-02T14:38:06.647Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8801299876",
+      "operation": "add_points",
+      "amount": 10,
+      "previous_value": "5",
+      "new_value": "15",
+      "details": "إضافة 10 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
     {
       "id": "tx_1793625180735_e7mnhm",
       "timestamp": "2026-11-02T13:13:00.735Z",
