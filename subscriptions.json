@@ -1935,7 +1935,7 @@
     "7188905780": {
       "username": "",
       "name": "مستخدم 7188905780",
-      "status": "cancelled",
+      "status": "active",
       "plan": "points",
       "report_payment_source": "points",
       "points": 20,
@@ -1948,13 +1948,24 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-02T13:12:47.504Z",
+      "updatedAt": "2026-11-02T13:13:00.735Z",
       "daysRemaining": 30,
       "daysUsed": 0,
       "reportsCount": 0
     }
   },
   "transactions": [
+    {
+      "id": "tx_1793625180735_e7mnhm",
+      "timestamp": "2026-11-02T13:13:00.735Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7188905780",
+      "operation": "subscription_activate",
+      "amount": null,
+      "previous_value": "cancelled",
+      "new_value": "active",
+      "details": "تغيير حالة المشترك إلى فعال"
+    },
     {
       "id": "tx_1793625167504_1k6tvc",
       "timestamp": "2026-11-02T13:12:47.504Z",
