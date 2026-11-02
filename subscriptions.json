@@ -584,7 +584,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-02T13:09:49.161Z",
+      "updatedAt": "2026-11-02T13:10:58.000Z",
       "reportsCount": 13,
       "daysRemaining": 318,
       "daysUsed": 48
@@ -1931,9 +1931,38 @@
       "daysRemaining": 0,
       "daysUsed": 0,
       "reportsCount": 0
+    },
+    "7188905780": {
+      "username": "",
+      "name": "مستخدم 7188905780",
+      "status": "active",
+      "plan": "unlimited",
+      "report_payment_source": "unlimited",
+      "points": 0,
+      "balance_points": 0,
+      "subscriptionDays": 30,
+      "subscription_start_date": "2026-11-02T13:11:03.686Z",
+      "subscription_end_date": "2026-12-02T13:11:03.686Z",
+      "subscriptionExpires": "2026-12-02T13:11:03.686Z",
+      "reports": [],
+      "referredBy": null,
+      "referralsCount": 0,
+      "referralPoints": 0,
+      "updatedAt": "2026-11-02T13:11:03.686Z"
     }
   },
   "transactions": [
+    {
+      "id": "tx_1793625063686_9phtuf",
+      "timestamp": "2026-11-02T13:11:03.686Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7188905780",
+      "operation": "add_user",
+      "amount": 0,
+      "previous_value": null,
+      "new_value": "30 days, 0 points, unlimited",
+      "details": "إضافة مشترك جديد Chat ID: 7188905780"
+    },
     {
       "id": "tx_1793605611464_xay3op",
       "timestamp": "2026-11-02T07:46:51.464Z",
