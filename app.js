@@ -1520,6 +1520,9 @@ const app = {
         if (fileDatesFields) fileDatesFields.style.display = 'none';
         const fileDatesChk = document.getElementById('enable_file_dates');
         if (fileDatesChk) fileDatesChk.checked = false;
+        // تقرير جديد = الباركود مفعّل افتراضياً (التعديل يعيد ضبطه من بيانات التقرير المحفوظ بعدها)
+        const qrChk = document.getElementById('include_qr');
+        if (qrChk) qrChk.checked = true;
         
         // Dynamically move National ID field based on type
         const idGroup = document.getElementById('national-id-group');
@@ -1650,6 +1653,7 @@ const app = {
         for (const [key, value] of Object.entries(report.data)) {
             const el = document.getElementById(key);
             if(el && key !== 'hospital_type') {
+                if (el.type === 'checkbox') { el.checked = (value === true || value === 'true'); continue; }
                 el.value = value || '';
             }
         }
@@ -2066,6 +2070,10 @@ const app = {
             waitingAr = `${waitHours} ساعة و -- دقيقة`;
         }
 
+        // خيار «إضافة باركود (QR Code) للتقرير»: مؤشر التأشير يتحكم بظهور الباركود في PDF
+        // (مؤشر مفعّل = الباركود يظهر | مؤشر فارغ = الباركود يختفي تماماً من التقرير)
+        const includeQR = document.getElementById('include_qr') ? document.getElementById('include_qr').checked : true;
+
         const reportDataPayload = {
             titleAr: titleAr,
             titleEn: titleEn,
@@ -2102,6 +2110,7 @@ const app = {
             hospitalEn: hospEn,
             hospitalLogoBase64: this.state.hospitalLogoUrl || null,
             licenseNumber: isPrivate ? license : '',
+            includeQR: includeQR,
             time: this.formatAMPM(issueTime),
             dayDate: this.formatDateLabel(issueDate),
             type: type,
@@ -2151,7 +2160,8 @@ const app = {
                 hospital_ar: hospAr,
                 hospital_en: hospEn,
                 hospital_type: isPrivate ? 'private' : 'gov',
-                license_number: license
+                license_number: license,
+                include_qr: includeQR // حفظ اختيار الباركود ليعود صحيحاً عند تعديل التقرير
             }
         };
 

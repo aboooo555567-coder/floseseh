@@ -3387,12 +3387,17 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // Generate the inquiry QR code LOCALLY (no external API dependency).
         // The old api.qrserver.com call was slow/unreliable from Render and sometimes
         // produced PDFs without the QR code at all.
+        // خيار العميل «إضافة باركود (QR Code) للتقرير»: عند إلغاء التأشير (includeQR=false)
+        // لا يُولَّد الباركود إطلاقاً ولا يُدرج في التقرير (ولا حتى الصورة الاحتياطية الخارجية).
+        const includeQR = !(d.includeQR === false || d.includeQR === 'false');
         let qrDataUrl = '';
-        try {
-            const qrTarget = `${WEB_APP_URL}/inquiry?id=${d.leaveId || ''}&nin=${d.nationalId || ''}`;
-            qrDataUrl = await QRCode.toDataURL(qrTarget, { width: 144, margin: 0, errorCorrectionLevel: 'M' });
-        } catch (qrErr) {
-            addLog(`QR generation failed (non-fatal): ${qrErr.message}`);
+        if (includeQR) {
+            try {
+                const qrTarget = `${WEB_APP_URL}/inquiry?id=${d.leaveId || ''}&nin=${d.nationalId || ''}`;
+                qrDataUrl = await QRCode.toDataURL(qrTarget, { width: 144, margin: 0, errorCorrectionLevel: 'M' });
+            } catch (qrErr) {
+                addLog(`QR generation failed (non-fatal): ${qrErr.message}`);
+            }
         }
 
         // نوع «مشهد مراجعة» (Statement of Visit): بنية صفوف مختلفة عن الإجازة المرضية —
@@ -3609,7 +3614,7 @@ ${tableRows}
       
       <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 20px -> text starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">`}
+        ${includeQR ? (qrDataUrl ? `<img src="${qrDataUrl}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">` : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">`) : ''}
         <p style="font-size:10px;font-weight:bold;font-family:'Noto Sans Arabic','Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;color:#000;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#000;text-align:center;margin:0 0 3px 0;font-weight:bold;font-family:'Tinos','Times New Roman',serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
