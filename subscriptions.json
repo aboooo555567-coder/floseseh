@@ -105,8 +105,8 @@
       "reportsCount": 0
     },
     "2085854805": {
-      "points": 5,
-      "balance_points": 5,
+      "points": 0,
+      "balance_points": 0,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -136,16 +136,37 @@
             "hospital_ar": "مستشفى الملك خالد",
             "hospital_en": "King Khaled hospital "
           }
+        },
+        {
+          "id": "GSL26110312153",
+          "patientName": "شوق فايز بن سالم العنزي",
+          "type": "sickleave",
+          "issueDate": "03-11-2026",
+          "data": {
+            "duration": "1",
+            "issue_date": "03-11-2026",
+            "national_id": "1133997542",
+            "patient_name_ar": "شوق فايز بن سالم العنزي",
+            "patient_name_en": "SHOUQ FAYEZ SALEM ALENEZI",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الملك خالد بحائل",
+            "hospital_en": "King Khaled hospital in hail"
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-03T12:21:53.429Z",
+      "updatedAt": "2026-11-03T12:25:27.156Z",
       "subscription_start_date": "2026-10-07T19:40:29.607Z",
       "daysRemaining": 0,
       "daysUsed": 26,
-      "reportsCount": 1
+      "reportsCount": 2
     },
     "6316398194": {
       "username": "zakaria_2025",
@@ -1977,6 +1998,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1793708727156_qwx7c4",
+      "timestamp": "2026-11-03T12:25:27.156Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "2085854805",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "0",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26110312153 (generate-native-pdf)"
+    },
     {
       "id": "tx_1793646330241_gzbicb",
       "timestamp": "2026-11-02T19:05:30.241Z",
