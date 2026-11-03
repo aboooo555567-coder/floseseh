@@ -129,6 +129,42 @@ const withDbLock = (fn) => {
     return next;
 };
 
+// ==================================================================================
+// تحليل تواريخ التقارير بمرونة — إصلاح خطأ «نافذة اليومين»:
+// سجلات التقارير تحفظ issueDate بصيغة dd-mm-yyyy (مثل 03-11-2026 = 3 نوفمبر)،
+// بينما new Date() الافتراضية تقرأها MM-DD-YYYY (أي مارس-11!) فتُحسب صادرة قبل
+// أشهر ويُرفض تحديثها بالبيانات الكاملة خطأً (403 «لا يمكن التعديل بعد يومين»)
+// فيبقى سجل الاستعلام محفوظاً ناقص الحقول. القاعدة هنا: مكوّن أول بطول 4 = سنة
+// (yyyy-mm-dd أي ISO)، وإلا فهو يوم أولاً (dd-mm-yyyy الصيغة المعروضة للمستخدم).
+// ==================================================================================
+const parseFlexibleDate = (value) => {
+    if (value == null || value === '') return null;
+    if (value instanceof Date) return isNaN(value.getTime()) ? null : value.getTime();
+    const s = String(value).trim();
+    const m = s.match(/^(\d{1,4})[-/](\d{1,2})[-/](\d{1,4})/);
+    if (m) {
+        let y, mo, d;
+        if (m[1].length === 4) { y = +m[1]; mo = +m[2]; d = +m[3]; }      // yyyy-mm-dd (ISO)
+        else { d = +m[1]; mo = +m[2]; y = +m[3]; }                        // dd-mm-yyyy (الصيغة المعروضة)
+        if (y < 100) y += 2000;
+        if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && y > 1990) {
+            const t = new Date(y, mo - 1, d, 12, 0, 0).getTime();         // ظهراً لتجنّب انزياح المنطقة الزمنية
+            return isNaN(t) ? null : t;
+        }
+        return null;
+    }
+    const t = new Date(s).getTime();
+    return isNaN(t) ? null : t;
+};
+// توحيد أي تاريخ محفوظ إلى yyyy-mm-dd (لتعبئة حقول input[type=date] عند التعديل)
+const reportDateToIso = (value) => {
+    const t = parseFlexibleDate(value);
+    if (t == null) return '';
+    const dt = new Date(t);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}`;
+};
+
 // Transaction logging helper
 const logTransaction = (data, { admin_chat_id = ADMIN_CHAT_ID, target_chat_id, operation, amount = null, previous_value = null, new_value = null, details = '' }) => {
     if (!data.transactions) data.transactions = [];
@@ -2249,10 +2285,13 @@ app.post('/api/generate', async (req, res) => {
         if (isUpdate) {
             const existingReport = userSub.reports[index];
             if (existingReport.issueDate) {
-                const issueDateObj = new Date(existingReport.issueDate);
-                const now = new Date();
-                if ((now - issueDateObj) > (2 * 24 * 60 * 60 * 1000)) {
-                    return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                // نفس إصلاح نافذة اليومين: parseFlexibleDate تفهم dd-mm-yyyy وISO معاً
+                const issuedTs = parseFlexibleDate(existingReport.issueDate);
+                if (issuedTs != null) {
+                    const now = new Date();
+                    if ((now.getTime() - issuedTs) > (2 * 24 * 60 * 60 * 1000)) {
+                        return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                    }
                 }
             }
         }
@@ -2292,6 +2331,8 @@ app.post('/api/generate', async (req, res) => {
 
         userSub.updatedAt = new Date().toISOString();
         await saveLocalSubscriptions(data);
+        // أرشفة السجل الكامل (نفس سلوك /api/report) — الحفظ الدائم لا يعتمد على نداء آخر
+        await archiveReport(chatIdStr, report);
         res.json({ success: true, report, generatedAt: new Date().toISOString() });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -3090,10 +3131,15 @@ app.post('/api/report/:chatId', async (req, res) => {
             if (isUpdate) {
                 const existingReport = userSub.reports[index];
                 if (existingReport.issueDate) {
-                    const issueDateObj = new Date(existingReport.issueDate);
-                    const now = new Date();
-                    if ((now - issueDateObj) > (2 * 24 * 60 * 60 * 1000)) {
-                        return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                    // parseFlexibleDate تفهم dd-mm-yyyy (صيغة issueDate المعروضة) وyyyy-mm-dd معاً —
+                    // new Date() المباشرة كانت تقرأ 03-11-2026 «مارس-11» فتمنع التعديل/التحديث زوراً.
+                    // تاريخ غير قابل للتحليل → نسمح بالتحديث (لا نحجب بيانات المستخدم بفشل تحليل).
+                    const issuedTs = parseFlexibleDate(existingReport.issueDate);
+                    if (issuedTs != null) {
+                        const now = new Date();
+                        if ((now.getTime() - issuedTs) > (2 * 24 * 60 * 60 * 1000)) {
+                            return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                        }
                     }
                 }
             }
@@ -3243,7 +3289,7 @@ app.post('/api/send-pdf', async (req, res) => {
 app.post('/api/generate-native-pdf', async (req, res) => {
     let browser = null;
     try {
-        const { chatId, reportData, filename, reportId, trial } = req.body;
+        const { chatId, reportData, filename, reportId, trial, reportRecord } = req.body;
         addLog(`generate-native-pdf called for chatId: ${chatId}`);
         
         if (!chatId || !reportData) {
@@ -3270,6 +3316,19 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         let isUpdate = false;
         if (userSub.reports && reportId) {
             isUpdate = userSub.reports.some(r => r.id === reportId || r.id === reportData.id);
+        }
+
+        // نافذة التعديل (نفس قاعدة /api/report): تحديث تقرير بعد مرور يومين من إصداره ممنوع.
+        // بعد إصلاح زر التعديل (currentReportId) أصبح هذا المسار قابلاً للوصول فعلاً،
+        // ففرض القاعدة هنا يمنع إعادة إصدار تقارير قديمة مجاناً بلا سقف.
+        if (isUpdate) {
+            const existingRep = (userSub.reports || []).find(r => r.id === reportId || r.id === reportData.id);
+            if (existingRep && existingRep.issueDate) {
+                const issuedTs = parseFlexibleDate(existingRep.issueDate);
+                if (issuedTs != null && (Date.now() - issuedTs) > (2 * 24 * 60 * 60 * 1000)) {
+                    return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
+                }
+            }
         }
         
         // PAYMENT-SOURCE AWARE GATE (آلية المصدر مع تحكم الإدارة):
@@ -3710,9 +3769,18 @@ ${tableRows}
         // and deduct 5 points SERVER-SIDE for brand-new points-based reports.
         // (Fix: the report is saved here before the client calls /api/report/:chatId,
         // which previously made that call see isUpdate=true and skip the deduction entirely.)
+        //
+        // إصلاح «البيانات غير كاملة في الاستعلامات»: كان هذا الحفظ يبني السجل من حمولة
+        // رندرة PDF بمفاتيح غير مطابقة (d.startDate/d.docNameAr بينما يرسل العميل
+        // admissionG/doctorAr) فتسقط حقول (تواريخ الدخول/الخروج، الطبيب، الجنسية،
+        // جهة العمل، أوقات الزيارة، نوع الزيارة، تواريخ الملف). الآن:
+        // 1) العميل يرسل reportRecord كاملاً (نفس سجل /api/report) ونعتمده مرجعاً.
+        // 2) إن غاب نستخرج كل الحقول من reportData بخرائط مصححة أدناه.
+        // 3) يُؤرشف السجل هنا مباشرة (archiveReport) حتى لو فشل نداء العميل الثاني.
         let finalBalance = null;
         let paySourceUsed = null;
         let daysAfterIssuance = null;
+        let recordToArchive = null;
         try {
             await withDbLock(async () => {
                 const dbData = await loadLocalSubscriptions();
@@ -3729,39 +3797,62 @@ ${tableRows}
                     if (!uSub.reports) uSub.reports = [];
                     const currentRepId = reportId || d.leaveId;
                     const rIdx = uSub.reports.findIndex(r => r.id === currentRepId);
-                    const repObj = {
-                        id: currentRepId,
-                        patientName: d.nameAr || d.patient_name_ar || ((d.type === 'companion' || d.type === 'companion_review') ? d.escort_name_ar : ''),
-                        type: d.type || 'sick',
-                        issueDate: d.issueDate || d.issue_date || new Date().toISOString().slice(0, 10),
-                        data: {
-                            admission_date: d.startDate || d.admission_date,
-                            discharge_date: d.endDate || d.discharge_date,
-                            duration: d.duration || '1',
-                            issue_date: d.issueDate || d.issue_date,
-                            issue_time: d.issueTime || d.issue_time,
-                            national_id: d.nationalId || d.national_id,
-                            patient_name_ar: d.nameAr || d.patient_name_ar,
-                            patient_name_en: d.nameEn || d.patient_name_en,
-                            escort_name_ar: d.escort_name_ar || '',
-                            escort_name_en: d.escort_name_en || '',
-                            relation_ar: d.relation_ar || '',
-                            relation_en: d.relation_en || '',
-                            doctor_name_ar: d.docNameAr || d.doctor_name_ar,
-                            doctor_name_en: d.docNameEn || d.doctor_name_en,
-                            job_title_ar: d.positionAr || d.job_title_ar,
-                            job_title_en: d.positionEn || d.job_title_en,
-                            hospital_ar: d.hospitalAr || d.hospital_ar,
-                            hospital_en: d.hospitalEn || d.hospital_en,
-                            hospital_type: d.hospitalType || d.hospital_type,
-                            license_number: d.licenseNumber || d.license_number
-                        }
-                    };
+
+                    // 1) سجل العميل الكامل (المصدر المعتمد) إن وصل — مع التحقق من تطابق المعرف
+                    let repObj = null;
+                    if (reportRecord && typeof reportRecord === 'object' && String(reportRecord.id || '') === String(currentRepId) && reportRecord.data) {
+                        repObj = JSON.parse(JSON.stringify(reportRecord));
+                        repObj.id = currentRepId;
+                        repObj.type = repObj.type || d.type || 'sick';
+                        if (!repObj.issueDate) repObj.issueDate = d.issueDate || d.issue_date || new Date().toISOString().slice(0, 10);
+                        if (!repObj.patientName) repObj.patientName = d.nameAr || d.patient_name_ar || '';
+                    }
+                    // 2) احتياطي: بناء السجل من reportData بخرائط مفاتيح مصححة (عملاء قدامى)
+                    if (!repObj) {
+                        repObj = {
+                            id: currentRepId,
+                            patientName: d.nameAr || d.patient_name_ar || ((d.type === 'companion' || d.type === 'companion_review') ? d.escort_name_ar : ''),
+                            type: d.type || 'sick',
+                            issueDate: d.issueDate || d.issue_date || new Date().toISOString().slice(0, 10),
+                            data: {
+                                admission_date: d.admission_date || d.startDate || reportDateToIso(d.admissionG),
+                                discharge_date: d.discharge_date || d.endDate || reportDateToIso(d.dischargeG),
+                                admission_time: d.admission_time || '',
+                                discharge_time: d.discharge_time || '',
+                                visit_type: d.visit_type || d.visitTypeAr || '',
+                                visit_type_ar: d.visit_type_ar || d.visitTypeAr || '',
+                                file_dates_enabled: !!d.file_dates_enabled,
+                                file_admission_date: d.file_admission_date || '',
+                                file_discharge_date: d.file_discharge_date || '',
+                                duration: d.duration || (String(d.durationEn || '').match(/^\s*(\d+)/) || [])[1] || '1',
+                                issue_date: d.issueDate || d.issue_date,
+                                issue_time: d.issue_time || d.issueTime || d.time || '',
+                                national_id: d.nationalId || d.national_id,
+                                patient_name_ar: d.nameAr || d.patient_name_ar,
+                                patient_name_en: d.nameEn || d.patient_name_en,
+                                nationality: d.nationality || d.nationalityAr || '',
+                                employer: (d.employer != null && d.employer !== '') ? d.employer : ((d.employerAr && d.employerAr !== 'غير محدد') ? d.employerAr : ''),
+                                escort_name_ar: d.escort_name_ar || '',
+                                escort_name_en: d.escort_name_en || '',
+                                relation_ar: d.relation_ar || '',
+                                relation_en: d.relation_en || '',
+                                doctor_name_ar: d.doctor_name_ar || d.docNameAr || d.doctorAr || '',
+                                doctor_name_en: d.doctor_name_en || d.docNameEn || d.doctorEn || '',
+                                job_title_ar: d.positionAr || d.job_title_ar || '',
+                                job_title_en: d.positionEn || d.job_title_en || '',
+                                hospital_ar: d.hospitalAr || d.hospital_ar || '',
+                                hospital_en: d.hospitalEn || d.hospital_en || '',
+                                hospital_type: d.hospital_type || d.hospitalType || ((d.licenseNumber || d.license_number) ? 'private' : ''),
+                                license_number: d.licenseNumber || d.license_number || ''
+                            }
+                        };
+                    }
                     if (rIdx >= 0) {
                         uSub.reports[rIdx] = repObj;
                     } else {
                         uSub.reports.push(repObj);
                     }
+                    recordToArchive = repObj;
 
                     // Server-side point deduction for NEW reports (single source of truth).
                     // آلية المصدر: كل تقرير جديد يخصم 5 نقاط عندما يكون مصدر الدفع «نقاط»؛
@@ -3792,6 +3883,12 @@ ${tableRows}
                     await saveLocalSubscriptions(dbData);
                 }
             });
+            // أرشفة فورية للسجل الكامل من الحفظ التلقائي نفسه — كانت الأرشفة تتم فقط عبر
+            // نداء العميل الثاني /api/report، فإذا فشل ذلك النداء (شبكة/حالة حساب) لا يوجد
+            // أي نسخة أرشيفية من التقرير إطلاقاً. archiveReport تدمج ولا تُكرر.
+            if (recordToArchive) {
+                await archiveReport(chatIdStr, recordToArchive);
+            }
         } catch (saveErr) {
             console.error('Error auto-saving report in generate-native-pdf:', saveErr.message);
         }

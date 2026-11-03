@@ -1484,6 +1484,8 @@ const app = {
         this.exitTrialMode(); // بدء نموذج عادي يلغي وضع التجريبي ويعيد فتح الحقول
         this.state.leaveType = type;
         this.state.currentStep = 1;
+        // نموذج جديد = معرف جديد — يُصفّر إلا إذا جاءنا من editReport (الذي يضبطه بعد الاستدعاء)
+        this.state.currentReportId = null;
         
         let title = 'إصدار تقرير جديد';
         if (type === 'sickleave') title = 'إصدار تقرير إجازة مرضية';
@@ -1640,6 +1642,9 @@ const app = {
         }
         
         this.startForm(report.type);
+        // التعديل يعيد إصدار نفس التقرير بمعرفه — لا تقرير جديد ولا خصم ثانٍ،
+        // والخادم يعامل الطلب تحديثاً داخل نافذة اليومين (isUpdate)
+        this.state.currentReportId = id;
         
         // Populate fields
         for (const [key, value] of Object.entries(report.data)) {
@@ -2108,17 +2113,60 @@ const app = {
             relation_en: relEn
         };
 
+        // سجل الاستعلام الكامل — يُبنى مرة واحدة هنا ويُرسل مع طلب التوليد نفسه
+        // (reportRecord) حتى يحفظ الخادم البيانات كاملة من أول مرة، ثم يُعاد إرساله
+        // إلى /api/report للتأكيد. الإصلاح السابق: كان الخادم يبني سجلاً ناقصاً من
+        // حمولة رندرة PDF (مفاتيح غير مطابقة) ويبقى ناقصاً إذا فشل النداء الثاني.
+        const reportRecord = {
+            id: reportId,
+            patientName: isCompanionType ? escAr : pNameAr,
+            type: type,
+            issueDate: issueDate,
+            data: {
+                admission_date: admission,
+                discharge_date: discharge,
+                admission_time: admissionTimeVal,
+                discharge_time: dischargeTimeVal,
+                visit_type: visitTypeAr,
+                visit_type_ar: visitTypeAr, // بنفس معرف حقل النموذج ليعمل تعبئة التعديل تلقائياً
+                file_dates_enabled: fileDatesEnabled,
+                file_admission_date: fileDatesEnabled ? (document.getElementById('file_admission_date')?.value || '') : '',
+                file_discharge_date: fileDatesEnabled ? (document.getElementById('file_discharge_date')?.value || '') : '',
+                duration: duration,
+                issue_date: issueDate,
+                issue_time: issueTime,
+                national_id: idNum,
+                patient_name_ar: pNameAr,
+                patient_name_en: pNameEn,
+                nationality: nationalityAr,
+                employer: employer,
+                escort_name_ar: escAr,
+                escort_name_en: escEn,
+                relation_ar: relAr,
+                relation_en: relEn,
+                doctor_name_ar: docNameAr,
+                doctor_name_en: docNameEn,
+                job_title_ar: jobAr,
+                job_title_en: jobEn,
+                hospital_ar: hospAr,
+                hospital_en: hospEn,
+                hospital_type: isPrivate ? 'private' : 'gov',
+                license_number: license
+            }
+        };
+
         try {
             // NOTE: points are deducted SERVER-SIDE (authoritative). The server returns the
             // new balance in the response and we sync the UI with it after success.
 
-            // SERVER-SIDE GENERATION
+            // SERVER-SIDE GENERATION — يُرسل معه reportRecord الكامل ليعتمده الحفظ التلقائي
             const res = await fetch('/api/generate-native-pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     chatId: app.state.chatId,
                     reportData: reportDataPayload,
+                    reportRecord: isTrial ? null : reportRecord,
                     filename: type === 'visit_review' ? 'Statement_of_Visit.pdf' : 'sickLeaves.pdf',
                     reportId: reportId,
                     trial: isTrial
@@ -2164,54 +2212,18 @@ const app = {
             }
 
             // Also save report data (trials are NEVER persisted — non-official samples)
+            // نفس reportRecord المرسل مع التوليد — التحديث مطابق فلا تغيير فعلي (idempotent)
             if (!isTrial) {
                 await fetch(`/api/report/${app.state.chatId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        report: {
-                            id: reportId,
-                            patientName: isCompanionType ? escAr : pNameAr,
-                            type: type,
-                            issueDate: issueDate,
-                            data: {
-                                admission_date: admission,
-                                discharge_date: discharge,
-                                admission_time: admissionTimeVal,
-                                discharge_time: dischargeTimeVal,
-                                visit_type: visitTypeAr,
-                                visit_type_ar: visitTypeAr, // بنفس معرف حقل النموذج ليعمل تعبئة التعديل تلقائياً
-                                file_dates_enabled: fileDatesEnabled,
-                                file_admission_date: fileDatesEnabled ? (document.getElementById('file_admission_date')?.value || '') : '',
-                                file_discharge_date: fileDatesEnabled ? (document.getElementById('file_discharge_date')?.value || '') : '',
-                                duration: duration,
-                                issue_date: issueDate,
-                                issue_time: issueTime,
-                                national_id: idNum,
-                                patient_name_ar: pNameAr,
-                                patient_name_en: pNameEn,
-                                nationality: document.getElementById('nationality').value,
-                                employer: employer,
-                                escort_name_ar: escAr,
-                                escort_name_en: escEn,
-                                relation_ar: relAr,
-                                relation_en: relEn,
-                                doctor_name_ar: docNameAr,
-                                doctor_name_en: docNameEn,
-                                job_title_ar: jobAr,
-                                job_title_en: jobEn,
-                                hospital_ar: hospAr,
-                                hospital_en: hospEn,
-                                hospital_type: isPrivate ? 'private' : 'gov',
-                                license_number: license
-                            }
-                        }
-                    })
+                    body: JSON.stringify({ report: reportRecord })
                 });
             }
 
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('report-form').reset();
+            this.state.currentReportId = null; // اكتمل الإصدار — النموذج التالي تقرير جديد
             app.navigate('success');
 
         } catch(e) {
