@@ -2072,8 +2072,8 @@
       "reportsCount": 0
     },
     "8702027800": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -2086,10 +2086,25 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-06T01:01:58.973Z"
+      "updatedAt": "2026-11-07T15:12:59.939Z",
+      "subscription_start_date": "2026-11-06T01:01:58.973Z",
+      "daysRemaining": 0,
+      "daysUsed": 1,
+      "reportsCount": 0
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794064379939_o5s660",
+      "timestamp": "2026-11-07T15:12:59.939Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8702027800",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
     {
       "id": "tx_1793708727156_qwx7c4",
       "timestamp": "2026-11-03T12:25:27.156Z",
