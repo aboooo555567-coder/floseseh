@@ -2094,20 +2094,59 @@
       "status": "active",
       "plan": "points",
       "report_payment_source": "points",
-      "points": 20,
-      "balance_points": 20,
+      "points": 15,
+      "balance_points": 15,
       "subscriptionDays": 23,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
       "subscriptionExpires": "2026-12-02T13:11:03.686Z",
-      "reports": [],
+      "reports": [
+        {
+          "id": "GSL26110983569",
+          "patientName": "الين يحيى المالكي ",
+          "type": "sickleave",
+          "issueDate": "2026-11-09",
+          "data": {
+            "admission_date": "2026-11-09",
+            "discharge_date": "2026-11-09",
+            "admission_time": "",
+            "discharge_time": "",
+            "visit_type": "",
+            "visit_type_ar": "",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-11-09",
+            "issue_time": "13:00",
+            "national_id": "1136227780",
+            "patient_name_ar": "الين يحيى المالكي ",
+            "patient_name_en": "ALAIN YAHYA AL-MALIKI",
+            "nationality": "السعودية",
+            "employer": "كلية التقنية",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "فهد الغامدي",
+            "doctor_name_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الأمير منصور العسكري",
+            "hospital_en": "Prince Mansour Military Hospital",
+            "hospital_type": "gov",
+            "license_number": "",
+            "include_qr": false
+          }
+        }
+      ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-09T18:17:31.863Z",
+      "updatedAt": "2026-11-09T18:22:35.543Z",
       "daysRemaining": 23,
       "daysUsed": 7,
-      "reportsCount": 0
+      "reportsCount": 1
     },
     "8702027800": {
       "points": 5,
@@ -2132,6 +2171,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794248555222_djdc63",
+      "timestamp": "2026-11-09T18:22:35.222Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "7188905780",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "20",
+      "new_value": "15",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26110983569 (generate-native-pdf)"
+    },
     {
       "id": "tx_1794064379939_o5s660",
       "timestamp": "2026-11-07T15:12:59.939Z",
