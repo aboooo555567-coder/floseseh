@@ -2089,14 +2089,14 @@
       "reportsCount": 0
     },
     "7188905780": {
-      "username": "",
+      "username": "yymhhm12",
       "name": "مستخدم 7188905780",
       "status": "active",
       "plan": "points",
       "report_payment_source": "points",
       "points": 20,
       "balance_points": 20,
-      "subscriptionDays": 30,
+      "subscriptionDays": 23,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
       "subscriptionExpires": "2026-12-02T13:11:03.686Z",
@@ -2104,9 +2104,9 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-02T13:13:00.735Z",
-      "daysRemaining": 30,
-      "daysUsed": 0,
+      "updatedAt": "2026-11-09T18:16:25.166Z",
+      "daysRemaining": 23,
+      "daysUsed": 7,
       "reportsCount": 0
     },
     "8702027800": {
