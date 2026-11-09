@@ -1552,6 +1552,124 @@ const runBroadcast = async (ownerChatId, session, recipients) => {
     return { sent, failed };
 };
 
+// ==================================================================================
+// تعبئة الحقول تلقائياً من استمارة ملصوقة (المالك/الأدمن فقط)
+// المالك يلصق استمارة منسقة (اسم المريض، الهوية، الجنسية، الطبيب...) في محادثة البوت،
+// فيحللها البوت ويخزن الحقول برمز عشوائي صالح لمرة واحدة (24 ساعة)، ثم يرسل زر
+// «فتح النموذج معبأ» يفتح التطبيق مع ?prefill=<token>. التطبيق يجلب الحقول عبر
+// GET /api/prefill/:token (يُستهلك مرة واحدة ويُحذف) ويملأ النموذج عند بدء تقرير جديد.
+// ==================================================================================
+const PREFILL_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // صلاحية الرمز: 24 ساعة
+
+const PREFILL_FIELD_MATCHERS = [
+    { test: (l) => l.includes('اسم المريض') && l.includes('عربي'), key: 'patient_name_ar' },
+    { test: (l) => l.includes('اسم المريض') && (l.includes('إنجليزي') || l.includes('الإنجليزية')), key: 'patient_name_en' },
+    { test: (l) => l.includes('الهوية'), key: 'national_id' },
+    { test: (l) => l.includes('الجنسية') && l.includes('عربي'), key: 'nationality' },
+    { test: (l) => l.includes('الجنسية') && (l.includes('إنجليزي') || l.includes('الإنجليزية')), key: 'nationality_en' },
+    { test: (l) => l.includes('مدة الإجازة'), key: 'duration' },
+    { test: (l) => l.includes('جهة العمل') && l.includes('عربي'), key: 'employer' },
+    { test: (l) => l.includes('جهة العمل') && (l.includes('إنجليزي') || l.includes('الإنجليزية')), key: 'employer_en' },
+    { test: (l) => l.includes('الطبيب') && l.includes('عربي'), key: 'doctor_name_ar' },
+    { test: (l) => l.includes('الطبيب') && (l.includes('إنجليزي') || l.includes('الإنجليزية')), key: 'doctor_name_en' },
+    { test: (l) => l.includes('المسمى الوظيفي') && l.includes('عربي'), key: 'job_title_ar' },
+    { test: (l) => l.includes('المسمى الوظيفي') && (l.includes('إنجليزي') || l.includes('الإنجليزية')), key: 'job_title_en' },
+    { test: (l) => l.includes('تاريخ الدخول'), key: 'admission_date' },
+    { test: (l) => l.includes('تاريخ الخروج'), key: 'discharge_date' },
+    { test: (l) => l.includes('المنشأة') && l.includes('عربي'), key: 'hospital_ar' },
+    { test: (l) => l.includes('المنشأة') && (l.includes('إنجليزي') || l.includes('الإنجليزية')), key: 'hospital_en' },
+    { test: (l) => l.includes('الوقت'), key: 'issue_time' }
+];
+
+// تنظيف التسمية من الرموز التعبيرية والمسافات الزائدة قبل المطابقة
+const stripEmojisForPrefill = (s) => String(s || '')
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{2B00}-\u{2BFF}]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// تحويل الوقت 12 ساعة (07:50 AM) إلى صيغة حقل الوقت 24 ساعة (07:50)
+const convertTime12to24 = (t) => {
+    const m = String(t || '').trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM|ص|م)?$/i);
+    if (!m) return String(t || '').trim();
+    let h = parseInt(m[1], 10);
+    const min = m[2];
+    const ap = (m[3] || '').toUpperCase();
+    if (ap === 'AM' || ap === 'ص') { if (h === 12) h = 0; }
+    else if (ap === 'PM' || ap === 'م') { if (h !== 12) h += 12; }
+    return `${String(h).padStart(2, '0')}:${min}`;
+};
+
+const parsePrefillForm = (text) => {
+    const fields = {};
+    let recognized = 0;
+    for (const raw of String(text || '').split(/\r?\n/)) {
+        const line = raw.trim();
+        if (!line) continue;
+        const idx = line.indexOf(':');
+        if (idx <= 0) continue;
+        const label = stripEmojisForPrefill(line.slice(0, idx));
+        let value = line.slice(idx + 1).trim();
+        if (!label || !value) continue;
+        for (const m of PREFILL_FIELD_MATCHERS) {
+            if (m.test(label)) {
+                if (m.key === 'issue_time') value = convertTime12to24(value);
+                fields[m.key] = value;
+                recognized++;
+                break;
+            }
+        }
+    }
+    // مدة الإجازة تُحسب تلقائياً من تاريخي الدخول والخروج (شاملة الطرفين) إن لم تُذكر
+    if (fields.duration == null && fields.admission_date && fields.discharge_date) {
+        const a = new Date(fields.admission_date), b = new Date(fields.discharge_date);
+        if (!isNaN(a) && !isNaN(b)) {
+            fields.duration = String(Math.max(1, Math.round((b - a) / 86400000) + 1));
+        }
+    }
+    return { fields, recognized };
+};
+
+// هل النص يبدو استمارة معبأة؟ (اسم مريض + هوية + عدد أسطر كافٍ) لتجنب التقاط رسائل عادية
+const looksLikePrefillForm = (text) => {
+    const t = stripEmojisForPrefill(String(text || ''));
+    return t.includes('اسم المريض') && t.includes('الهوية') && String(text || '').split(/\r?\n/).filter(l => l.trim()).length >= 5;
+};
+
+const handlePrefillFormMessage = async (chatId, text) => {
+    try {
+        const { fields, recognized } = parsePrefillForm(text);
+        if (recognized < 3) {
+            await bot.sendMessage(chatId, '⚠️ لم أتعرف على ما يكفي من الحقول في هذه الاستمارة. تأكد من نسخها كاملة كما هي دون تعديل التنسيق.');
+            return;
+        }
+        const token = crypto.randomBytes(12).toString('hex');
+        await withDbLock(async () => {
+            const db = await loadLocalSubscriptions();
+            if (!db.prefills || typeof db.prefills !== 'object') db.prefills = {};
+            // نظافة: حذف الرموز المنتهية الصلاحية
+            const now = Date.now();
+            for (const [tk, v] of Object.entries(db.prefills)) {
+                if (!v || !v.createdAt || (now - new Date(v.createdAt).getTime()) > PREFILL_TOKEN_TTL_MS) delete db.prefills[tk];
+            }
+            db.prefills[token] = { fields, createdAt: new Date().toISOString() };
+            await saveLocalSubscriptions(db);
+        });
+        const openUrl = `${WEB_APP_URL}/index.html?prefill=${token}`;
+        const fieldSummary = [
+            fields.patient_name_ar ? `👤 ${fields.patient_name_ar}` : null,
+            fields.national_id ? `🆔 ${fields.national_id}` : null,
+            fields.admission_date ? `📅 ${fields.admission_date}` : null,
+            fields.hospital_ar ? `🏥 ${fields.hospital_ar}` : null
+        ].filter(Boolean).join('\n');
+        await bot.sendMessage(chatId,
+            `✅ تم تحليل الاستمارة بنجاح — ${recognized} حقل جاهز للتعبئة التلقائية.\n${fieldSummary}\n\nاضغط الزر لفتح نموذج الإصدار وستُملأ الحقول تلقائياً فور بدء تقرير جديد.\n\n(الرمز صالح لمرة واحدة لمدة 24 ساعة)`,
+            { reply_markup: { inline_keyboard: [[{ text: '📝 فتح النموذج معبأ', web_app: { url: openUrl } }]] } });
+    } catch (e) {
+        console.error('Prefill form error:', e.message);
+        await bot.sendMessage(chatId, '⚠️ حدث خطأ أثناء تحليل الاستمارة. حاول مرة أخرى.');
+    }
+};
+
 bot.on('message', async (msg) => {
     if (!msg.text) return;
     if (/^\/start/i.test(msg.text)) return; // Already handled
@@ -1613,6 +1731,12 @@ bot.on('message', async (msg) => {
         // زر البث الجماعي — لا يظهر في لوحة أحد غير المالك، والتحقق هنا حماية إضافية
         if (!isBotAdmin(chatId, msg.from?.username)) return;
         await startBroadcastSession(chatId);
+        return;
+    }
+    
+    // استمارة معبأة ملصوقة من الأدمن → تحليل تلقائي وفتح النموذج معبأ (ميزة الأدمن فقط)
+    if (isBotAdmin(chatId, msg.from?.username) && looksLikePrefillForm(msg.text)) {
+        await handlePrefillFormMessage(chatId, msg.text);
         return;
     }
     
@@ -3093,6 +3217,35 @@ app.post('/api/user/:chatId/package', async (req, res) => {
         
         await saveLocalSubscriptions(data);
         res.json({ success: true, points: normalized.points, subscriptionDays: normalized.subscriptionDays });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2.9 جلب بيانات الاستمارة المعربة للتعبئة التلقائية (رمز صالح لمرة واحدة — 24 ساعة)
+// يُرجع الحقول ويحذف الرمز فوراً حتى لا تُستخدم البيانات مرتين أو من شخص آخر
+app.get('/api/prefill/:token', async (req, res) => {
+    try {
+        const token = String(req.params.token || '');
+        if (!/^[a-f0-9]{16,64}$/.test(token)) {
+            return res.status(400).json({ success: false, error: 'رمز تعبئة غير صالح' });
+        }
+        let payload = null;
+        await withDbLock(async () => {
+            const db = await loadLocalSubscriptions();
+            if (db.prefills && Object.prototype.hasOwnProperty.call(db.prefills, token)) {
+                const v = db.prefills[token];
+                if (v && v.createdAt && (Date.now() - new Date(v.createdAt).getTime()) <= PREFILL_TOKEN_TTL_MS) {
+                    payload = v.fields;
+                }
+                delete db.prefills[token]; // استهلاك مرة واحدة
+                await saveLocalSubscriptions(db);
+            }
+        });
+        if (!payload) {
+            return res.status(404).json({ success: false, error: 'انتهت صلاحية رمز التعبئة أو استُخدم مسبقاً' });
+        }
+        res.json({ success: true, fields: payload });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

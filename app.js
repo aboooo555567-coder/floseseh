@@ -343,6 +343,13 @@ const app = {
         await this.loadLocalData();
         this.updateDashboardUI();
 
+        // استمارة معبأة (رمز من البوت بعد لصق الاستمارة من الأدمن):
+        // جلب الحقول الآن وتخزينها — تُطبّق على النموذج فور بدء تقرير جديد (startForm)
+        const prefillToken = urlParams.get('prefill');
+        if (prefillToken) {
+            this.fetchPrefillForm(prefillToken).catch(err => console.warn('prefill fetch failed:', err));
+        }
+
 
 
 
@@ -1563,6 +1570,9 @@ const app = {
             document.getElementById('discharge_time').value = `${pad(Math.floor(disTotal / 60))}:${pad(disTotal % 60)}`;
             document.getElementById('visit_type_ar').value = 'طوارئ';
         }
+        
+        // تعبئة تلقائية من الاستمارة الملصوقة (إن وُجد رمز نشط) — بعد القيم الافتراضية لتتقدم عليها
+        this.applyPrefillFields();
     },
 
     syncHospitalEn() {
@@ -1927,6 +1937,34 @@ const app = {
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         return ` ${days[d.getDay()]} ,${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    },
+
+    // ===== استمارة ملصوقة من الأدمن: جلب الحقول وتطبيقها على النموذج تلقائياً =====
+    async fetchPrefillForm(token) {
+        try {
+            const res = await fetch(`/api/prefill/${encodeURIComponent(token)}`);
+            const data = await res.json();
+            if (!data.success || !data.fields) return;
+            this.state.pendingPrefill = data.fields;
+            this.showToast('تم جلب بيانات الاستمارة ✅ — ابدأ تقرير جديد وستُملأ الحقول تلقائياً');
+        } catch (e) {
+            console.warn('prefill fetch failed:', e);
+        }
+    },
+
+    // تُستدعى في نهاية startForm — تعبئة كل الحقول المتوفرة من الاستمارة (استهلاك لمرة واحدة)
+    applyPrefillFields() {
+        const f = this.state.pendingPrefill;
+        if (!f) return false;
+        const setVal = (id, val) => {
+            if (val == null || val === '') return;
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        };
+        Object.keys(f).forEach(id => setVal(id, f[id]));
+        this.state.pendingPrefill = null; // استهلاك — لا تُطبق على تقرير تالٍ
+        this.showToast('تم تعبئة الحقول تلقائياً من الاستمارة ✅');
+        return true;
     },
 
     async submitForm() {
