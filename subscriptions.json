@@ -864,8 +864,8 @@
       "name": "أ/بسمه"
     },
     "5275574402": {
-      "points": 30,
-      "balance_points": 30,
+      "points": 25,
+      "balance_points": 25,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1063,13 +1063,51 @@
             "license_number": "",
             "include_qr": true
           }
+        },
+        {
+          "id": "GSL26111048800",
+          "patientName": "نقنقن",
+          "type": "sickleave",
+          "issueDate": "2026-11-10",
+          "data": {
+            "admission_date": "2026-11-10",
+            "discharge_date": "2026-11-10",
+            "admission_time": "",
+            "discharge_time": "",
+            "visit_type": "",
+            "visit_type_ar": "",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-11-10",
+            "issue_time": "20:22",
+            "national_id": "ترترز",
+            "patient_name_ar": "نقنقن",
+            "patient_name_en": "زي",
+            "nationality": "أرجنتيني",
+            "employer": "ظؤظؤ",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "نيني",
+            "doctor_name_en": "نثثنن",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى الولادة والأطفال بنجران",
+            "hospital_en": "Maternity and Children Hospital, Najran",
+            "hospital_type": "gov",
+            "license_number": "",
+            "include_qr": true
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T14:40:02.769Z",
-      "reportsCount": 6,
+      "updatedAt": "2026-11-10T14:40:45.131Z",
+      "reportsCount": 7,
       "status": "active",
       "subscription_start_date": "2026-09-18T21:33:34.621Z",
       "daysRemaining": 0,
@@ -2209,6 +2247,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794321643805_ddp85n",
+      "timestamp": "2026-11-10T14:40:43.805Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "5275574402",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "30",
+      "new_value": "25",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26111048800 (generate-native-pdf)"
+    },
     {
       "id": "tx_1794321586318_ymvcp6",
       "timestamp": "2026-11-10T14:39:46.318Z",
