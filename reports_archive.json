@@ -191,6 +191,44 @@
           "license_number": "",
           "include_qr": true
         }
+      },
+      "GSL26111048800": {
+        "id": "GSL26111048800",
+        "patientName": "نقنقن",
+        "type": "sickleave",
+        "issueDate": "2026-11-10",
+        "data": {
+          "admission_date": "2026-11-10",
+          "discharge_date": "2026-11-10",
+          "admission_time": "",
+          "discharge_time": "",
+          "visit_type": "",
+          "visit_type_ar": "",
+          "file_dates_enabled": false,
+          "file_admission_date": "",
+          "file_discharge_date": "",
+          "duration": "1",
+          "issue_date": "2026-11-10",
+          "issue_time": "20:22",
+          "national_id": "ترترز",
+          "patient_name_ar": "نقنقن",
+          "patient_name_en": "زي",
+          "nationality": "أرجنتيني",
+          "employer": "ظؤظؤ",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "نيني",
+          "doctor_name_en": "نثثنن",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "مستشفى الولادة والأطفال بنجران",
+          "hospital_en": "Maternity and Children Hospital, Najran",
+          "hospital_type": "gov",
+          "license_number": "",
+          "include_qr": true
+        }
       }
     },
     "7853478744": {
@@ -1401,5 +1439,5 @@
       }
     }
   },
-  "updatedAt": "2026-11-10T14:39:46.731Z"
+  "updatedAt": "2026-11-10T14:40:45.133Z"
 }
