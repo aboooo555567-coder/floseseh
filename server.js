@@ -1077,6 +1077,128 @@ const processQuickAddCallback = async (query) => {
     await bot.sendMessage(ownerChatId, result.success ? result.message : `❌ ${result.error}`).catch(() => {});
 };
 
+// ==================================================================================
+// صندوق طلبات النقاط/الباقات (طلب المالك: «اي واحد يطلب نقاط يظهر لي اشعار داخل البوت
+// مع امكانية اعتماد الطلب من المحادثة او من لوحه الادمن»)
+// كل طلب يُحفظ في db.requests (مزامن مع GitHub) ويظهر في مكانين:
+// 1) إشعار فوري في محادثة المالك بأزرار ✅ اعتماد / ❌ رفض
+// 2) قسم «🔔 طلبات الشحن» في لوحة الإدارة (نفس منطق الاعتماد بالضبط)
+// ==================================================================================
+const REQUESTS_MAX = 200; // سقف السجل — الأحدث يُحتفظ به
+
+const createPointRequest = async ({ chatId, pkgId, name, username }) => {
+    const pkg = PKG_CATALOG[pkgId];
+    if (!pkg) return null;
+    const record = {
+        id: 'rq' + crypto.randomBytes(6).toString('hex'),
+        chatId: String(chatId),
+        name: String(name || ''),
+        username: String(username || ''),
+        pkgId: pkgId,
+        label: pkg.label,
+        price: pkg.price,
+        points: pkg.points,
+        days: pkg.days,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        handledAt: null,
+        handledVia: null
+    };
+    await withDbLock(async () => {
+        const db = await loadLocalSubscriptions();
+        if (!Array.isArray(db.requests)) db.requests = [];
+        db.requests.unshift(record);
+        // نظافة: سقف السجل + حذف المُعالج الأقدم من 7 أيام
+        const weekAgo = Date.now() - 7 * 86400000;
+        db.requests = db.requests
+            .filter(r => (r.status === 'pending' || r.status === 'processing') || (r.handledAt && new Date(r.handledAt).getTime() > weekAgo))
+            .slice(0, REQUESTS_MAX);
+        await saveLocalSubscriptions(db);
+    });
+    return record;
+};
+
+// منطق الاعتماد/الرفض المشترك (من المحادثة أو من اللوحة):
+// يُعلَّم الطلب ذرياً داخل القفل أولاً لمنع الاعتماد المزدوج، ثم تُمنح الباقة
+// بنفس منطق الشحن السريع تماماً (نقاط/أيام + حركة مالية + إشعار المشترك).
+const decidePointRequest = async (reqId, action, via) => {
+    reqId = String(reqId || '');
+    if (!reqId || (action !== 'approve' && action !== 'reject')) {
+        return { success: false, error: 'طلب غير صالح' };
+    }
+    let req = null;
+    let claimed = false;
+    await withDbLock(async () => {
+        const db = await loadLocalSubscriptions();
+        req = (db.requests || []).find(r => r.id === reqId);
+        if (!req) return;
+        // «processing» تُسمح لاستئناف طلب تعطل شحنه (انقطاع/إعادة تشغيل) — القفل يمنع التزامن
+        if (req.status !== 'pending' && req.status !== 'processing') return;
+        req.status = (action === 'approve') ? 'processing' : 'rejected';
+        req.handledAt = new Date().toISOString();
+        req.handledVia = via;
+        claimed = true;
+        await saveLocalSubscriptions(db);
+    });
+    if (!req) return { success: false, error: 'الطلب غير موجود' };
+    if (!claimed) return { success: false, already: true, error: 'تمت معالجة هذا الطلب مسبقاً' };
+    if (action === 'reject') {
+        return { success: true, rejected: true, request: req, message: `❌ تم رفض الطلب (${req.label}) للمستخدم ${req.name || req.chatId}` };
+    }
+    // منح الباقة — نفس مسار الشحن السريع
+    const grant = await handleQuickAdd(req.chatId, req.pkgId, `اعتماد طلب (${via})`);
+    if (!grant.success) {
+        // إعادة الطلب إلى «قيد الانتظار» ليُحاول الاعتماد مرة أخرى
+        await withDbLock(async () => {
+            const db = await loadLocalSubscriptions();
+            const r = (db.requests || []).find(x => x.id === reqId);
+            if (r && r.status === 'processing') {
+                r.status = 'pending';
+                r.handledAt = null;
+                r.handledVia = null;
+                await saveLocalSubscriptions(db);
+            }
+        });
+        return { success: false, error: grant.error || 'فشل شحن الباقة' };
+    }
+    // إتمام الحجز: الحالة النهائية «معتمد» بعد نجاح الشحن فعلاً (يمنع الاعتماد المزدوج)
+    await withDbLock(async () => {
+        const db = await loadLocalSubscriptions();
+        const r = (db.requests || []).find(x => x.id === reqId);
+        if (r && r.status === 'processing') {
+            r.status = 'approved';
+            await saveLocalSubscriptions(db);
+        }
+    });
+    return { success: true, request: Object.assign({}, req, { status: 'approved' }), message: grant.message };
+};
+
+// أزرار اعتماد/رفض الطلب داخل إشعار المحادثة (للمالك فقط)
+const processRequestDecisionCallback = async (query) => {
+    const ownerChatId = query.message.chat.id.toString();
+    if (String(query.from?.id) !== String(ADMIN_CHAT_ID)) {
+        await bot.answerCallbackQuery(query.id, { text: 'هذا الإجراء متاح للمالك فقط', show_alert: true }).catch(() => {});
+        return;
+    }
+    const [verb, reqId] = String(query.data || '').split(':');
+    const action = (verb === 'reqok') ? 'approve' : 'reject';
+    const result = await decidePointRequest(reqId, action, 'المحادثة (البوت)');
+    await bot.answerCallbackQuery(query.id).catch(() => {});
+    await bot.sendMessage(ownerChatId, result.success ? result.message : `⚠️ ${result.error}`).catch(() => {});
+    // تحسيني: تحديث رسالة الإشعار الأصلية بحالة نهائية واضحة
+    try {
+        if (result.success && query.message && query.message.text) {
+            const verdict = (action === 'approve')
+                ? '\n\n✅ تم اعتماد هذا الطلب وشحن الباقة.'
+                : '\n\n❌ تم رفض هذا الطلب.';
+            await bot.editMessageText(query.message.text + verdict, {
+                chat_id: query.message.chat.id,
+                message_id: query.message.message_id
+            });
+        }
+    } catch (e) { /* التعديل تحسيني فقط — لا يؤثر على النتيجة */ }
+};
+
 // Helper: Send User Status Message
 const sendMyStatusMessage = async (chatId, username) => {
     const user = await findSubscription(chatId, username);
@@ -2119,6 +2241,9 @@ bot.on('callback_query', async (query) => {
         const nm = [query.from?.first_name, query.from?.last_name].filter(Boolean).join(' ');
         await bot.sendMessage(chatId, buildRechargeText(chatId, nm));
         await bot.answerCallbackQuery(query.id);
+    } else if (query.data && (query.data.startsWith('reqok:') || query.data.startsWith('reqno:'))) {
+        // أزرار اعتماد/رفض طلبات النقاط في إشعارات المالك (طلب المالك: اعتماد من المحادثة)
+        await processRequestDecisionCallback(query);
     } else if (query.data && query.data.startsWith('qpkg:')) {
         // أزرار الشحن السريع في إشعارات المالك (طلب باقة/مستخدم جديد)
         await processQuickAddCallback(query);
@@ -2286,8 +2411,13 @@ app.post('/api/packages/request', express.json(), async (req, res) => {
         const displayName = (name || '').trim() || u.name || (u.username ? '@' + u.username : 'بدون اسم');
         const uname = (username || '').trim() || u.username || null;
 
+        // تسجيل الطلب في صندوق الطلبات (تظهر في لوحة الإدارة + تُعتمد/تُرفض من أي مكان)
+        const reqRecord = await createPointRequest({ chatId: cleanId, pkgId, name: displayName, username: uname });
+        if (!reqRecord) return res.status(400).json({ success: false, error: 'باقة غير معروفة' });
+
+        // إشعار فوري للمالك داخل البوت مع أزرار الاعتماد/الرفض (الاعتماد يشحن الباقة فوراً)
         notifyOwner(
-`🛒 طلب باقة جديدة!
+`🔔 طلب نقاط/باقة جديد!
 ━━━━━━━━━━━━━━━━━━━━━━
 • المستخدم: ${displayName}
 • المعرف: ${uname ? '@' + uname : 'لا يوجد'}
@@ -2295,10 +2425,16 @@ app.post('/api/packages/request', express.json(), async (req, res) => {
 • الباقة: ${pkg.label}
 • السعر: ${pkg.price} ريال سعودي
 ━━━━━━━━━━━━━━━━━━━━━━
-بعد تأكد الدفع اضغط للشحن الفوري 👇`,
-            pkgReqKeyboard(cleanId, pkgId, uname)
+بعد تأكد الدفع اعتمد الطلب بالزر 👇 أو من لوحة الإدارة (قسم 🔔 طلبات الشحن)`,
+            [
+                [
+                    { text: '✅ اعتماد الطلب', callback_data: `reqok:${reqRecord.id}` },
+                    { text: '❌ رفض', callback_data: `reqno:${reqRecord.id}` }
+                ],
+                (uname ? [{ text: '💬 مراسلة المستخدم', url: `https://t.me/${uname}` }] : []).concat([{ text: '🛠 لوحة الإدارة', web_app: { url: ADMIN_PANEL_URL } }])
+            ]
         );
-        res.json({ success: true });
+        res.json({ success: true, requestId: reqRecord.id });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -2508,6 +2644,44 @@ const verifyAdmin = (req) => {
 // -------------------------------------------------------------
 // ADMIN WEB APIS
 // -------------------------------------------------------------
+
+// قائمة طلبات النقاط/الباقات (صندوق الطلبات): المعلقة أولاً ثم الأحدث — سقف 50
+app.get('/api/admin/web/requests', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    try {
+        const db = await loadLocalSubscriptions();
+        const all = Array.isArray(db.requests) ? db.requests.slice() : [];
+        const rank = (r) => (r.status === 'pending' || r.status === 'processing') ? 0 : 1;
+        all.sort((a, b) => (rank(a) - rank(b)) || (new Date(b.createdAt) - new Date(a.createdAt)));
+        res.json({ success: true, requests: all.slice(0, 50) });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// اعتماد/رفض طلب من لوحة الإدارة — نفس منطق اعتماد المحادثة تماماً (decidePointRequest)
+app.post('/api/admin/web/requests/handle', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    try {
+        const { requestId, action } = req.body || {};
+        const result = await decidePointRequest(requestId, action === 'approve' ? 'approve' : 'reject', 'لوحة الإدارة');
+        if (!result.success && result.already) {
+            return res.status(409).json({ success: false, error: result.error });
+        }
+        if (!result.success) {
+            return res.status(400).json({ success: false, error: result.error });
+        }
+        res.json({ success: true, message: result.message });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // Admin Statistics Endpoint
 app.get('/api/admin/web/stats', async (req, res) => {
@@ -4072,6 +4246,28 @@ ${tableRows}
             if (!isLocalTest) {
                 bot.sendMessage(chatId, notificationText).catch(e => console.warn('Could not send balance notification:', e.message));
             }
+        }
+
+        // إشعار المالك: أي مستخدم يصدر تقريراً يظهر إشعار فوري في محادثة المالك
+        // (طلب المالك: «اي مستخدم يصدر تقرير يظهر عندي اشعار انه تم اصدار تقرير من المستخدم»)
+        // العينة التجريبية والمالك نفسه مستثنيان لتجنب الضجيج.
+        if (!isTrial && chatIdStr !== String(ADMIN_CHAT_ID)) {
+            const issuerName = normalized.name || (normalized.username ? '@' + normalized.username : chatIdStr);
+            const issuerUname = normalized.username ? '@' + normalized.username : 'لا يوجد';
+            const payLine = (paySourceUsed === 'points')
+                ? `🧾 خُصمت ${REPORT_COST_POINTS} نقاط — الرصيد المتبقي: ${finalBalance != null ? finalBalance : 0} نقطة`
+                : `♾️ اشتراك غير محدود — الأيام المتبقية: ${daysAfterIssuance != null ? daysAfterIssuance : 0} يوم`;
+            notifyOwner(
+`${isUpdate ? '♻️ إعادة إصدار تقرير (تعديل)' : '📄 إصدار تقرير جديد'}
+━━━━━━━━━━━━━━━━━━━━━━
+• المستخدم: ${issuerName}
+• المعرف: ${issuerUname}
+• ID: ${chatIdStr}
+• التقرير: ${d.titleAr || 'تقرير'}
+• رمز التقرير: ${reportId || d.leaveId || '—'}
+• ${payLine}`,
+                [[{ text: '🛠 لوحة الإدارة', web_app: { url: ADMIN_PANEL_URL } }]]
+            );
         }
 
         if (isLocalTest) {

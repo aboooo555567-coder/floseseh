@@ -575,6 +575,7 @@ const app = {
     adminState: {
         users: [],
         stats: {},
+        requests: [],
         activeFilter: 'all',
         searchQuery: '',
         sortBy: 'default',
@@ -843,9 +844,10 @@ const app = {
         await this.executeAdminBtn(btn, async () => {
             try {
                 const headers = this.getAdminHeaders();
-                const [statsRes, usersRes] = await Promise.all([
+                const [statsRes, usersRes, reqsRes] = await Promise.all([
                     fetch('/api/admin/web/stats', { headers }),
-                    fetch('/api/admin/web/users', { headers })
+                    fetch('/api/admin/web/users', { headers }),
+                    fetch('/api/admin/web/requests', { headers })
                 ]);
 
                 if (statsRes.status === 401 || usersRes.status === 401) {
@@ -866,6 +868,15 @@ const app = {
                     this.adminState.users = usersData.users;
                     this.renderAdminUsers();
                 }
+
+                // صندوق طلبات الشحن (المعلقة أولاً) — فشلها غير حاجز لبقية اللوحة
+                if (reqsRes.ok) {
+                    const reqsData = await reqsRes.json();
+                    if (reqsData.success && Array.isArray(reqsData.requests)) {
+                        this.adminState.requests = reqsData.requests;
+                    }
+                }
+                this.renderAdminRequests();
             } catch (err) {
                 console.error('Error loading admin data:', err);
                 this.showToast('فشل في تحميل بيانات الإدارة: ' + err.message, 'error');
@@ -887,6 +898,76 @@ const app = {
         setVal('stat-total-points', s.totalPoints);
         setVal('stat-points-users', s.pointsSubscribers);
         setVal('stat-unlimited-users', s.unlimitedSubscribers);
+    },
+
+    // ===== صندوق طلبات الشحن: عرض الطلبات واعتمادها/رفضها من اللوحة (متزامنة مع إشعارات البوت) =====
+    renderAdminRequests() {
+        const box = document.getElementById('admin-requests-list');
+        if (!box) return;
+        const list = this.adminState.requests || [];
+        if (!list.length) {
+            box.innerHTML = '<div style="text-align:center; padding:24px; color:#94a3b8; font-size:0.9rem;">لا توجد طلبات بعد — ستظهر هنا فوراً عند طلب أي مستخدم نقاطاً أو باقة 🔔</div>';
+            return;
+        }
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const statusMeta = {
+            pending:    { label: '⏳ قيد الانتظار', color: '#b45309', bg: '#fef3c7' },
+            processing: { label: '⏳ قيد الانتظار', color: '#b45309', bg: '#fef3c7' },
+            approved:   { label: '✅ معتمد', color: '#15803d', bg: '#dcfce7' },
+            rejected:   { label: '❌ مرفوض', color: '#b91c1c', bg: '#fee2e2' }
+        };
+        const fmtDate = (iso) => {
+            try {
+                const dt = new Date(iso);
+                return `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+            } catch (e) { return ''; }
+        };
+        box.innerHTML = list.map(r => {
+            const st = statusMeta[r.status] || statusMeta.pending;
+            const isPending = r.status === 'pending' || r.status === 'processing';
+            const actions = isPending ? `
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button onclick="app.adminHandleRequest('${esc(r.id)}','approve',this)" style="flex:1; padding:9px; border:none; border-radius:9px; background:#16a34a; color:#fff; font-family:'Tajawal',sans-serif; font-weight:700; font-size:0.85rem; cursor:pointer;">✅ اعتماد وشحن</button>
+                    <button onclick="app.adminHandleRequest('${esc(r.id)}','reject',this)" style="flex:1; padding:9px; border:none; border-radius:9px; background:#fee2e2; color:#b91c1c; font-family:'Tajawal',sans-serif; font-weight:700; font-size:0.85rem; cursor:pointer;">❌ رفض</button>
+                </div>` : '';
+            const pkgLine = (r.days > 0) ? `📅 ${r.days} يوم (لامحدود)` : `🪙 ${r.points} نقاط`;
+            return `
+            <div style="background:#fff; border:1px solid ${isPending ? '#fcd34d' : '#e2e8f0'}; border-radius:14px; padding:13px 15px; margin-bottom:10px; ${isPending ? 'box-shadow:0 1px 6px rgba(245,158,11,0.12);' : 'opacity:0.72;'}">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="font-weight:700; color:#0f172a; font-size:0.95rem;">${esc(r.name || 'بدون اسم')}${r.username ? ` <span dir="ltr" style="color:#64748b; font-weight:400; font-size:0.8rem;">@${esc(r.username)}</span>` : ''}</div>
+                    <span style="padding:3px 10px; border-radius:99px; font-size:0.72rem; font-weight:700; color:${st.color}; background:${st.bg}; white-space:nowrap;">${st.label}</span>
+                </div>
+                <div style="color:#475569; font-size:0.82rem; margin-top:6px; line-height:1.8;">
+                    • الطلب: ${esc(r.label)} — ${pkgLine} (${esc(r.price)} ريال)<br>
+                    • ID: <span dir="ltr">${esc(r.chatId)}</span> • ${fmtDate(r.createdAt)}
+                    ${r.handledVia ? `<br>• عولج عبر: ${esc(r.handledVia)}` : ''}
+                </div>
+                ${actions}
+            </div>`;
+        }).join('');
+    },
+
+    async adminHandleRequest(requestId, action, btnEl) {
+        if (!window.confirm(action === 'approve' ? 'اعتماد الطلب وشحن الباقة للمستخدم؟' : 'رفض هذا الطلب؟')) return;
+        const old = btnEl ? btnEl.textContent : '';
+        if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ جارٍ التنفيذ...'; }
+        try {
+            const res = await fetch('/api/admin/web/requests/handle', {
+                method: 'POST',
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify({ requestId, action })
+            });
+            const data = await res.json();
+            if (data.success) {
+                this.showToast(data.message || 'تمت المعالجة ✅');
+            } else {
+                this.showToast(data.error || 'فشل تنفيذ العملية', 'error');
+            }
+        } catch (e) {
+            this.showToast('فشل الاتصال: ' + e.message, 'error');
+        }
+        await this.loadAdminData();
+        if (btnEl) { btnEl.disabled = false; btnEl.textContent = old; }
     },
 
     // تطبيع النص العربي للبحث: توحيد الهمزات والتاء المربوطة والألف المقصورة وحذف التشكيل
