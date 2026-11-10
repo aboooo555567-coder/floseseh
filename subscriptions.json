@@ -2094,8 +2094,8 @@
       "status": "active",
       "plan": "points",
       "report_payment_source": "points",
-      "points": 15,
-      "balance_points": 15,
+      "points": 10,
+      "balance_points": 10,
       "subscriptionDays": 22,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
@@ -2143,7 +2143,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T13:33:45.998Z",
+      "updatedAt": "2026-11-10T13:36:02.934Z",
       "daysRemaining": 22,
       "daysUsed": 8,
       "reportsCount": 1
@@ -2171,6 +2171,28 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794317762934_tlykm3",
+      "timestamp": "2026-11-10T13:36:02.934Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7188905780",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "10",
+      "details": "إضافة 5 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
+    {
+      "id": "tx_1794317751078_ll0e62",
+      "timestamp": "2026-11-10T13:35:51.078Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7188905780",
+      "operation": "remove_points",
+      "amount": 10,
+      "previous_value": "15",
+      "new_value": "5",
+      "details": "خصم 10 نقطة من رصيد المشترك"
+    },
     {
       "id": "tx_1794317625998_zl8s80",
       "timestamp": "2026-11-10T13:33:45.998Z",
