@@ -1027,8 +1027,8 @@
           }
         },
         {
-          "id": "GSL26111071240",
-          "patientName": "نور ن",
+          "id": "GSL26111099272",
+          "patientName": "رر",
           "type": "sickleave",
           "issueDate": "2026-11-10",
           "data": {
@@ -1043,32 +1043,32 @@
             "file_discharge_date": "",
             "duration": "1",
             "issue_date": "2026-11-10",
-            "issue_time": "14:39",
-            "national_id": "غسغ",
-            "patient_name_ar": "نور ن",
-            "patient_name_en": "ن",
+            "issue_time": "07:21",
+            "national_id": "ظبممب",
+            "patient_name_ar": "رر",
+            "patient_name_en": "ALHODHOD ALGREEH",
             "nationality": "السعودية",
-            "employer": "نسن",
+            "employer": "رررررربب",
             "escort_name_ar": "",
             "escort_name_en": "",
             "relation_ar": "",
             "relation_en": "",
-            "doctor_name_ar": "عيني ",
-            "doctor_name_en": "مثن",
+            "doctor_name_ar": "زظ",
+            "doctor_name_en": "نن",
             "job_title_ar": "طبيب عام",
             "job_title_en": "General",
-            "hospital_ar": "نيينن",
-            "hospital_en": "مينين",
+            "hospital_ar": "مستشفى الملك خالد بنجران",
+            "hospital_en": "King Khalid Hospital, Najran",
             "hospital_type": "gov",
             "license_number": "",
-            "include_qr": false
+            "include_qr": true
           }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T14:38:46.144Z",
+      "updatedAt": "2026-11-10T14:39:46.728Z",
       "reportsCount": 6,
       "status": "active",
       "subscription_start_date": "2026-09-18T21:33:34.621Z",
@@ -2210,15 +2210,15 @@
   },
   "transactions": [
     {
-      "id": "tx_1794321525007_sh1ten",
-      "timestamp": "2026-11-10T14:38:45.008Z",
+      "id": "tx_1794321586318_ymvcp6",
+      "timestamp": "2026-11-10T14:39:46.318Z",
       "admin_chat_id": "system",
       "target_chat_id": "5275574402",
       "operation": "report_deduction",
       "amount": 5,
       "previous_value": "35",
       "new_value": "30",
-      "details": "خصم 5 نقاط عند إصدار التقرير GSL26111071240 (generate-native-pdf)"
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26111099272 (generate-native-pdf)"
     },
     {
       "id": "tx_1794321449710_0d6nbe",
