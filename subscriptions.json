@@ -2096,7 +2096,7 @@
       "report_payment_source": "points",
       "points": 15,
       "balance_points": 15,
-      "subscriptionDays": 23,
+      "subscriptionDays": 22,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
       "subscriptionExpires": "2026-12-02T13:11:03.686Z",
@@ -2143,9 +2143,9 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-09T18:22:35.543Z",
-      "daysRemaining": 23,
-      "daysUsed": 7,
+      "updatedAt": "2026-11-10T13:33:45.998Z",
+      "daysRemaining": 22,
+      "daysUsed": 8,
       "reportsCount": 1
     },
     "8702027800": {
@@ -2171,6 +2171,39 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794317625998_zl8s80",
+      "timestamp": "2026-11-10T13:33:45.998Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7188905780",
+      "operation": "payment_source_changed",
+      "amount": null,
+      "previous_value": "points",
+      "new_value": "points",
+      "details": "تغيير مصدر دفع التقارير إلى بالنقاط"
+    },
+    {
+      "id": "tx_1794317621933_83txw6",
+      "timestamp": "2026-11-10T13:33:41.934Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7188905780",
+      "operation": "payment_source_changed",
+      "amount": null,
+      "previous_value": "points",
+      "new_value": "points",
+      "details": "تغيير مصدر دفع التقارير إلى بالنقاط"
+    },
+    {
+      "id": "tx_1794317620947_6yhql1",
+      "timestamp": "2026-11-10T13:33:40.947Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7188905780",
+      "operation": "payment_source_changed",
+      "amount": null,
+      "previous_value": "points",
+      "new_value": "points",
+      "details": "تغيير مصدر دفع التقارير إلى بالنقاط"
+    },
     {
       "id": "tx_1794248555222_djdc63",
       "timestamp": "2026-11-09T18:22:35.222Z",
