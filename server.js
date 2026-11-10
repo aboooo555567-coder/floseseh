@@ -2393,7 +2393,8 @@ app.post('/api/packages/request', express.json(), async (req, res) => {
         const cleanId = String(chatId || '').trim();
         if (!pkg) return res.status(400).json({ success: false, error: 'باقة غير معروفة' });
         if (!cleanId || !/^\d+$/.test(cleanId)) return res.status(400).json({ success: false, error: 'Chat ID غير صالح' });
-        if (cleanId === String(ADMIN_CHAT_ID)) return res.json({ success: true, skipped: true });
+        // ملاحظة: طلب المالك نفسه (اختباراً أو لشحن حسابه) يُشعَر به أيضاً — لا استثناء هنا
+        // (إصلاح: الحارس السابق كان يبتلع إشعار التجربة عندما يضغط المالك على باقة بنفسه)
 
         // منع التكرار: نفس الطلب خلال 30 ثانية يُتجاهل بهدوء (حماية من الضغط المتكرر)
         const tKey = `${cleanId}:${pkgId}`;
@@ -2449,17 +2450,23 @@ if (TEST_MODE) {
         TEST_SENT_MESSAGES.length = 0;
         res.json({ success: true });
     });
-    // محاكاة ضغط المالك على زر الشحن السريع في إشعار تيليجرام
+    // محاكاة ضغط المالك على زر داخل إشعار تيليجرام (شحن سريع qpkg أو اعتماد/رفض reqok/reqno)
     app.post('/api/test/callback', express.json(), async (req, res) => {
         try {
             const { data, fromId } = req.body || {};
             const fid = parseInt(fromId) || parseInt(ADMIN_CHAT_ID);
-            await processQuickAddCallback({
+            const query = {
                 id: 'testcb-' + Date.now(),
                 data,
                 from: { id: fid, username: 'test_owner', first_name: 'Owner' },
                 message: { chat: { id: fid } }
-            });
+            };
+            const d = String(data || '');
+            if (d.startsWith('reqok:') || d.startsWith('reqno:')) {
+                await processRequestDecisionCallback(query);
+            } else {
+                await processQuickAddCallback(query);
+            }
             res.json({ success: true });
         } catch (err) { res.status(500).json({ success: false, error: err.message }); }
     });
@@ -4250,8 +4257,8 @@ ${tableRows}
 
         // إشعار المالك: أي مستخدم يصدر تقريراً يظهر إشعار فوري في محادثة المالك
         // (طلب المالك: «اي مستخدم يصدر تقرير يظهر عندي اشعار انه تم اصدار تقرير من المستخدم»)
-        // العينة التجريبية والمالك نفسه مستثنيان لتجنب الضجيج.
-        if (!isTrial && chatIdStr !== String(ADMIN_CHAT_ID)) {
+        // العينة التجريبية مستثناة فقط — إصدار المالك نفسه يُشعَر به أيضاً (يتيح له اختبار الإشعار والاطلاع).
+        if (!isTrial) {
             const issuerName = normalized.name || (normalized.username ? '@' + normalized.username : chatIdStr);
             const issuerUname = normalized.username ? '@' + normalized.username : 'لا يوجد';
             const payLine = (paySourceUsed === 'points')
