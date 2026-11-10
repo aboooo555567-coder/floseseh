@@ -864,8 +864,8 @@
       "name": "أ/بسمه"
     },
     "5275574402": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 30,
+      "balance_points": 30,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1030,7 +1030,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T14:35:09.277Z",
+      "updatedAt": "2026-11-10T14:36:10.129Z",
       "reportsCount": 5,
       "status": "active",
       "subscription_start_date": "2026-09-18T21:33:34.621Z",
@@ -2172,6 +2172,17 @@
   },
   "transactions": [
     {
+      "id": "tx_1794321370129_3p94wi",
+      "timestamp": "2026-11-10T14:36:10.129Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "5275574402",
+      "operation": "add_points",
+      "amount": 30,
+      "previous_value": "0",
+      "new_value": "30",
+      "details": "شحن سريع (اعتماد طلب (المحادثة (البوت))): حزمة النقاط الأساسية (30 نقطة)"
+    },
+    {
       "id": "tx_1794317762934_tlykm3",
       "timestamp": "2026-11-10T13:36:02.934Z",
       "admin_chat_id": "7853478744",
@@ -3088,5 +3099,22 @@
   "ownerGrantModelAt": "2026-09-18T21:22:30.153Z",
   "activeZeroModel": true,
   "activeZeroModelAt": "2026-09-19T00:00:00.000Z",
-  "prefills": {}
+  "prefills": {},
+  "requests": [
+    {
+      "id": "rqd0ef32d8ffe4",
+      "chatId": "5275574402",
+      "name": "الملكه👑👑👑",
+      "username": "hm999m",
+      "pkgId": "Basic",
+      "label": "حزمة النقاط الأساسية (30 نقطة)",
+      "price": 20,
+      "points": 30,
+      "days": 0,
+      "status": "approved",
+      "createdAt": "2026-11-10T14:35:57.030Z",
+      "handledAt": "2026-11-10T14:36:10.125Z",
+      "handledVia": "المحادثة (البوت)"
+    }
+  ]
 }
