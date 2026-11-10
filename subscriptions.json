@@ -740,7 +740,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T14:36:29.168Z",
+      "updatedAt": "2026-11-10T14:02:59.275Z",
       "reportsCount": 16,
       "daysRemaining": 310,
       "daysUsed": 56
@@ -864,8 +864,8 @@
       "name": "أ/بسمه"
     },
     "5275574402": {
-      "points": 30,
-      "balance_points": 30,
+      "points": 35,
+      "balance_points": 35,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -1030,7 +1030,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T14:36:10.129Z",
+      "updatedAt": "2026-11-10T14:37:29.710Z",
       "reportsCount": 5,
       "status": "active",
       "subscription_start_date": "2026-09-18T21:33:34.621Z",
@@ -2171,6 +2171,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794321449710_0d6nbe",
+      "timestamp": "2026-11-10T14:37:29.710Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "5275574402",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "30",
+      "new_value": "35",
+      "details": "إضافة 5 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
     {
       "id": "tx_1794321370129_3p94wi",
       "timestamp": "2026-11-10T14:36:10.129Z",
