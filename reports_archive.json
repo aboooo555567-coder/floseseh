@@ -153,6 +153,44 @@
           "hospital_type": "gov",
           "license_number": ""
         }
+      },
+      "GSL26111071240": {
+        "id": "GSL26111071240",
+        "patientName": "نور ن",
+        "type": "sickleave",
+        "issueDate": "2026-11-10",
+        "data": {
+          "admission_date": "2026-11-10",
+          "discharge_date": "2026-11-10",
+          "admission_time": "",
+          "discharge_time": "",
+          "visit_type": "",
+          "visit_type_ar": "",
+          "file_dates_enabled": false,
+          "file_admission_date": "",
+          "file_discharge_date": "",
+          "duration": "1",
+          "issue_date": "2026-11-10",
+          "issue_time": "14:39",
+          "national_id": "غسغ",
+          "patient_name_ar": "نور ن",
+          "patient_name_en": "ن",
+          "nationality": "السعودية",
+          "employer": "نسن",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "عيني ",
+          "doctor_name_en": "مثن",
+          "job_title_ar": "طبيب عام",
+          "job_title_en": "General",
+          "hospital_ar": "نيينن",
+          "hospital_en": "مينين",
+          "hospital_type": "gov",
+          "license_number": "",
+          "include_qr": false
+        }
       }
     },
     "7853478744": {
@@ -1363,5 +1401,5 @@
       }
     }
   },
-  "updatedAt": "2026-11-09T18:22:35.547Z"
+  "updatedAt": "2026-11-10T14:38:46.162Z"
 }
