@@ -4397,7 +4397,12 @@ app.get('/api/verify', async (req, res) => {
         let foundReport = null;
         for (const user of Object.values(data.subscriptions)) {
             if (user.reports) {
-                const report = user.reports.find(r => r.id === id && r.nationalId === nid);
+                // الهوية تُحفظ داخل data.national_id — نقبل أيضاً nationalId بالأعلى للسجلات القديمة
+                const report = user.reports.find(r => {
+                    if (r.id !== id) return false;
+                    if (r.nationalId === nid) return true;
+                    return !!(r.data && (r.data.national_id === nid || r.data.nationalId === nid));
+                });
                 if (report) {
                     foundReport = report;
                     break;
