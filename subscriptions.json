@@ -2360,8 +2360,8 @@
       "reportsCount": 0
     },
     "8516884171": {
-      "points": 10,
-      "balance_points": 10,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -2370,15 +2370,54 @@
       "report_payment_source": "points",
       "username": "aamdsaa",
       "name": "ايلان محمد",
-      "reports": [],
+      "reports": [
+        {
+          "id": "GSL26111205205",
+          "patientName": "الين يحي المالكي",
+          "type": "visit_review",
+          "issueDate": "2026-11-12",
+          "data": {
+            "admission_date": "2026-10-12",
+            "discharge_date": "2026-11-12",
+            "admission_time": "14:00",
+            "discharge_time": "17:11",
+            "visit_type": "مراجعة",
+            "visit_type_ar": "مراجعة",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-11-12",
+            "issue_time": "17:11",
+            "national_id": "1136227780",
+            "patient_name_ar": "الين يحي المالكي",
+            "patient_name_en": "ALEEN YAHYA AL-MALIKI",
+            "nationality": "السعودية",
+            "employer": "طالبة",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "اسامه الغامدي",
+            "doctor_name_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مركز صحي السيل الصغير",
+            "hospital_en": "",
+            "hospital_type": "gov",
+            "license_number": "",
+            "include_qr": false
+          }
+        }
+      ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-11T23:45:50.174Z",
+      "updatedAt": "2026-11-11T23:55:31.232Z",
       "subscription_start_date": "2026-11-10T22:41:25.975Z",
       "daysRemaining": 0,
       "daysUsed": 1,
-      "reportsCount": 0
+      "reportsCount": 1
     },
     "8589071159": {
       "points": 5,
@@ -2403,6 +2442,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794441330476_fb3s23",
+      "timestamp": "2026-11-11T23:55:30.476Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8516884171",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "10",
+      "new_value": "5",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26111205205 (generate-native-pdf)"
+    },
     {
       "id": "tx_1794418317796_153ypb",
       "timestamp": "2026-11-11T17:31:57.796Z",
