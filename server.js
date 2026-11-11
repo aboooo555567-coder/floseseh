@@ -4562,10 +4562,11 @@ app.get('/setup', async (req, res) => {
         if (isProduction) {
             const webhookUrl = `${WEB_APP_URL}/webhook/${TOKEN}`;
             await bot.setWebHook(webhookUrl);
+            // إصلاح أمني: لا تُعَدِ EVER رابط الويبهوك — كان يكشف توكن البوت كاملاً لأي زائر!
             res.json({
                 success: true,
                 message: `Webhook and Menu Button configured successfully`,
-                webhookUrl,
+                webhookSet: true,
                 webAppUrl: WEB_APP_URL_CACHED
             });
         } else {
