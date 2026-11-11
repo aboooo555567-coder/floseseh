@@ -2246,8 +2246,8 @@
       "reportsCount": 0
     },
     "8516884171": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 10,
+      "balance_points": 10,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -2260,15 +2260,15 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T22:42:29.375Z",
+      "updatedAt": "2026-11-11T12:51:08.016Z",
       "subscription_start_date": "2026-11-10T22:41:25.975Z",
       "daysRemaining": 0,
       "daysUsed": 0,
       "reportsCount": 0
     },
     "8589071159": {
-      "points": 0,
-      "balance_points": 0,
+      "points": 5,
+      "balance_points": 5,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -2281,10 +2281,47 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T22:41:50.183Z"
+      "updatedAt": "2026-11-11T12:50:54.285Z",
+      "subscription_start_date": "2026-11-10T22:41:50.183Z",
+      "daysRemaining": 0,
+      "daysUsed": 0,
+      "reportsCount": 0
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794401468016_7wt05x",
+      "timestamp": "2026-11-11T12:51:08.016Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8516884171",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "10",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
+    {
+      "id": "tx_1794401456316_8dyx2r",
+      "timestamp": "2026-11-11T12:50:56.316Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8516884171",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
+    {
+      "id": "tx_1794401454285_anoumg",
+      "timestamp": "2026-11-11T12:50:54.285Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "8589071159",
+      "operation": "add_points",
+      "amount": 5,
+      "previous_value": "0",
+      "new_value": "5",
+      "details": "شحن سريع (زر تيليجرام (إشعار المالك)): حزمة البداية (5 نقاط)"
+    },
     {
       "id": "tx_1794321643805_ddp85n",
       "timestamp": "2026-11-10T14:40:43.805Z",
