@@ -2170,9 +2170,9 @@
       "status": "active",
       "plan": "points",
       "report_payment_source": "points",
-      "points": 10,
-      "balance_points": 10,
-      "subscriptionDays": 22,
+      "points": 5,
+      "balance_points": 5,
+      "subscriptionDays": 21,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
       "subscriptionExpires": "2026-12-02T13:11:03.686Z",
@@ -2214,15 +2214,53 @@
             "license_number": "",
             "include_qr": true
           }
+        },
+        {
+          "id": "GSL26111138449",
+          "patientName": "حمزة عصام معراج سليماني",
+          "type": "sickleave",
+          "issueDate": "2026-11-11",
+          "data": {
+            "admission_date": "2026-11-11",
+            "discharge_date": "2026-11-11",
+            "admission_time": "",
+            "discharge_time": "",
+            "visit_type": "",
+            "visit_type_ar": "",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-11-11",
+            "issue_time": "10:10",
+            "national_id": "1136786983",
+            "patient_name_ar": "حمزة عصام معراج سليماني",
+            "patient_name_en": "HAMZA ESSAM MERAJ SULEIMANI",
+            "nationality": "السعودية",
+            "employer": "جامعة ام القرى",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "فهد الغامدي",
+            "doctor_name_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مستشفى النور التخصصي",
+            "hospital_en": "Khabash General Hospital",
+            "hospital_type": "gov",
+            "license_number": "",
+            "include_qr": true
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-10T23:18:22.772Z",
-      "daysRemaining": 22,
-      "daysUsed": 8,
-      "reportsCount": 1
+      "updatedAt": "2026-11-11T17:31:58.240Z",
+      "daysRemaining": 21,
+      "daysUsed": 9,
+      "reportsCount": 2
     },
     "8702027800": {
       "points": 5,
@@ -2289,6 +2327,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794418317796_153ypb",
+      "timestamp": "2026-11-11T17:31:57.796Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "7188905780",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "10",
+      "new_value": "5",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26111138449 (generate-native-pdf)"
+    },
     {
       "id": "tx_1794401468016_7wt05x",
       "timestamp": "2026-11-11T12:51:08.016Z",
