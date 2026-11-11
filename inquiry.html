@@ -114,22 +114,8 @@
                 });
             }
 
-            // تعبئة تلقائية من رابط الباركود: /inquiry?id=...&nin=... ثم استعلام فوري بدون ضغط زر
-            // (إصلاح: كان الباركود يفتح النموذج فارغاً ولا تظهر بيانات الاستعلام)
-            try {
-                const qp = new URLSearchParams(window.location.search);
-                const autoCode = (qp.get('id') || qp.get('service_code') || qp.get('code') || '').trim();
-                const autoNid = (qp.get('nin') || qp.get('national_id') || qp.get('nid') || '').trim();
-                if (autoCode && autoNid) {
-                    const scInput = document.getElementById('service_code');
-                    const nidInput = document.getElementById('national_id');
-                    if (scInput) scInput.value = autoCode;
-                    if (nidInput) nidInput.value = autoNid;
-                    // إرسال تلقائي — نفس مسار ضغط زر الاستعلام بالضبط
-                    if (inquiryForm.requestSubmit) inquiryForm.requestSubmit();
-                    else inquiryForm.dispatchEvent(new Event('submit', { cancelable: true }));
-                }
-            } catch (e) { console.warn('auto-inquiry from QR link failed:', e); }
+            // طلب المالك: رابط الباركود يفتح صفحة الاستعلام فارغة فقط —
+            // يُدخل المستخدم الرمز ورقم الهوية يدوياً ويضغط «استعلام» بنفسه (لا تعبئة ولا استعلام تلقائي)
         });
 
         function resetForm() {
