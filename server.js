@@ -4426,7 +4426,9 @@ app.get('/health', (req, res) => {
 });
 
 // Ensure SPA routes always return index.html instead of Not Found
-app.get('*', (req, res) => {
+app.get('*', (req, res, next) => {
+    // إصلاح حرج: /setup كان معترَضاً هنا فتعذّل ضبط الويبهوك يدوياً عند انقطاعه — نمرره لمعالجه الحقيقي
+    if (req.path === '/setup') return next();
     if (req.path.startsWith('/api') || req.path.startsWith(`/webhook/${TOKEN}`)) {
         return res.status(404).json({ success: false, error: 'Route not found' });
     }
@@ -4518,9 +4520,31 @@ const startServer = async () => {
             await setupWebhook();
             
             app.post(`/webhook/${TOKEN}`, (req, res) => {
-                bot.processUpdate(req.body);
+                // حماية: لا تسمح لأي تحديث تيليجرام بإسقاط العملية — نُقر بالاستقبال دائماً (200)
+                try {
+                    Promise.resolve(bot.processUpdate(req.body))
+                        .catch(e => console.error('processUpdate error:', e.message));
+                } catch (e) {
+                    console.error('processUpdate sync error:', e.message);
+                }
                 res.sendStatus(200);
             });
+
+            // ⛑️ دودة حماية للويبهوك: فحص كل 5 دقائق — إذا حُذف الويبهوك أو تغيّر
+            // (مثلاً بتعارض مثيل polling محلي بنفس التوكن) أو فشل التسليم مؤخراً، يُعاد ضبطه تلقائياً
+            const expectedWebhook = webhookUrl;
+            setInterval(async () => {
+                try {
+                    const info = await bot.getWebHookInfo();
+                    const recentError = info.last_error_date && (Math.floor(Date.now() / 1000) - info.last_error_date) < 600;
+                    if (!info.url || info.url !== expectedWebhook || recentError) {
+                        console.warn(`⛑️ Webhook check: url=${info.url || 'MISSING'} lastError=${info.last_error_message || 'none'} — re-setting`);
+                        await bot.setWebHook(expectedWebhook);
+                    }
+                } catch (e) {
+                    console.error('⛑️ Webhook self-heal failed:', e.message);
+                }
+            }, 5 * 60 * 1000).unref();
         }
 
         // Configure Open button with the correct Render URL
