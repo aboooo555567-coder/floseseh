@@ -4566,6 +4566,27 @@ const startServer = async () => {
             }, 5 * 60 * 1000).unref();
         }
 
+        // ☕ Keep-alive: خطة Render المجانية تُسبّ الخدمة بعد ~15 دقيقة بلا طلبات واردة،
+        // فيبدو البوت «متوقفاً» وأول رسالة/زيارة بعدها تنتظر إقلاعاً بارداً (30-60 ثانية).
+        // نداء ذاتي كل 10 دقائق لـ /health عبر العنوان العام يمنع الإسبان تماماً
+        // (النداء يخرج للإنترنت ويعود كطلب وارد — يُحتسب نشاطاً لدى Render).
+        if (process.env.RENDER_EXTERNAL_URL && process.env.NODE_ENV !== 'test') {
+            const selfPing = () => {
+                try {
+                    const req = https.get(`${process.env.RENDER_EXTERNAL_URL}/health`, { timeout: 20000 }, (r) => {
+                        r.resume();
+                        if (r.statusCode !== 200) console.warn(`☕ Keep-alive: HTTP ${r.statusCode}`);
+                    });
+                    req.on('timeout', () => req.destroy(new Error('timeout')));
+                    req.on('error', (e) => console.warn(`☕ Keep-alive failed: ${e.message}`));
+                } catch (e) {
+                    console.warn(`☕ Keep-alive failed: ${e.message}`);
+                }
+            };
+            setTimeout(selfPing, 60 * 1000).unref();           // أول نداء بعد دقيقة من الإقلاع
+            setInterval(selfPing, 10 * 60 * 1000).unref();     // ثم كل 10 دقائق (داخل نافذة الـ15)
+        }
+
         // Configure Open button with the correct Render URL
         await configureChatMenuButton();
 
