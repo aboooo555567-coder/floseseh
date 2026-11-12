@@ -4441,7 +4441,21 @@ app.get('/api/verify', async (req, res) => {
 
 // Health check endpoint (required by Render healthCheckPath)
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', fonts: FONT_MODE, printQueue: pdfQueueLength, githubSync: GITHUB_SYNC_ENABLED && !!githubSyncToken });
+    // فحص حي لمتصفح Chrome الذي يعتمد عليه توليد PDF — فشله الصامت يعطل الإصدارات كلياً
+    let chromePath = resolveChromeExecutablePath();
+    if (!chromePath || !fsSync.existsSync(chromePath)) {
+        try {
+            const pp = puppeteer.executablePath();
+            if (pp && fsSync.existsSync(pp)) chromePath = pp;
+        } catch (e) { /* puppeteer لم يجد شيئاً */ }
+    }
+    const chromeOk = !!(chromePath && fsSync.existsSync(chromePath));
+    res.status(200).json({
+        status: 'ok', fonts: FONT_MODE, printQueue: pdfQueueLength,
+        githubSync: GITHUB_SYNC_ENABLED && !!githubSyncToken,
+        chrome: chromeOk,
+        chromePath: chromeOk ? chromePath : 'MISSING'
+    });
 });
 
 // Ensure SPA routes always return index.html instead of Not Found
@@ -4593,13 +4607,28 @@ const startServer = async () => {
         
         // Ensure Puppeteer Chrome is installed on Render
         if (process.env.NODE_ENV !== 'test') {
-            try {
-                console.log('Checking and installing Puppeteer Chrome if missing...');
-                const { execSync } = require('child_process');
-                execSync('npx puppeteer browsers install chrome', { stdio: 'inherit' });
-                console.log('Chrome installation verified.');
-            } catch (err) {
-                console.error('Failed to ensure Chrome:', err.message);
+            const chromeUsable = () => {
+                let p = resolveChromeExecutablePath();
+                if (p && fsSync.existsSync(p)) return p;
+                try {
+                    const pp = puppeteer.executablePath();
+                    if (pp && fsSync.existsSync(pp)) return pp;
+                } catch (e) { /* غير موجود */ }
+                return null;
+            };
+            if (chromeUsable()) {
+                console.log('✅ Chrome ready for PDF generation:', chromeUsable());
+            } else {
+                try {
+                    console.log('Chrome missing — installing now...');
+                    const { execSync } = require('child_process');
+                    execSync('npx puppeteer browsers install chrome', { stdio: 'inherit', timeout: 5 * 60 * 1000 });
+                } catch (err) {
+                    console.error('Failed to ensure Chrome:', err.message);
+                }
+                const finalChrome = chromeUsable();
+                if (finalChrome) console.log('✅ Chrome installed and ready:', finalChrome);
+                else console.error('❌ CHROME MISSING — توليد PDF سيفشل حتى الإقلاع التالي! تحقق من شبكة الحاوية.');
             }
         }
 
