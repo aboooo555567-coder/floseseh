@@ -2246,8 +2246,8 @@
       "status": "active",
       "plan": "points",
       "report_payment_source": "points",
-      "points": 0,
-      "balance_points": 0,
+      "points": 25,
+      "balance_points": 25,
       "subscriptionDays": 21,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
@@ -2371,7 +2371,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-12T02:14:46.737Z",
+      "updatedAt": "2026-11-12T06:42:27.428Z",
       "daysRemaining": 21,
       "daysUsed": 9,
       "reportsCount": 3
@@ -2558,6 +2558,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794465747428_j4dhhn",
+      "timestamp": "2026-11-12T06:42:27.428Z",
+      "admin_chat_id": "7853478744",
+      "target_chat_id": "7188905780",
+      "operation": "add_points",
+      "amount": 25,
+      "previous_value": "0",
+      "new_value": "25",
+      "details": "إضافة 25 نقطة إلى رصيد المشترك (مصدر الدفع: نقاط)"
+    },
     {
       "id": "tx_1794444172662_0vvfrt",
       "timestamp": "2026-11-12T00:42:52.662Z",
