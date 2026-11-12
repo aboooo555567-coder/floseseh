@@ -197,7 +197,12 @@ app.use(fontInject());
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static(__dirname));
+// HTML دائماً بدون كاش — متصفح تيليجرام المدمج قد يخدم نسخة app.js قديمة إن سمح لكاش index.html
+app.use(express.static(__dirname, {
+    setHeaders: (res, fp) => {
+        if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+}));
 app.use('/assets', express.static(path.join(__dirname, 'الشعارات')));
 app.use('/logos', express.static(path.join(__dirname, 'الشعارات')));
 
@@ -4440,7 +4445,7 @@ app.get('/api/verify', async (req, res) => {
 });
 
 // Health check endpoint (required by Render healthCheckPath)
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
     // فحص حي لمتصفح Chrome الذي يعتمد عليه توليد PDF — فشله الصامت يعطل الإصدارات كلياً
     let chromePath = resolveChromeExecutablePath();
     if (!chromePath || !fsSync.existsSync(chromePath)) {
@@ -4450,12 +4455,32 @@ app.get('/health', (req, res) => {
         } catch (e) { /* puppeteer لم يجد شيئاً */ }
     }
     const chromeOk = !!(chromePath && fsSync.existsSync(chromePath));
-    res.status(200).json({
+    const payload = {
         status: 'ok', fonts: FONT_MODE, printQueue: pdfQueueLength,
         githubSync: GITHUB_SYNC_ENABLED && !!githubSyncToken,
         chrome: chromeOk,
         chromePath: chromeOk ? chromePath : 'MISSING'
-    });
+    };
+    // ?deep=1 — إطلاق Chrome فعلياً بنفس معاملات توليد PDF للتأكد من قابلية التشغيل
+    // (وجود الملف لا يعني أنه يعمل: مكتبات نظام ناقصة تفشل عند الإطلاق فقط)
+    if (req.query.deep === '1') {
+        try {
+            const b = await puppeteer.launch({
+                headless: true, timeout: 60000,
+                executablePath: chromeOk ? chromePath : undefined,
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
+            });
+            const pg = await b.newPage();
+            await pg.setContent('<h1>ok</h1>', { waitUntil: 'load', timeout: 15000 });
+            payload.chromeLaunch = 'ok';
+            payload.chromeVersion = await b.version();
+            await b.close();
+        } catch (e) {
+            payload.chromeLaunch = 'FAILED';
+            payload.chromeError = String(e.message).split('\n').slice(0, 3).join(' | ');
+        }
+    }
+    res.status(200).json(payload);
 });
 
 // Ensure SPA routes always return index.html instead of Not Found
@@ -4465,6 +4490,7 @@ app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api') || req.path.startsWith(`/webhook/${TOKEN}`)) {
         return res.status(404).json({ success: false, error: 'Route not found' });
     }
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
