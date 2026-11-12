@@ -2248,7 +2248,7 @@
       "report_payment_source": "points",
       "points": 20,
       "balance_points": 20,
-      "subscriptionDays": 21,
+      "subscriptionDays": 20,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
       "subscriptionExpires": "2026-12-02T13:11:03.686Z",
@@ -2409,9 +2409,9 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-12T06:49:18.692Z",
-      "daysRemaining": 21,
-      "daysUsed": 9,
+      "updatedAt": "2026-11-12T18:50:47.217Z",
+      "daysRemaining": 20,
+      "daysUsed": 10,
       "reportsCount": 4
     },
     "8702027800": {
