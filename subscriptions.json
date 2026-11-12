@@ -2246,8 +2246,8 @@
       "status": "active",
       "plan": "points",
       "report_payment_source": "points",
-      "points": 5,
-      "balance_points": 5,
+      "points": 0,
+      "balance_points": 0,
       "subscriptionDays": 20,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
@@ -2518,15 +2518,53 @@
             "license_number": "",
             "include_qr": false
           }
+        },
+        {
+          "id": "GSL26102179985",
+          "patientName": "الين يحي المالكي ",
+          "type": "visit_review",
+          "issueDate": "2026-10-21",
+          "data": {
+            "admission_date": "2026-10-21",
+            "discharge_date": "2026-10-21",
+            "admission_time": "10:00",
+            "discharge_time": "12:15",
+            "visit_type": "طوارئ",
+            "visit_type_ar": "طوارئ",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-10-21",
+            "issue_time": "12:15",
+            "national_id": "1136227780",
+            "patient_name_ar": "الين يحي المالكي ",
+            "patient_name_en": "ALEEN YAHYA AL-MALIKI",
+            "nationality": "السعودية",
+            "employer": "طالبة",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "بدرية الدوسري",
+            "doctor_name_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "إدارة المختبرات وبنوك الدم",
+            "hospital_en": "",
+            "hospital_type": "gov",
+            "license_number": "",
+            "include_qr": false
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-12T19:54:14.509Z",
+      "updatedAt": "2026-11-12T19:56:27.138Z",
       "daysRemaining": 20,
       "daysUsed": 10,
-      "reportsCount": 7
+      "reportsCount": 8
     },
     "8702027800": {
       "points": 5,
@@ -2710,6 +2748,17 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794513387138_0r5qak",
+      "timestamp": "2026-11-12T19:56:27.138Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "7188905780",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "0",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26102179985 (generate-native-pdf)"
+    },
     {
       "id": "tx_1794512726060_3pq7e9",
       "timestamp": "2026-11-12T19:45:26.061Z",
