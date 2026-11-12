@@ -89,8 +89,6 @@ const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://floseseh.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=52';
-// صفحة الاستعلام العامة — زر موحّد في كل مواضع الدخول (URL يبقى صالحاً مع وجود ?v في الأصل)
-const INQUIRY_URL = new URL('/inquiry', WEB_APP_URL_CACHED).href;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'ppppokl';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '7853478744';
 // لوحة الإدارة (أزرار الإشعارات تنقل المالك مباشرة لشحن نقاط المشترك)
@@ -1249,8 +1247,7 @@ const handleStartCommand = async (msg) => {
     // (لوحة الرد خاصة بكل محادثة في تيليجرام — لذا الزر الإداري لا يراه أحد غير المالك)
     const ownerQuickKeyboard = [
         [{ text: '🛒 متجر الباقات' }, { text: '🔗 كسب نقاط (الإحالات)' }, { text: '📘 دليل الاستخدام' }],
-        [{ text: '💳 شحن حسابي' }, { text: '📊 حالة حسابي' }],
-        [{ text: '🔍 استعلام عن تقرير' }]
+        [{ text: '💳 شحن حسابي' }, { text: '📊 حالة حسابي' }]
     ];
     if (isBotAdmin(chatId, msg.from?.username)) {
         ownerQuickKeyboard[1].push({ text: '📢 رسالة للجميع' });
@@ -1295,7 +1292,6 @@ ${statusIcon} اشتراكك ${statusText}
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }],
-                [{ text: '🔍 استعلام عن تقرير', url: INQUIRY_URL }],
                 [{ text: 'دعوة صديق 🎁', callback_data: 'referrals' }],
                 [{ text: 'باقات الاشتراك 💎', callback_data: 'packages' }],
                 [{ text: '💳 شحن حسابي (طريقة الدفع)', callback_data: 'recharge_info' }],
@@ -1310,11 +1306,7 @@ bot.onText(/^\/start(\/verify)?(@\w+)?(\s.*)?$/i, handleStartCommand);
 // /help command
 bot.onText(/\/help/, async (msg) => {
     const chatId = msg.chat.id.toString();
-    await bot.sendMessage(chatId, `مرحباً!\nاستخدم /start للبدء.\n🔍 للاستعلام عن تقرير صادر من المنصة: ${INQUIRY_URL}\nإذا كنت مسؤولاً، يمكنك استخدام /addsub @username <days> لتفعيل الاشتراك.`, {
-        reply_markup: {
-            inline_keyboard: [[{ text: '🔍 فتح صفحة الاستعلام', url: INQUIRY_URL }]]
-        }
-    });
+    await bot.sendMessage(chatId, `مرحباً!\nاستخدم /start للبدء.\nإذا كنت مسؤولاً، يمكنك استخدام /addsub @username <days> لتفعيل الاشتراك.`);
 });
 
 // /charge command — نص تعليمات الشحن (طلب المالك: زر «شحن حسابي» يظهر التعليمات)
@@ -1836,16 +1828,6 @@ bot.on('message', async (msg) => {
         }
     }
     
-    // 🔍 استعلام عن تقرير — يفتح صفحة الاستعلام العامة (إدخال الرمز والهوية يدوياً ثم الاستعلام)
-    if (msg.text === '🔍 استعلام عن تقرير') {
-        await bot.sendMessage(chatId, `🔍 للاستعلام عن أي تقرير صادر من المنصة:\n\n1️⃣ افتح صفحة الاستعلام من الزر بالأسفل\n2️⃣ أدخل رمز الخدمة ورقم هوية المريض يدوياً\n3️⃣ اضغط «استعلام»`, {
-            reply_markup: {
-                inline_keyboard: [[{ text: '🔍 فتح صفحة الاستعلام', url: INQUIRY_URL }]]
-            }
-        });
-        return;
-    }
-
     if (msg.text === '📊 حالة حسابي') {
         await sendMyStatusMessage(chatId, username);
         return;
@@ -2191,7 +2173,6 @@ const sendUsageGuideMessage = async (chatId) => {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'Open — فتح التطبيق', web_app: { url: WEB_APP_URL_CACHED } }],
-                [{ text: '🔍 استعلام عن تقرير', url: INQUIRY_URL }],
                 [
                     { text: '🛒 متجر الباقات', callback_data: 'packages' },
                     { text: '💳 تعليمات الشحن', callback_data: 'recharge_info' }
