@@ -2371,7 +2371,7 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-12T00:25:46.891Z",
+      "updatedAt": "2026-11-12T00:45:05.877Z",
       "daysRemaining": 21,
       "daysUsed": 9,
       "reportsCount": 3
@@ -2496,8 +2496,8 @@
       "reportsCount": 2
     },
     "8589071159": {
-      "points": 5,
-      "balance_points": 5,
+      "points": 0,
+      "balance_points": 0,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -2505,19 +2505,70 @@
       "plan": "points",
       "report_payment_source": "points",
       "username": "yrhej12",
-      "name": null,
-      "reports": [],
+      "name": "A M",
+      "reports": [
+        {
+          "id": "GSL26101210690",
+          "patientName": "الين يحي المالكي",
+          "type": "visit_review",
+          "issueDate": "2026-10-12",
+          "data": {
+            "admission_date": "2026-10-12",
+            "discharge_date": "2026-10-12",
+            "admission_time": "14:00",
+            "discharge_time": "17:00",
+            "visit_type": "مراجعة",
+            "visit_type_ar": "مراجعة",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-10-12",
+            "issue_time": "17:00",
+            "national_id": "1136227780",
+            "patient_name_ar": "الين يحي المالكي",
+            "patient_name_en": "ALEEN YAHYA AL-MALIKI",
+            "nationality": "السعودية",
+            "employer": "طالبة",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "أسامة الغامدي",
+            "doctor_name_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مركز صحي السيل الصغير",
+            "hospital_en": "",
+            "hospital_type": "gov",
+            "license_number": "",
+            "include_qr": false
+          }
+        }
+      ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-12T00:38:43.965Z",
+      "updatedAt": "2026-11-12T00:54:46.592Z",
       "subscription_start_date": "2026-11-10T22:41:50.183Z",
       "daysRemaining": 0,
       "daysUsed": 1,
-      "reportsCount": 0
+      "reportsCount": 1,
+      "trialUsed": true
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794444172662_0vvfrt",
+      "timestamp": "2026-11-12T00:42:52.662Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8589071159",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "0",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26101210690 (generate-native-pdf)"
+    },
     {
       "id": "tx_1794442160280_wf508z",
       "timestamp": "2026-11-12T00:09:20.280Z",
@@ -3558,6 +3609,21 @@
   "activeZeroModelAt": "2026-09-19T00:00:00.000Z",
   "prefills": {},
   "requests": [
+    {
+      "id": "rq1084e79e6ddf",
+      "chatId": "8589071159",
+      "name": "A M",
+      "username": "yrhej12",
+      "pkgId": "Points 20",
+      "label": "حزمة 20 نقطة",
+      "price": 15,
+      "points": 20,
+      "days": 0,
+      "status": "pending",
+      "createdAt": "2026-11-12T00:49:51.368Z",
+      "handledAt": null,
+      "handledVia": null
+    },
     {
       "id": "rq8ace564362be",
       "chatId": "8516884171",
