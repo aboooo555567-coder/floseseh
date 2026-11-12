@@ -1669,10 +1669,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-06T01:03:01.983Z",
+      "updatedAt": "2026-11-12T00:31:44.299Z",
       "subscription_start_date": "2026-09-23T19:45:01.555Z",
       "daysRemaining": 0,
-      "daysUsed": 43,
+      "daysUsed": 49,
       "reportsCount": 0
     },
     "8081309179": {
@@ -2246,8 +2246,8 @@
       "status": "active",
       "plan": "points",
       "report_payment_source": "points",
-      "points": 5,
-      "balance_points": 5,
+      "points": 0,
+      "balance_points": 0,
       "subscriptionDays": 21,
       "subscription_start_date": "2026-11-02T13:11:03.686Z",
       "subscription_end_date": "2026-12-02T13:11:03.686Z",
@@ -2328,15 +2328,53 @@
             "license_number": "",
             "include_qr": true
           }
+        },
+        {
+          "id": "GSL26101464247",
+          "patientName": "الين يحي المالكي ",
+          "type": "visit_review",
+          "issueDate": "2026-10-14",
+          "data": {
+            "admission_date": "2026-10-14",
+            "discharge_date": "2026-10-14",
+            "admission_time": "21:30",
+            "discharge_time": "23:05",
+            "visit_type": "مراجعة",
+            "visit_type_ar": "مراجعة",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-10-14",
+            "issue_time": "11:05",
+            "national_id": "1136227780",
+            "patient_name_ar": "الين يحي المالكي ",
+            "patient_name_en": "ALEEN YAHYA AL-MALIKI",
+            "nationality": "السعودية",
+            "employer": "طالبة",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "نواف السبيعي ",
+            "doctor_name_en": "",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مركز صحي شقصان",
+            "hospital_en": "",
+            "hospital_type": "gov",
+            "license_number": "",
+            "include_qr": false
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-11T23:42:21.481Z",
+      "updatedAt": "2026-11-12T00:25:46.891Z",
       "daysRemaining": 21,
       "daysUsed": 9,
-      "reportsCount": 2
+      "reportsCount": 3
     },
     "8702027800": {
       "points": 5,
@@ -2360,8 +2398,8 @@
       "reportsCount": 0
     },
     "8516884171": {
-      "points": 5,
-      "balance_points": 5,
+      "points": 0,
+      "balance_points": 0,
       "subscriptionDays": 0,
       "subscriptionExpires": null,
       "subscription_end_date": null,
@@ -2375,7 +2413,7 @@
           "id": "GSL26111205205",
           "patientName": "الين يحي المالكي",
           "type": "visit_review",
-          "issueDate": "2026-11-12",
+          "issueDate": "2026-10-12",
           "data": {
             "admission_date": "2026-10-12",
             "discharge_date": "2026-11-12",
@@ -2387,7 +2425,7 @@
             "file_admission_date": "",
             "file_discharge_date": "",
             "duration": "1",
-            "issue_date": "2026-11-12",
+            "issue_date": "2026-10-12",
             "issue_time": "17:11",
             "national_id": "1136227780",
             "patient_name_ar": "الين يحي المالكي",
@@ -2408,16 +2446,54 @@
             "license_number": "",
             "include_qr": false
           }
+        },
+        {
+          "id": "GSL26101474450",
+          "patientName": "الين يحي المالكي ",
+          "type": "visit_review",
+          "issueDate": "2026-10-14",
+          "data": {
+            "admission_date": "2026-10-14",
+            "discharge_date": "2026-10-14",
+            "admission_time": "09:30",
+            "discharge_time": "23:00",
+            "visit_type": "مراجعة",
+            "visit_type_ar": "مراجعة",
+            "file_dates_enabled": false,
+            "file_admission_date": "",
+            "file_discharge_date": "",
+            "duration": "1",
+            "issue_date": "2026-10-14",
+            "issue_time": "23:00",
+            "national_id": "1136227780",
+            "patient_name_ar": "الين يحي المالكي ",
+            "patient_name_en": "ALEEN YAHYA AL-MALIKI",
+            "nationality": "السعودية",
+            "employer": "طالبة",
+            "escort_name_ar": "",
+            "escort_name_en": "",
+            "relation_ar": "",
+            "relation_en": "",
+            "doctor_name_ar": "",
+            "doctor_name_en": "نواف السبيعي ",
+            "job_title_ar": "طبيب عام",
+            "job_title_en": "General",
+            "hospital_ar": "مركز صحي شقصان",
+            "hospital_en": "",
+            "hospital_type": "gov",
+            "license_number": "",
+            "include_qr": false
+          }
         }
       ],
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-11T23:55:31.232Z",
+      "updatedAt": "2026-11-12T00:36:45.268Z",
       "subscription_start_date": "2026-11-10T22:41:25.975Z",
       "daysRemaining": 0,
       "daysUsed": 1,
-      "reportsCount": 1
+      "reportsCount": 2
     },
     "8589071159": {
       "points": 5,
@@ -2442,6 +2518,28 @@
     }
   },
   "transactions": [
+    {
+      "id": "tx_1794442160280_wf508z",
+      "timestamp": "2026-11-12T00:09:20.280Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "7188905780",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "0",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26101464247 (generate-native-pdf)"
+    },
+    {
+      "id": "tx_1794441694882_2t0n4v",
+      "timestamp": "2026-11-12T00:01:34.882Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "8516884171",
+      "operation": "report_deduction",
+      "amount": 5,
+      "previous_value": "5",
+      "new_value": "0",
+      "details": "خصم 5 نقاط عند إصدار التقرير GSL26101474450 (generate-native-pdf)"
+    },
     {
       "id": "tx_1794441330476_fb3s23",
       "timestamp": "2026-11-11T23:55:30.476Z",
@@ -3460,6 +3558,36 @@
   "activeZeroModelAt": "2026-09-19T00:00:00.000Z",
   "prefills": {},
   "requests": [
+    {
+      "id": "rq8ace564362be",
+      "chatId": "8516884171",
+      "name": "ايلان محمد",
+      "username": "Aamdsaa",
+      "pkgId": "Month 1",
+      "label": "خطة 30 يوم لامحدودة",
+      "price": 100,
+      "points": 0,
+      "days": 30,
+      "status": "pending",
+      "createdAt": "2026-11-12T00:35:57.999Z",
+      "handledAt": null,
+      "handledVia": null
+    },
+    {
+      "id": "rqabcc5862b88d",
+      "chatId": "8516884171",
+      "name": "ايلان محمد",
+      "username": "Aamdsaa",
+      "pkgId": "Points 5",
+      "label": "حزمة البداية (5 نقاط)",
+      "price": 5,
+      "points": 5,
+      "days": 0,
+      "status": "pending",
+      "createdAt": "2026-11-12T00:02:32.495Z",
+      "handledAt": null,
+      "handledVia": null
+    },
     {
       "id": "rqd0ef32d8ffe4",
       "chatId": "5275574402",
