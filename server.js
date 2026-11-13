@@ -195,12 +195,7 @@ app.use(fontInject());
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-// HTML دائماً بدون كاش — متصفح تيليجرام المدمج قد يخدم نسخة app.js قديمة إن سمح لكاش index.html
-app.use(express.static(__dirname, {
-    setHeaders: (res, fp) => {
-        if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-    }
-}));
+app.use(express.static(__dirname));
 app.use('/assets', express.static(path.join(__dirname, 'الشعارات')));
 app.use('/logos', express.static(path.join(__dirname, 'الشعارات')));
 
@@ -2398,8 +2393,7 @@ app.post('/api/packages/request', express.json(), async (req, res) => {
         const cleanId = String(chatId || '').trim();
         if (!pkg) return res.status(400).json({ success: false, error: 'باقة غير معروفة' });
         if (!cleanId || !/^\d+$/.test(cleanId)) return res.status(400).json({ success: false, error: 'Chat ID غير صالح' });
-        // ملاحظة: طلب المالك نفسه (اختباراً أو لشحن حسابه) يُشعَر به أيضاً — لا استثناء هنا
-        // (إصلاح: الحارس السابق كان يبتلع إشعار التجربة عندما يضغط المالك على باقة بنفسه)
+        if (cleanId === String(ADMIN_CHAT_ID)) return res.json({ success: true, skipped: true });
 
         // منع التكرار: نفس الطلب خلال 30 ثانية يُتجاهل بهدوء (حماية من الضغط المتكرر)
         const tKey = `${cleanId}:${pkgId}`;
@@ -2455,23 +2449,17 @@ if (TEST_MODE) {
         TEST_SENT_MESSAGES.length = 0;
         res.json({ success: true });
     });
-    // محاكاة ضغط المالك على زر داخل إشعار تيليجرام (شحن سريع qpkg أو اعتماد/رفض reqok/reqno)
+    // محاكاة ضغط المالك على زر الشحن السريع في إشعار تيليجرام
     app.post('/api/test/callback', express.json(), async (req, res) => {
         try {
             const { data, fromId } = req.body || {};
             const fid = parseInt(fromId) || parseInt(ADMIN_CHAT_ID);
-            const query = {
+            await processQuickAddCallback({
                 id: 'testcb-' + Date.now(),
                 data,
                 from: { id: fid, username: 'test_owner', first_name: 'Owner' },
                 message: { chat: { id: fid } }
-            };
-            const d = String(data || '');
-            if (d.startsWith('reqok:') || d.startsWith('reqno:')) {
-                await processRequestDecisionCallback(query);
-            } else {
-                await processQuickAddCallback(query);
-            }
+            });
             res.json({ success: true });
         } catch (err) { res.status(500).json({ success: false, error: err.message }); }
     });
@@ -4262,8 +4250,8 @@ ${tableRows}
 
         // إشعار المالك: أي مستخدم يصدر تقريراً يظهر إشعار فوري في محادثة المالك
         // (طلب المالك: «اي مستخدم يصدر تقرير يظهر عندي اشعار انه تم اصدار تقرير من المستخدم»)
-        // العينة التجريبية مستثناة فقط — إصدار المالك نفسه يُشعَر به أيضاً (يتيح له اختبار الإشعار والاطلاع).
-        if (!isTrial) {
+        // العينة التجريبية والمالك نفسه مستثنيان لتجنب الضجيج.
+        if (!isTrial && chatIdStr !== String(ADMIN_CHAT_ID)) {
             const issuerName = normalized.name || (normalized.username ? '@' + normalized.username : chatIdStr);
             const issuerUname = normalized.username ? '@' + normalized.username : 'لا يوجد';
             const payLine = (paySourceUsed === 'points')
@@ -4402,12 +4390,7 @@ app.get('/api/verify', async (req, res) => {
         let foundReport = null;
         for (const user of Object.values(data.subscriptions)) {
             if (user.reports) {
-                // الهوية تُحفظ داخل data.national_id — نقبل أيضاً nationalId بالأعلى للسجلات القديمة
-                const report = user.reports.find(r => {
-                    if (r.id !== id) return false;
-                    if (r.nationalId === nid) return true;
-                    return !!(r.data && (r.data.national_id === nid || r.data.nationalId === nid));
-                });
+                const report = user.reports.find(r => r.id === id && r.nationalId === nid);
                 if (report) {
                     foundReport = report;
                     break;
@@ -4426,52 +4409,15 @@ app.get('/api/verify', async (req, res) => {
 });
 
 // Health check endpoint (required by Render healthCheckPath)
-app.get('/health', async (req, res) => {
-    // فحص حي لمتصفح Chrome الذي يعتمد عليه توليد PDF — فشله الصامت يعطل الإصدارات كلياً
-    let chromePath = resolveChromeExecutablePath();
-    if (!chromePath || !fsSync.existsSync(chromePath)) {
-        try {
-            const pp = puppeteer.executablePath();
-            if (pp && fsSync.existsSync(pp)) chromePath = pp;
-        } catch (e) { /* puppeteer لم يجد شيئاً */ }
-    }
-    const chromeOk = !!(chromePath && fsSync.existsSync(chromePath));
-    const payload = {
-        status: 'ok', fonts: FONT_MODE, printQueue: pdfQueueLength,
-        githubSync: GITHUB_SYNC_ENABLED && !!githubSyncToken,
-        chrome: chromeOk,
-        chromePath: chromeOk ? chromePath : 'MISSING'
-    };
-    // ?deep=1 — إطلاق Chrome فعلياً بنفس معاملات توليد PDF للتأكد من قابلية التشغيل
-    // (وجود الملف لا يعني أنه يعمل: مكتبات نظام ناقصة تفشل عند الإطلاق فقط)
-    if (req.query.deep === '1') {
-        try {
-            const b = await puppeteer.launch({
-                headless: true, timeout: 60000,
-                executablePath: chromeOk ? chromePath : undefined,
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
-            });
-            const pg = await b.newPage();
-            await pg.setContent('<h1>ok</h1>', { waitUntil: 'load', timeout: 15000 });
-            payload.chromeLaunch = 'ok';
-            payload.chromeVersion = await b.version();
-            await b.close();
-        } catch (e) {
-            payload.chromeLaunch = 'FAILED';
-            payload.chromeError = String(e.message).split('\n').slice(0, 3).join(' | ');
-        }
-    }
-    res.status(200).json(payload);
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', fonts: FONT_MODE, printQueue: pdfQueueLength, githubSync: GITHUB_SYNC_ENABLED && !!githubSyncToken });
 });
 
 // Ensure SPA routes always return index.html instead of Not Found
-app.get('*', (req, res, next) => {
-    // إصلاح حرج: /setup كان معترَضاً هنا فتعذّل ضبط الويبهوك يدوياً عند انقطاعه — نمرره لمعالجه الحقيقي
-    if (req.path === '/setup') return next();
+app.get('*', (req, res) => {
     if (req.path.startsWith('/api') || req.path.startsWith(`/webhook/${TOKEN}`)) {
         return res.status(404).json({ success: false, error: 'Route not found' });
     }
-    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
@@ -4560,52 +4506,9 @@ const startServer = async () => {
             await setupWebhook();
             
             app.post(`/webhook/${TOKEN}`, (req, res) => {
-                // حماية: لا تسمح لأي تحديث تيليجرام بإسقاط العملية — نُقر بالاستقبال دائماً (200)
-                try {
-                    Promise.resolve(bot.processUpdate(req.body))
-                        .catch(e => console.error('processUpdate error:', e.message));
-                } catch (e) {
-                    console.error('processUpdate sync error:', e.message);
-                }
+                bot.processUpdate(req.body);
                 res.sendStatus(200);
             });
-
-            // ⛑️ دودة حماية للويبهوك: فحص كل 5 دقائق — إذا حُذف الويبهوك أو تغيّر
-            // (مثلاً بتعارض مثيل polling محلي بنفس التوكن) أو فشل التسليم مؤخراً، يُعاد ضبطه تلقائياً
-            const expectedWebhook = webhookUrl;
-            setInterval(async () => {
-                try {
-                    const info = await bot.getWebHookInfo();
-                    const recentError = info.last_error_date && (Math.floor(Date.now() / 1000) - info.last_error_date) < 600;
-                    if (!info.url || info.url !== expectedWebhook || recentError) {
-                        console.warn(`⛑️ Webhook check: url=${info.url || 'MISSING'} lastError=${info.last_error_message || 'none'} — re-setting`);
-                        await bot.setWebHook(expectedWebhook);
-                    }
-                } catch (e) {
-                    console.error('⛑️ Webhook self-heal failed:', e.message);
-                }
-            }, 5 * 60 * 1000).unref();
-        }
-
-        // ☕ Keep-alive: خطة Render المجانية تُسبّ الخدمة بعد ~15 دقيقة بلا طلبات واردة،
-        // فيبدو البوت «متوقفاً» وأول رسالة/زيارة بعدها تنتظر إقلاعاً بارداً (30-60 ثانية).
-        // نداء ذاتي كل 10 دقائق لـ /health عبر العنوان العام يمنع الإسبان تماماً
-        // (النداء يخرج للإنترنت ويعود كطلب وارد — يُحتسب نشاطاً لدى Render).
-        if (process.env.RENDER_EXTERNAL_URL && process.env.NODE_ENV !== 'test') {
-            const selfPing = () => {
-                try {
-                    const req = https.get(`${process.env.RENDER_EXTERNAL_URL}/health`, { timeout: 20000 }, (r) => {
-                        r.resume();
-                        if (r.statusCode !== 200) console.warn(`☕ Keep-alive: HTTP ${r.statusCode}`);
-                    });
-                    req.on('timeout', () => req.destroy(new Error('timeout')));
-                    req.on('error', (e) => console.warn(`☕ Keep-alive failed: ${e.message}`));
-                } catch (e) {
-                    console.warn(`☕ Keep-alive failed: ${e.message}`);
-                }
-            };
-            setTimeout(selfPing, 60 * 1000).unref();           // أول نداء بعد دقيقة من الإقلاع
-            setInterval(selfPing, 10 * 60 * 1000).unref();     // ثم كل 10 دقائق (داخل نافذة الـ15)
         }
 
         // Configure Open button with the correct Render URL
@@ -4614,28 +4517,13 @@ const startServer = async () => {
         
         // Ensure Puppeteer Chrome is installed on Render
         if (process.env.NODE_ENV !== 'test') {
-            const chromeUsable = () => {
-                let p = resolveChromeExecutablePath();
-                if (p && fsSync.existsSync(p)) return p;
-                try {
-                    const pp = puppeteer.executablePath();
-                    if (pp && fsSync.existsSync(pp)) return pp;
-                } catch (e) { /* غير موجود */ }
-                return null;
-            };
-            if (chromeUsable()) {
-                console.log('✅ Chrome ready for PDF generation:', chromeUsable());
-            } else {
-                try {
-                    console.log('Chrome missing — installing now...');
-                    const { execSync } = require('child_process');
-                    execSync('npx puppeteer browsers install chrome', { stdio: 'inherit', timeout: 5 * 60 * 1000 });
-                } catch (err) {
-                    console.error('Failed to ensure Chrome:', err.message);
-                }
-                const finalChrome = chromeUsable();
-                if (finalChrome) console.log('✅ Chrome installed and ready:', finalChrome);
-                else console.error('❌ CHROME MISSING — توليد PDF سيفشل حتى الإقلاع التالي! تحقق من شبكة الحاوية.');
+            try {
+                console.log('Checking and installing Puppeteer Chrome if missing...');
+                const { execSync } = require('child_process');
+                execSync('npx puppeteer browsers install chrome', { stdio: 'inherit' });
+                console.log('Chrome installation verified.');
+            } catch (err) {
+                console.error('Failed to ensure Chrome:', err.message);
             }
         }
 
@@ -4662,11 +4550,10 @@ app.get('/setup', async (req, res) => {
         if (isProduction) {
             const webhookUrl = `${WEB_APP_URL}/webhook/${TOKEN}`;
             await bot.setWebHook(webhookUrl);
-            // إصلاح أمني: لا تُعَدِ EVER رابط الويبهوك — كان يكشف توكن البوت كاملاً لأي زائر!
             res.json({
                 success: true,
                 message: `Webhook and Menu Button configured successfully`,
-                webhookSet: true,
+                webhookUrl,
                 webAppUrl: WEB_APP_URL_CACHED
             });
         } else {
