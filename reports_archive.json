@@ -796,6 +796,44 @@
           "license_number": "",
           "include_qr": true
         }
+      },
+      "GSL26111476499": {
+        "id": "GSL26111476499",
+        "patientName": "أحمد محمد العتيبي",
+        "type": "sickleave",
+        "issueDate": "2026-11-14",
+        "data": {
+          "admission_date": "2026-11-14",
+          "discharge_date": "2026-11-16",
+          "admission_time": "",
+          "discharge_time": "",
+          "visit_type": "",
+          "visit_type_ar": "",
+          "file_dates_enabled": false,
+          "file_admission_date": "",
+          "file_discharge_date": "",
+          "duration": "3",
+          "issue_date": "2026-11-14",
+          "issue_time": "10:30",
+          "national_id": "1098765432",
+          "patient_name_ar": "أحمد محمد العتيبي",
+          "patient_name_en": "AHMED MOHAMMED ALOTAIBI",
+          "nationality": "السعودية",
+          "employer": "شركة النخبة للمقاولات",
+          "escort_name_ar": "",
+          "escort_name_en": "",
+          "relation_ar": "",
+          "relation_en": "",
+          "doctor_name_ar": "د. خالد عبدالله الشمري",
+          "doctor_name_en": "DR. KHALED ABDULLAH ALSHAMMARI",
+          "job_title_ar": "استشاري باطنية",
+          "job_title_en": "Internal Medicine Consultant",
+          "hospital_ar": "مستشفى الملك فهد التخصصي",
+          "hospital_en": "King Fahad Specialist Hospital",
+          "hospital_type": "gov",
+          "license_number": "",
+          "include_qr": true
+        }
       }
     },
     "5729445246": {
@@ -1899,5 +1937,5 @@
       }
     }
   },
-  "updatedAt": "2026-11-12T19:56:27.141Z"
+  "updatedAt": "2026-11-13T23:39:26.851Z"
 }
