@@ -197,7 +197,12 @@ app.use(fontInject());
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static(__dirname));
+// HTML دائماً بدون كاش — متصفح تيليجرام المدمج قد يخدم نسخة قديمة من التطبيق إن سُمح لكاش index.html
+app.use(express.static(__dirname, {
+    setHeaders: (res, fp) => {
+        if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    }
+}));
 app.use('/assets', express.static(path.join(__dirname, 'الشعارات')));
 app.use('/logos', express.static(path.join(__dirname, 'الشعارات')));
 
@@ -4437,6 +4442,7 @@ app.get('*', (req, res) => {
     if (req.path.startsWith('/api') || req.path.startsWith(`/webhook/${TOKEN}`)) {
         return res.status(404).json({ success: false, error: 'Route not found' });
     }
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
