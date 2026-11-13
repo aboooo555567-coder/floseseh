@@ -3181,6 +3181,8 @@ app.post('/api/admin/package', async (req, res) => {
 // --- Inquiry Endpoints ---
 // مطابقة للمستودع المرجعي alehtiat-almorish: /inquiry يخدم صفحة الاستعلام بنمط منصة صحة (Cairo)
 app.get(['/inquiry', '/inquiries/slenquiry', '/slenquiry'], (req, res) => {
+    // no-cache: متصفح تيليجرام المدمج قد يخدم نسخة قديمة مكسورة من الصفحة إن سُمح لكاشها
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     res.sendFile(path.join(__dirname, 'inquiry.html'));
 });
 app.get('/verify', (req, res) => {
