@@ -4555,6 +4555,21 @@ const startServer = async () => {
             };
             setTimeout(selfPing, 60 * 1000).unref();           // أول نداء بعد دقيقة من الإقلاع
             setInterval(selfPing, 10 * 60 * 1000).unref();     // ثم كل 10 دقائق (داخل نافذة الـ15)
+
+            // 🛡 حماية الويبهوك: إن حُذف لأي سبب (إعادة نشر، خطأ تيليجرام) يُعاد ضبطه تلقائياً
+            const assertWebhook = async () => {
+                try {
+                    const info = await bot.getWebHookInfo();
+                    if (!info.url || !String(info.url).includes('/webhook/')) {
+                        await bot.setWebHook(`${WEB_APP_URL}/webhook/${TOKEN}`);
+                        console.log('🛡 Webhook self-heal: أُعيد ضبط الويبهوك تلقائياً');
+                    }
+                } catch (e) {
+                    console.warn(`🛡 Webhook self-heal notice: ${e.message}`);
+                }
+            };
+            setTimeout(assertWebhook, 90 * 1000).unref();      // أول فحص بعد دقيقة ونصف من الإقلاع
+            setInterval(assertWebhook, 10 * 60 * 1000).unref(); // ثم كل 10 دقائق مع النداء الذاتي
         }
 
         // Configure Open button with the correct Render URL
