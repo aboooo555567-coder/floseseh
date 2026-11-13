@@ -1250,7 +1250,7 @@ const handleStartCommand = async (msg) => {
     const ownerQuickKeyboard = [
         [{ text: '🛒 متجر الباقات' }, { text: '🔗 كسب نقاط (الإحالات)' }, { text: '📘 دليل الاستخدام' }],
         [{ text: '💳 شحن حسابي' }, { text: '📊 حالة حسابي' }],
-        [{ text: '🔍 استعلام عن تقرير' }]
+        [{ text: '🔍 استعلام عن تقرير' }, { text: '🌐 فتح التطبيق في المتصفح' }]
     ];
     if (isBotAdmin(chatId, msg.from?.username)) {
         ownerQuickKeyboard[1].push({ text: '📢 رسالة للجميع' });
@@ -1841,6 +1841,22 @@ bot.on('message', async (msg) => {
         await bot.sendMessage(chatId, `🔍 للاستعلام عن أي تقرير صادر من المنصة:\n\n1️⃣ افتح صفحة الاستعلام من الزر بالأسفل\n2️⃣ أدخل رمز الخدمة ورقم هوية المريض يدوياً\n3️⃣ اضغط «استعلام»`, {
             reply_markup: {
                 inline_keyboard: [[{ text: '🔍 فتح صفحة الاستعلام', url: INQUIRY_URL }]]
+            }
+        });
+        return;
+    }
+
+    // 🌐 فتح التطبيق في متصفح الجهاز — جسر دخول يتجاوز ويبفيو تيليجرام (رمز استخدام واحد صالح 10 دقائق)
+    if (msg.text === '🌐 فتح التطبيق في المتصفح') {
+        // نظافة: حذف الرموز المنتهية قبل إصدار رمز جديد
+        for (const [k, v] of appLoginTokens) {
+            if (v.expires < Date.now()) appLoginTokens.delete(k);
+        }
+        const token = crypto.randomBytes(24).toString('hex');
+        appLoginTokens.set(token, { chatId: chatId, expires: Date.now() + 10 * 60 * 1000 });
+        await bot.sendMessage(chatId, `🌐 فتح التطبيق في متصفح الجهاز (Chrome / Safari):\n\nهذا الخيار يتجاوز نافذة تيليجرام الداخلية — مفيد إذا ظهرت شاشة بيضاء عند فتح التطبيق من زر Open.\n\n⏳ الرمز صالح ١٠ دقائق وللاستخدام مرة واحدة فقط.\nبعد أول فتح سيتعرف التطبيق على حسابك تلقائياً في هذا المتصفح.`, {
+            reply_markup: {
+                inline_keyboard: [[{ text: '🌐 فتح التطبيق في المتصفح', url: `${WEB_APP_URL}?login=${token}` }]]
             }
         });
         return;
@@ -3420,6 +3436,21 @@ app.post('/api/user/:chatId/package', async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
+});
+
+// 2.9-b جسر دخول المتصفح: رمز استخدام واحد يصدر من البوت (زر «🌐 فتح التطبيق في المتصفح») — صالح 10 دقائق
+// يرجع chatId صاحب الرمز مرة واحدة ثم يُحذف، فيتعرف عليه التطبيق في متصفح الجهاز (localStorage)
+const appLoginTokens = new Map();
+app.get('/api/app-login/:token', (req, res) => {
+    const t = String(req.params.token || '');
+    const rec = appLoginTokens.get(t);
+    res.setHeader('Cache-Control', 'no-store');
+    if (!rec || rec.expires < Date.now()) {
+        appLoginTokens.delete(t);
+        return res.status(403).json({ success: false, error: 'الرمز غير صالح أو منتهي الصلاحية — اطلب زر «🌐 فتح التطبيق في المتصفح» من البوت من جديد.' });
+    }
+    appLoginTokens.delete(t); // استخدام واحد
+    res.json({ success: true, chatId: rec.chatId });
 });
 
 // 2.9 جلب بيانات الاستمارة المعربة للتعبئة التلقائية (رمز صالح لمرة واحدة — 24 ساعة)

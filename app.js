@@ -327,6 +327,20 @@ const app = {
             document.getElementById('fab-menu').style.display = 'none';
         }
 
+        // جسر الدخول من متصفح الجهاز: ?login=رمز من زر «🌐 فتح التطبيق في المتصفح» في البوت
+        // يتجاوز ويبفيو تيليجرام نهائياً — الرمز استخدام واحد وصلاحيته 10 دقائق
+        const loginToken = urlParams.get('login');
+        if (loginToken) {
+            try {
+                const lr = await fetch('/api/app-login/' + encodeURIComponent(loginToken));
+                const ld = await lr.json();
+                if (ld.success && ld.chatId) {
+                    localStorage.setItem('floseseh_app_chat_id', String(ld.chatId));
+                    try { window.history.replaceState({}, '', window.location.pathname); } catch (eH) {}
+                }
+            } catch (eL) { console.warn('app-login failed:', eL); }
+        }
+
         if (this.tg) {
             this.tg.expand();
             if (this.tg.initDataUnsafe && this.tg.initDataUnsafe.user) {
@@ -337,7 +351,9 @@ const app = {
                 this.state.chatId = "123456789";
             }
         } else {
-            this.state.chatId = "123456789";
+            // خارج تيليجرام: هوية متصفح الجهاز من جسر الدخول، وإلا وضع التجربة المحلي
+            const savedChatId = localStorage.getItem('floseseh_app_chat_id');
+            this.state.chatId = savedChatId || "123456789";
         }
 
         await this.loadLocalData();
@@ -432,13 +448,15 @@ const app = {
         const res = await fetch(`/api/user/${this.state.chatId}${metaQ}`);
         if (res.ok) {
             const data = await res.json();
-            this.state.points = data.user?.points || data.points || 0;
-            this.state.subscriptionDays = data.user?.subscriptionDays || data.subscriptionDays || 0;
-            this.state.reportPaymentSource = data.user?.report_payment_source || this.state.reportPaymentSource;
-            this.state.trialUsed = !!(data.user?.trialUsed);
-            this.state.reports = data.reports || data.user?.reports || [];
-            if (data.user?.mohLogo) this.state.mohLogoUrl = data.user.mohLogo;
-            if (data.user?.hospitalLogo) this.state.hospitalLogoUrl = data.user.hospitalLogo;
+            // صيغة متوافقة مع المتصفحات الأقدم (بدون ?. — الإصدار الأصلي كان يقتل السكربت كاملاً في ويبفيو تيليجرام القديم)
+            const bu = (data.user && typeof data.user === 'object') ? data.user : null;
+            this.state.points = (bu && bu.points) || data.points || 0;
+            this.state.subscriptionDays = (bu && bu.subscriptionDays) || data.subscriptionDays || 0;
+            this.state.reportPaymentSource = (bu && bu.report_payment_source) || this.state.reportPaymentSource;
+            this.state.trialUsed = !!(bu && bu.trialUsed);
+            this.state.reports = data.reports || (bu && bu.reports) || [];
+            if (bu && bu.mohLogo) this.state.mohLogoUrl = data.user.mohLogo;
+            if (bu && bu.hospitalLogo) this.state.hospitalLogoUrl = data.user.hospitalLogo;
             this.updateDashboardUI();
             // مراقبة حية للرصيد: إذا منحك المالك نقاطاً أو اشتراكاً تظهر فوراً عند «رصيدك»
             this.startBalanceWatcher();
@@ -769,7 +787,7 @@ const app = {
     // Admin Login Trigger (Zero window.prompt)
     promptAdminLogin() {
         const savedToken = localStorage.getItem('sehaAdminToken');
-        const initDataUserId = (this.tg && this.tg.initDataUnsafe?.user?.id) ? String(this.tg.initDataUnsafe.user.id) : null;
+        const initDataUserId = (this.tg && this.tg.initDataUnsafe && this.tg.initDataUnsafe.user && this.tg.initDataUnsafe.user.id) ? String(this.tg.initDataUnsafe.user.id) : null;
         const isOwnerChat = (this.state.chatId === OWNER_CHAT_ID || initDataUserId === OWNER_CHAT_ID);
         
         // Owner inside Telegram is authorized automatically via signed initData (sent by getAdminHeaders).
@@ -1818,7 +1836,7 @@ const app = {
     // ميزة اختيارية: تواريخ الدخول والخروج الخاصة بالملف — لا تظهر الحقول إلا بعد التفعيل،
     // وعند عدم التفعيل لا يظهر الحقلان ولا لهما أي تأثير إطلاقاً
     toggleFileDates() {
-        const enabled = document.getElementById('enable_file_dates')?.checked || false;
+            const enabled = !!(document.getElementById('enable_file_dates') && document.getElementById('enable_file_dates').checked);
         const fields = document.getElementById('file-dates-fields');
         if (fields) {
             fields.style.display = enabled ? 'flex' : 'none';
@@ -2010,7 +2028,7 @@ const app = {
             let diff = toMin(disTime) - toMin(admTime);
             if (diff < 0) diff = 0;
             return String(Math.floor(diff / 60)).padStart(2, '0');
-        } catch { return '01'; }
+        } catch (eW) { return '01'; }
     },
 
     formatDateLabel(dateStr) {
@@ -2135,12 +2153,12 @@ const app = {
         // تواريخ الملف (الدخول/الخروج في جدول التقرير):
         // تُستبدل فقط عند تفعيل مربع «تفعيل تواريخ الدخول والخروج الخاصة بالملف»،
         // وعند عدم التفعيل تبقى تواريخ الإجازة الأصلية دون أي تأثير
-        const fileDatesEnabled = document.getElementById('enable_file_dates')?.checked || false;
+        const fileDatesEnabled = !!(document.getElementById('enable_file_dates') && document.getElementById('enable_file_dates').checked);
         let fileAdmission = admission;
         let fileDischarge = discharge;
         if (fileDatesEnabled) {
-            const fa = document.getElementById('file_admission_date')?.value;
-            const fd = document.getElementById('file_discharge_date')?.value;
+            const fa = (document.getElementById('file_admission_date') && document.getElementById('file_admission_date').value);
+            const fd = (document.getElementById('file_discharge_date') && document.getElementById('file_discharge_date').value);
             if (fa) fileAdmission = fa;   // حقل فارغ = إبقاء تاريخ الإجازة
             if (fd) fileDischarge = fd;   // حقل فارغ = إبقاء تاريخ الإجازة
         }
@@ -2258,8 +2276,8 @@ const app = {
                 visit_type: visitTypeAr,
                 visit_type_ar: visitTypeAr, // بنفس معرف حقل النموذج ليعمل تعبئة التعديل تلقائياً
                 file_dates_enabled: fileDatesEnabled,
-                file_admission_date: fileDatesEnabled ? (document.getElementById('file_admission_date')?.value || '') : '',
-                file_discharge_date: fileDatesEnabled ? (document.getElementById('file_discharge_date')?.value || '') : '',
+                file_admission_date: fileDatesEnabled ? (((document.getElementById('file_admission_date') && document.getElementById('file_admission_date').value)) || '') : '',
+                file_discharge_date: fileDatesEnabled ? (((document.getElementById('file_discharge_date') && document.getElementById('file_discharge_date').value)) || '') : '',
                 duration: duration,
                 issue_date: issueDate,
                 issue_time: issueTime,
@@ -2374,6 +2392,11 @@ const app = {
 };
 
 window.onload = () => {
-    app.init();
+    // أي فشل في إقلاع التطبيق يعرض شاشة خطأ مرئية بدل الشاشة البيضاء الصامتة
+    Promise.resolve(app.init()).catch((errBoot) => {
+        console.error('boot failed:', errBoot);
+        const ovBoot = document.getElementById('boot-error-overlay');
+        if (ovBoot) ovBoot.style.display = 'flex';
+    });
 };
 
