@@ -89,8 +89,6 @@ const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://floseseh.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=52';
-// صفحة الاستعلام العامة — زر موحّد في كل مواضع الدخول (URL يبقى صالحاً مع وجود ?v في الأصل)
-const INQUIRY_URL = new URL('/inquiry', WEB_APP_URL_CACHED).href;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'ppppokl';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '7853478744';
 // لوحة الإدارة (أزرار الإشعارات تنقل المالك مباشرة لشحن نقاط المشترك)
@@ -197,12 +195,7 @@ app.use(fontInject());
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-// HTML دائماً بدون كاش — متصفح تيليجرام المدمج قد يخدم نسخة قديمة من التطبيق إن سُمح لكاش index.html
-app.use(express.static(__dirname, {
-    setHeaders: (res, fp) => {
-        if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-    }
-}));
+app.use(express.static(__dirname));
 app.use('/assets', express.static(path.join(__dirname, 'الشعارات')));
 app.use('/logos', express.static(path.join(__dirname, 'الشعارات')));
 
@@ -1249,8 +1242,7 @@ const handleStartCommand = async (msg) => {
     // (لوحة الرد خاصة بكل محادثة في تيليجرام — لذا الزر الإداري لا يراه أحد غير المالك)
     const ownerQuickKeyboard = [
         [{ text: '🛒 متجر الباقات' }, { text: '🔗 كسب نقاط (الإحالات)' }, { text: '📘 دليل الاستخدام' }],
-        [{ text: '💳 شحن حسابي' }, { text: '📊 حالة حسابي' }],
-        [{ text: '🔍 استعلام عن تقرير' }, { text: '🌐 فتح التطبيق في المتصفح' }]
+        [{ text: '💳 شحن حسابي' }, { text: '📊 حالة حسابي' }]
     ];
     if (isBotAdmin(chatId, msg.from?.username)) {
         ownerQuickKeyboard[1].push({ text: '📢 رسالة للجميع' });
@@ -1295,7 +1287,6 @@ ${statusIcon} اشتراكك ${statusText}
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }],
-                [{ text: '🔍 استعلام عن تقرير', url: INQUIRY_URL }],
                 [{ text: 'دعوة صديق 🎁', callback_data: 'referrals' }],
                 [{ text: 'باقات الاشتراك 💎', callback_data: 'packages' }],
                 [{ text: '💳 شحن حسابي (طريقة الدفع)', callback_data: 'recharge_info' }],
@@ -1310,11 +1301,7 @@ bot.onText(/^\/start(\/verify)?(@\w+)?(\s.*)?$/i, handleStartCommand);
 // /help command
 bot.onText(/\/help/, async (msg) => {
     const chatId = msg.chat.id.toString();
-    await bot.sendMessage(chatId, `مرحباً!\nاستخدم /start للبدء.\n🔍 للاستعلام عن تقرير صادر من المنصة: ${INQUIRY_URL}\nإذا كنت مسؤولاً، يمكنك استخدام /addsub @username <days> لتفعيل الاشتراك.`, {
-        reply_markup: {
-            inline_keyboard: [[{ text: '🔍 فتح صفحة الاستعلام', url: INQUIRY_URL }]]
-        }
-    });
+    await bot.sendMessage(chatId, `مرحباً!\nاستخدم /start للبدء.\nإذا كنت مسؤولاً، يمكنك استخدام /addsub @username <days> لتفعيل الاشتراك.`);
 });
 
 // /charge command — نص تعليمات الشحن (طلب المالك: زر «شحن حسابي» يظهر التعليمات)
@@ -1836,32 +1823,6 @@ bot.on('message', async (msg) => {
         }
     }
     
-    // 🔍 استعلام عن تقرير — يفتح صفحة الاستعلام العامة (إدخال الرمز والهوية يدوياً ثم الاستعلام)
-    if (msg.text === '🔍 استعلام عن تقرير') {
-        await bot.sendMessage(chatId, `🔍 للاستعلام عن أي تقرير صادر من المنصة:\n\n1️⃣ افتح صفحة الاستعلام من الزر بالأسفل\n2️⃣ أدخل رمز الخدمة ورقم هوية المريض يدوياً\n3️⃣ اضغط «استعلام»`, {
-            reply_markup: {
-                inline_keyboard: [[{ text: '🔍 فتح صفحة الاستعلام', url: INQUIRY_URL }]]
-            }
-        });
-        return;
-    }
-
-    // 🌐 فتح التطبيق في متصفح الجهاز — جسر دخول يتجاوز ويبفيو تيليجرام (رمز استخدام واحد صالح 10 دقائق)
-    if (msg.text === '🌐 فتح التطبيق في المتصفح') {
-        // نظافة: حذف الرموز المنتهية قبل إصدار رمز جديد
-        for (const [k, v] of appLoginTokens) {
-            if (v.expires < Date.now()) appLoginTokens.delete(k);
-        }
-        const token = crypto.randomBytes(24).toString('hex');
-        appLoginTokens.set(token, { chatId: chatId, expires: Date.now() + 10 * 60 * 1000 });
-        await bot.sendMessage(chatId, `🌐 فتح التطبيق في متصفح الجهاز (Chrome / Safari):\n\nهذا الخيار يتجاوز نافذة تيليجرام الداخلية — مفيد إذا ظهرت شاشة بيضاء عند فتح التطبيق من زر Open.\n\n⏳ الرمز صالح ١٠ دقائق وللاستخدام مرة واحدة فقط.\nبعد أول فتح سيتعرف التطبيق على حسابك تلقائياً في هذا المتصفح.`, {
-            reply_markup: {
-                inline_keyboard: [[{ text: '🌐 فتح التطبيق في المتصفح', url: `${WEB_APP_URL}?login=${token}` }]]
-            }
-        });
-        return;
-    }
-
     if (msg.text === '📊 حالة حسابي') {
         await sendMyStatusMessage(chatId, username);
         return;
@@ -2207,7 +2168,6 @@ const sendUsageGuideMessage = async (chatId) => {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'Open — فتح التطبيق', web_app: { url: WEB_APP_URL_CACHED } }],
-                [{ text: '🔍 استعلام عن تقرير', url: INQUIRY_URL }],
                 [
                     { text: '🛒 متجر الباقات', callback_data: 'packages' },
                     { text: '💳 تعليمات الشحن', callback_data: 'recharge_info' }
@@ -3197,8 +3157,6 @@ app.post('/api/admin/package', async (req, res) => {
 // --- Inquiry Endpoints ---
 // مطابقة للمستودع المرجعي alehtiat-almorish: /inquiry يخدم صفحة الاستعلام بنمط منصة صحة (Cairo)
 app.get(['/inquiry', '/inquiries/slenquiry', '/slenquiry'], (req, res) => {
-    // no-cache: متصفح تيليجرام المدمج قد يخدم نسخة قديمة مكسورة من الصفحة إن سُمح لكاشها
-    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     res.sendFile(path.join(__dirname, 'inquiry.html'));
 });
 app.get('/verify', (req, res) => {
@@ -3436,21 +3394,6 @@ app.post('/api/user/:chatId/package', async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
-});
-
-// 2.9-b جسر دخول المتصفح: رمز استخدام واحد يصدر من البوت (زر «🌐 فتح التطبيق في المتصفح») — صالح 10 دقائق
-// يرجع chatId صاحب الرمز مرة واحدة ثم يُحذف، فيتعرف عليه التطبيق في متصفح الجهاز (localStorage)
-const appLoginTokens = new Map();
-app.get('/api/app-login/:token', (req, res) => {
-    const t = String(req.params.token || '');
-    const rec = appLoginTokens.get(t);
-    res.setHeader('Cache-Control', 'no-store');
-    if (!rec || rec.expires < Date.now()) {
-        appLoginTokens.delete(t);
-        return res.status(403).json({ success: false, error: 'الرمز غير صالح أو منتهي الصلاحية — اطلب زر «🌐 فتح التطبيق في المتصفح» من البوت من جديد.' });
-    }
-    appLoginTokens.delete(t); // استخدام واحد
-    res.json({ success: true, chatId: rec.chatId });
 });
 
 // 2.9 جلب بيانات الاستمارة المعربة للتعبئة التلقائية (رمز صالح لمرة واحدة — 24 ساعة)
@@ -4475,7 +4418,6 @@ app.get('*', (req, res) => {
     if (req.path.startsWith('/api') || req.path.startsWith(`/webhook/${TOKEN}`)) {
         return res.status(404).json({ success: false, error: 'Route not found' });
     }
-    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
@@ -4567,42 +4509,6 @@ const startServer = async () => {
                 bot.processUpdate(req.body);
                 res.sendStatus(200);
             });
-        }
-
-        // ☕ Keep-alive: خطة Render المجانية تُسبّ الخدمة بعد ~15 دقيقة بلا طلبات واردة،
-        // فيبدو البوت «متوقفاً» وأول رسالة/زيارة بعدها تنتظر إقلاعاً بارداً (30-60 ثانية).
-        // نداء ذاتي كل 10 دقائق لـ /health عبر العنوان العام يمنع الإسبان تماماً
-        // (النداء يخرج للإنترنت ويعود كطلب وارد — يُحتسب نشاطاً لدى Render).
-        if (process.env.RENDER_EXTERNAL_URL && process.env.NODE_ENV !== 'test') {
-            const selfPing = () => {
-                try {
-                    const req = https.get(`${process.env.RENDER_EXTERNAL_URL}/health`, { timeout: 20000 }, (r) => {
-                        r.resume();
-                        if (r.statusCode !== 200) console.warn(`☕ Keep-alive: HTTP ${r.statusCode}`);
-                    });
-                    req.on('timeout', () => req.destroy(new Error('timeout')));
-                    req.on('error', (e) => console.warn(`☕ Keep-alive failed: ${e.message}`));
-                } catch (e) {
-                    console.warn(`☕ Keep-alive failed: ${e.message}`);
-                }
-            };
-            setTimeout(selfPing, 60 * 1000).unref();           // أول نداء بعد دقيقة من الإقلاع
-            setInterval(selfPing, 10 * 60 * 1000).unref();     // ثم كل 10 دقائق (داخل نافذة الـ15)
-
-            // 🛡 حماية الويبهوك: إن حُذف لأي سبب (إعادة نشر، خطأ تيليجرام) يُعاد ضبطه تلقائياً
-            const assertWebhook = async () => {
-                try {
-                    const info = await bot.getWebHookInfo();
-                    if (!info.url || !String(info.url).includes('/webhook/')) {
-                        await bot.setWebHook(`${WEB_APP_URL}/webhook/${TOKEN}`);
-                        console.log('🛡 Webhook self-heal: أُعيد ضبط الويبهوك تلقائياً');
-                    }
-                } catch (e) {
-                    console.warn(`🛡 Webhook self-heal notice: ${e.message}`);
-                }
-            };
-            setTimeout(assertWebhook, 90 * 1000).unref();      // أول فحص بعد دقيقة ونصف من الإقلاع
-            setInterval(assertWebhook, 10 * 60 * 1000).unref(); // ثم كل 10 دقائق مع النداء الذاتي
         }
 
         // Configure Open button with the correct Render URL

@@ -606,14 +606,6 @@
             <div class="spinner"></div>
             <p id="loading-text">جاري إصدار التقرير...</p>
         </div>
-
-        <!-- شاشة خطأ الإقلاع: تظهر فقط إذا فشل تحميل/تشغيل جافاسكربت التطبيق (بدل الشاشة البيضاء الصامتة) -->
-        <div id="boot-error-overlay" style="display:none; position:fixed; top:0; right:0; bottom:0; left:0; z-index:99999; background:#0b1220; color:#ffffff; font-family:'Cairo','Tajawal',sans-serif; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; gap:14px;">
-            <div style="font-size:44px;">⚠️</div>
-            <div style="font-size:17px; font-weight:700;">تعذّر تحميل التطبيق</div>
-            <div style="font-size:13px; opacity:.85; line-height:1.9;">تحقق من اتصال الإنترنت ثم أعد المحاولة.<br>إن تكررت المشكلة، افتح بوت المنصة واضغط «🌐 فتح التطبيق في المتصفح»<br>ليفتح التطبيق في متصفح الجهاز مباشرة بدل نافذة تيليجرام.</div>
-            <button onclick="location.reload()" style="margin-top:6px; padding:10px 26px; border:0; border-radius:12px; background:#2f6df6; color:#ffffff; font-size:14px; font-weight:700; font-family:inherit;">🔄 إعادة المحاولة</button>
-        </div>
     </div>
     
     <div id="pdf-container" style="position: absolute; top: -9999px; left: -9999px; width: 800px;">
@@ -880,6 +872,6 @@
     </div>
 
     <!-- Application Logic (Loaded after all DOM elements & modals) -->
-    <script src="app.js?v=7401"></script>
+    <script src="app.js?v=7300"></script>
 </body>
 </html>
