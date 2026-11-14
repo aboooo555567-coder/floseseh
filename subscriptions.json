@@ -221,7 +221,7 @@
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 307,
+      "subscriptionDays": 306,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-15T23:59:59.999Z",
       "subscriptionExpires": "2027-09-15T23:59:59.999Z",
@@ -854,10 +854,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-11-13T23:39:26.846Z",
+      "updatedAt": "2026-11-14T12:48:32.731Z",
       "reportsCount": 19,
-      "daysRemaining": 307,
-      "daysUsed": 59
+      "daysRemaining": 306,
+      "daysUsed": 60
     },
     "8337606751": {
       "points": 35,
