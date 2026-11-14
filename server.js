@@ -4534,6 +4534,22 @@ const startServer = async () => {
                 console.log(`✓ WEB_APP_URL = ${WEB_APP_URL}`);
                 console.log(`✓ Bot mode: ${isProduction ? 'Webhook (Production/Render)' : 'Polling (Local)'}`);
                 console.log(`✓ Database: Local subscriptions.json\n`);
+
+                // ===== مانع النوم (الإضافة الوحيدة فوق حالة 10 نوفمبر) =====
+                // الخطة المجانية على Render تُسبي الخدمة بعد 15 دقيقة خمول: فيبدو البوت متوقفاً
+                // ولا ترد رسائل المستخدمين، ويفتح Open ببطء أو بشاشة بيضاء أثناء الاستيقاظ.
+                // نبضة ذاتية كل 10 دقائق على /health تُبقي الخدمة مستيقظة دائماً.
+                if (process.env.RENDER_EXTERNAL_URL && process.env.KEEP_ALIVE !== 'off') {
+                    const pingSelf = () => {
+                        try {
+                            require('https').get(process.env.RENDER_EXTERNAL_URL + '/health', (r) => { r.resume(); }).on('error', () => {});
+                        } catch (ePing) {}
+                    };
+                    setInterval(pingSelf, 10 * 60 * 1000);
+                    setTimeout(pingSelf, 30 * 1000);
+                    console.log('✓ Keep-alive: نبضة ذاتية كل 10 دقائق — منع نوم Render (البوت يبقى حياً دائماً)');
+                }
+
                 resolve(srv);
             });
         });
